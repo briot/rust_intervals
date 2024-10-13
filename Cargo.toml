@@ -8,7 +8,7 @@ name = "rust_intervals"
 version = "0.1.0"
 edition = "2018"
 license = "MIT"
-keywords = ["intervals", "open-closed", "ranges", "intersection", "convex hull"]
+keywords = ["intervals", "open-closed", "ranges", "intersection", "convex_hull"]
 
 [dependencies]
 chrono = { version = "0.4.24", optional = true }
