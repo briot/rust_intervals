@@ -1,0 +1,26 @@
+# Install
+#    cargo install --force cargo-make
+
+[config]
+default_to_workspace = false
+
+[tasks.workflow]
+dependencies = [ "format", "coverage", "doc" ]
+
+[tasks.coverage]
+dependencies = ["codecov-clean"]
+env = { "CARGO_INCREMENTAL" = "0", "RUSTFLAGS" = "-Cinstrument-coverage", "LLVM_PROFILE_FILE" = "cargo-test-%p-%m.profraw" }
+run_task = "codecov-grcov"
+
+[tasks.codecov-grcov]
+dependencies = [ "test" ]
+command = "grcov"
+args = [".", "-s", ".", "--binary-path", "${CARGO_MAKE_CRATE_TARGET_DIRECTORY}/debug/", "-t",  "html", "--branch", "--ignore-not-existing", "-o", "${CARGO_MAKE_CRATE_TARGET_DIRECTORY}/debug/coverage/"]
+
+[tasks.codecov-clean]
+script_runner = "@shell"
+script = "rm -f *.profraw"
+
+[tasks.doc]
+command = "cargo"
+args = [ "doc" ]
