@@ -1,0 +1,14 @@
+[package]
+authors = ["Emmanuel Briot <briot.emmanuel@gmail.com>"]
+description = "Intervals arithmetic with any combination of open, closed or infinite bounds, along with operations like intersection, convex hull, union, difference,..."
+documentation = "https://docs.rs/rust_intervals/"
+repository = "https://github.com/briot/rust_intervals"
+readme = "./README.md"
+name = "rust_intervals"
+version = "0.1.0"
+edition = "2018"
+license = "MIT"
+keywords = ["intervals", "open-closed", "ranges", "intersection", "convex hull"]
+
+[dependencies]
+chrono = { version = "0.4.24", optional = true }
