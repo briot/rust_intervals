@@ -1,11 +1,11 @@
 # Install
-#    cargo install --force cargo-make
+#    cargo install --force cargo-make cargo-fuzz
 
 [config]
 default_to_workspace = false
 
 [tasks.workflow]
-dependencies = [ "format", "coverage", "doc" ]
+dependencies = [ "format", "coverage", "doc", "fuzz" ]
 
 [tasks.coverage]
 dependencies = ["codecov-clean"]
@@ -24,3 +24,9 @@ script = "rm -f *.profraw"
 [tasks.doc]
 command = "cargo"
 args = [ "doc" ]
+
+[tasks.fuzz]
+toolchain = "nightly"
+install_crate = "cargo-fuzz"
+command = "cargo"
+args = ["fuzz", "run", "fuzz_target_1", "--", "-runs=10000", "-max_len=1000"]
