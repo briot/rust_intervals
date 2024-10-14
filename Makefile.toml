@@ -29,4 +29,4 @@ args = [ "doc" ]
 toolchain = "nightly"
 install_crate = "cargo-fuzz"
 command = "cargo"
-args = ["fuzz", "run", "fuzz_target_1", "--", "-runs=10000", "-max_len=1000"]
+args = ["fuzz", "run", "fuzz_target_1", "--", "-max_total_time=10", "-max_len=1000"]
