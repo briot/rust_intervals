@@ -38,6 +38,8 @@ It provides the following features:
      * `union()`: union of two contiguous intervals
      * `Display` and `Debug` support
   - Operator overloads for the queries above
+  - Support for `serde`
+  - Support for `no_std`
 
 Example
 -------

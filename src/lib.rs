@@ -71,6 +71,9 @@ mod multi_intervals;
 mod nothing_between;
 mod tests;
 
+#[cfg(feature = "serde")]
+mod serde;
+
 pub use crate::intervals::Interval;
 pub use crate::multi_intervals::MultiInterval;
 pub use crate::nothing_between::NothingBetween;

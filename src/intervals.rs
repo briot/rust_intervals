@@ -5,8 +5,8 @@ use ::core::cmp::{Ordering, PartialOrd};
 
 /// An interval of values.
 pub struct Interval<T> {
-    lower: Bound<T>,
-    upper: Bound<T>,
+    pub(crate) lower: Bound<T>,
+    pub(crate) upper: Bound<T>,
 }
 
 impl<T> Interval<T> {

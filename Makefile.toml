@@ -12,7 +12,7 @@ dependencies = ["test-default", "test-nostd" ]
 
 [tasks.test-default]
 command = "cargo"
-args = ["test", "--features=chrono"]
+args = ["test", "--features=chrono,serde"]
 
 [tasks.test-nostd]
 command = "cargo"

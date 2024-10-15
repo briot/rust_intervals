@@ -10,3 +10,5 @@
    `chrono::NaiveDate`
 
  - support for no_std
+
+ - support for serde
