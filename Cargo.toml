@@ -12,3 +12,7 @@ keywords = ["intervals", "open-closed", "ranges", "intersection", "convex_hull"]
 
 [dependencies]
 chrono = { version = "0.4.24", optional = true }
+
+[features]
+default = ["std"]
+std = []

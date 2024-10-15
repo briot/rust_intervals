@@ -1,7 +1,7 @@
 use crate::bounds::Bound;
 use crate::multi_intervals::MultiInterval;
 use crate::nothing_between::NothingBetween;
-use std::cmp::{Ordering, PartialOrd};
+use ::core::cmp::{Ordering, PartialOrd};
 
 /// An interval of values.
 pub struct Interval<T> {
@@ -411,7 +411,7 @@ impl<T: PartialOrd + NothingBetween + Clone> Interval<T> {
 }
 
 ///  &Interval ^ &Interval
-impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitXor<&Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<&Interval<T>>
     for &Interval<T>
 {
     type Output = MultiInterval<T>;
@@ -422,7 +422,7 @@ impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitXor<&Interval<T>>
 }
 
 ///  &Interval ^ Interval
-impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitXor<Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<Interval<T>>
     for &Interval<T>
 {
     type Output = MultiInterval<T>;
@@ -433,7 +433,7 @@ impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitXor<Interval<T>>
 }
 
 ///  Interval ^ Interval
-impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitXor<Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<Interval<T>>
     for Interval<T>
 {
     type Output = MultiInterval<T>;
@@ -444,7 +444,7 @@ impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitXor<Interval<T>>
 }
 
 ///  Interval ^ &Interval
-impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitXor<&Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<&Interval<T>>
     for Interval<T>
 {
     type Output = MultiInterval<T>;
@@ -455,7 +455,7 @@ impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitXor<&Interval<T>>
 }
 
 ///  &Interval & &Interval
-impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitAnd<&Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<&Interval<T>>
     for &Interval<T>
 {
     type Output = Interval<T>;
@@ -466,7 +466,7 @@ impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitAnd<&Interval<T>>
 }
 
 ///  &Interval & Interval
-impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitAnd<Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<Interval<T>>
     for &Interval<T>
 {
     type Output = Interval<T>;
@@ -477,7 +477,7 @@ impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitAnd<Interval<T>>
 }
 
 ///  Interval & Interval
-impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitAnd<Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<Interval<T>>
     for Interval<T>
 {
     type Output = Interval<T>;
@@ -488,7 +488,7 @@ impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitAnd<Interval<T>>
 }
 
 ///  Interval & &Interval
-impl<T: PartialOrd + NothingBetween + Clone> std::ops::BitAnd<&Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<&Interval<T>>
     for Interval<T>
 {
     type Output = Interval<T>;
@@ -546,7 +546,7 @@ impl<T: PartialOrd + NothingBetween + Clone> core::ops::Sub<Interval<T>>
     }
 }
 
-impl<T: Clone> std::clone::Clone for Interval<T> {
+impl<T: Clone> ::core::clone::Clone for Interval<T> {
     fn clone(&self) -> Self {
         Self {
             lower: self.lower.clone(),

@@ -82,6 +82,8 @@ impl NothingBetween for isize {
         other - self <= 1
     }
 }
+
+#[cfg(feature = "std")]
 impl NothingBetween for std::time::Duration {
     fn nothing_between(&self, other: &Self) -> bool {
         other.as_nanos() - self.as_nanos() <= 1

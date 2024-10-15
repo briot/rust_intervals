@@ -1,5 +1,5 @@
 use crate::nothing_between::NothingBetween;
-use std::cmp::{Ordering, PartialOrd};
+use ::core::cmp::{Ordering, PartialOrd};
 
 /// One bound of an interval
 /// LeftOf, applied to value, represents a conceptual point halfway between
@@ -172,7 +172,7 @@ impl<T: PartialOrd + NothingBetween> PartialOrd<Bound<&T>> for Bound<T> {
     }
 }
 
-impl<T: Clone> std::clone::Clone for Bound<T> {
+impl<T: Clone> ::core::clone::Clone for Bound<T> {
     fn clone(&self) -> Self {
         match self {
             Bound::LeftUnbounded => Bound::LeftUnbounded,

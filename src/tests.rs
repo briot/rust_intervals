@@ -384,6 +384,7 @@ mod test {
         assert_not_equivalent(&empty, &intv1);
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn test_io() {
         assert_eq!(format!("{}", Interval::new_closed_closed(1, 4)), "[1, 4]",);
@@ -574,6 +575,8 @@ mod test {
                 Interval::new_open_closed(30, 50),
             )
         );
+
+        #[cfg(feature = "std")]
         assert_eq!(
             format!("{:?}", intv2.difference(&intv1)),
             "((LeftOf(1),LeftOf(10)) + (RightOf(30),RightOf(50)))"
@@ -582,6 +585,8 @@ mod test {
         let intv3 = Interval::new_closed_closed(1, 5); // disjoint
         assert_eq!(intv1.difference(&intv3), MultiInterval::One(intv1.clone()));
         assert_eq!(intv3.difference(&intv1), MultiInterval::One(intv3.clone()));
+
+        #[cfg(feature = "std")]
         assert_eq!(
             format!("{:?}", intv1.difference(&intv3)),
             "(LeftOf(10),RightOf(30))"
@@ -630,9 +635,12 @@ mod test {
         assert!(!intv2.upper_inclusive());
         assert!(intv2.upper_unbounded());
 
-        let intv3 =
-            Interval::new_closed_open("abc".to_string(), "def".to_string());
-        let _intv4 = intv3.as_ref();
+        #[cfg(feature = "std")]
+        {
+            let intv3 =
+                Interval::new_closed_open("abc".to_string(), "def".to_string());
+            let _intv4 = intv3.as_ref();
+        }
 
         let intv5 = Interval::new_closed_open('a', 'c');
         assert!(!intv5.is_empty());

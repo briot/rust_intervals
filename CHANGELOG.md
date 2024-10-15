@@ -8,3 +8,5 @@
 
  - support for more types `u128`, `usize`, `isize`, `time::Duration` and
    `chrono::NaiveDate`
+
+ - support for no_std
