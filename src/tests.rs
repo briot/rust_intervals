@@ -457,6 +457,20 @@ mod test {
         let intv7 = Interval::new_unbounded_closed(10_i16);
         assert!(!intv7.right_of(&0));
         assert!(!intv7.strictly_right_of(&0));
+
+        let intv1 = Interval::new_open_closed(3, 5); // (3,5]
+        let intv2 = Interval::new_closed_closed(5, 9); // [5,9]
+        assert!(!intv1.strictly_left_of_interval(&intv2));
+        assert!(intv1.left_of_interval(&intv2));
+        assert!(intv2.right_of_interval(&intv1));
+        assert!(!intv2.strictly_right_of_interval(&intv1));
+
+        let intv1 = Interval::new_open_closed(3, 5); // (3,5]
+        let intv2 = Interval::new_open_closed(5, 9); // (5,9]
+        assert!(intv1.strictly_left_of_interval(&intv2));
+        assert!(intv1.left_of_interval(&intv2));
+        assert!(intv2.right_of_interval(&intv1));
+        assert!(intv2.strictly_right_of_interval(&intv1));
     }
 
     #[test]

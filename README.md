@@ -9,7 +9,7 @@ Features
 
 It provides the following features:
 
-  - **Generic** over the interval type.  Supports out of the box for u8, u16,
+  - **Generic** over the interval type.  Support out of the box for u8, u16,
     u32, u64, i8, i16, i32, i64, char, and optionally for chrono::DateTime
   - Extensive **testing**, with **coverage** of nearly 100% of the code and
     basic fuzzing.
@@ -42,7 +42,7 @@ It provides the following features:
 Example
 -------
 
-```
+```rust
    use rust_intervals::{interval, Interval};
    let intv1 = Interval::new_closed_open(1, 10);
    let value = 5;

@@ -211,22 +211,6 @@ impl<T: PartialOrd + NothingBetween> Interval<T> {
         self.is_empty() || self.upper.left_of(x)
     }
 
-    /// Whether every value in self is less than (<=) X.
-    /// (returns True is if self is empty).
-    /// ```txt
-    ///    [------]
-    ///           X    => left of the interval (but not strictly left of)
-    /// ```
-    pub fn left_of(&self, x: &T) -> bool {
-        self.is_empty() || self.upper <= Bound::RightOf(x)
-    }
-
-    /// Whether every value in self is strictly less than (<) every value in
-    /// right (returns True if either interval is empty).
-    pub fn strictly_left_of_interval(&self, right: &Self) -> bool {
-        self.is_empty() || right.is_empty() || self.upper <= right.lower
-    }
-
     /// Whether X is strictly less than (<) every value in self.
     /// (returns True is if self is empty).
     /// ```txt
@@ -235,6 +219,16 @@ impl<T: PartialOrd + NothingBetween> Interval<T> {
     /// ```
     pub fn strictly_right_of(&self, x: &T) -> bool {
         self.is_empty() || self.lower.right_of(x)
+    }
+
+    /// Whether every value in self is less than (<=) X.
+    /// (returns True is if self is empty).
+    /// ```txt
+    ///    [------]
+    ///           X    => left of the interval (but not strictly left of)
+    /// ```
+    pub fn left_of(&self, x: &T) -> bool {
+        self.is_empty() || self.upper <= Bound::RightOf(x)
     }
 
     /// Whether X is less than (<=) every value in self.
@@ -246,9 +240,33 @@ impl<T: PartialOrd + NothingBetween> Interval<T> {
     pub fn right_of(&self, x: &T) -> bool {
         self.is_empty() || self.lower >= Bound::LeftOf(x)
     }
-}
 
-impl<T: PartialEq + NothingBetween> Interval<T> {
+    /// Whether every value in self is less than or equal (<=) to every value
+    /// in right (returns true if either interval is empty).
+    pub fn left_of_interval(&self, right: &Self) -> bool {
+        self.strictly_left_of_interval(right)
+            || self.upper.value() == right.lower.value()
+    }
+
+    /// Whethever every value in self is greater or equal (>=) to every value
+    /// in right (returns true if either inverval is empty)
+    pub fn right_of_interval(&self, right: &Self) -> bool {
+        self.strictly_right_of_interval(right)
+            || self.lower.value() == right.upper.value()
+    }
+
+    /// Whether every value in self is strictly less than (<) every value in
+    /// right (returns True if either interval is empty).
+    pub fn strictly_left_of_interval(&self, right: &Self) -> bool {
+        self.is_empty() || right.is_empty() || self.upper <= right.lower
+    }
+
+    /// Whether every value in self is strictly greater than (>) every value in
+    /// right (returns True if either interval is empty).
+    pub fn strictly_right_of_interval(&self, right: &Self) -> bool {
+        self.is_empty() || right.is_empty() || right.upper <= self.lower
+    }
+
     /// True if self is of the form `[A, A]`.
     /// This returns false for any other kind of interval, even if they
     /// happen to contain a single value.
