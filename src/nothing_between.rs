@@ -1,6 +1,3 @@
-#[cfg(feature = "chrono")]
-use chrono::{DateTime, TimeZone};
-
 pub trait NothingBetween {
     fn nothing_between(&self, other: &Self) -> bool;
     //  Should return True if no value exists between self and other in this
@@ -9,47 +6,52 @@ pub trait NothingBetween {
 }
 
 impl NothingBetween for u8 {
-    fn nothing_between(&self, other: &u8) -> bool {
+    fn nothing_between(&self, other: &Self) -> bool {
         other - self <= 1
     }
 }
 impl NothingBetween for u16 {
-    fn nothing_between(&self, other: &u16) -> bool {
+    fn nothing_between(&self, other: &Self) -> bool {
         other - self <= 1
     }
 }
 impl NothingBetween for u32 {
-    fn nothing_between(&self, other: &u32) -> bool {
+    fn nothing_between(&self, other: &Self) -> bool {
         other - self <= 1
     }
 }
 impl NothingBetween for u64 {
-    fn nothing_between(&self, other: &u64) -> bool {
+    fn nothing_between(&self, other: &Self) -> bool {
+        other - self <= 1
+    }
+}
+impl NothingBetween for u128 {
+    fn nothing_between(&self, other: &Self) -> bool {
         other - self <= 1
     }
 }
 impl NothingBetween for i8 {
-    fn nothing_between(&self, other: &i8) -> bool {
+    fn nothing_between(&self, other: &Self) -> bool {
         other - self <= 1
     }
 }
 impl NothingBetween for i16 {
-    fn nothing_between(&self, other: &i16) -> bool {
+    fn nothing_between(&self, other: &Self) -> bool {
         other - self <= 1
     }
 }
 impl NothingBetween for i32 {
-    fn nothing_between(&self, other: &i32) -> bool {
+    fn nothing_between(&self, other: &Self) -> bool {
         other - self <= 1
     }
 }
 impl NothingBetween for i64 {
-    fn nothing_between(&self, other: &i64) -> bool {
+    fn nothing_between(&self, other: &Self) -> bool {
         other - self <= 1
     }
 }
 impl NothingBetween for f32 {
-    fn nothing_between(&self, other: &f32) -> bool {
+    fn nothing_between(&self, other: &Self) -> bool {
         // In general, comparing with EPSILON is wrong.  There are however two
         // cases:
         // * the user has used V + EPSILON with a large V.  The addition had no
@@ -61,14 +63,28 @@ impl NothingBetween for f32 {
     }
 }
 impl NothingBetween for f64 {
-    fn nothing_between(&self, other: &f64) -> bool {
+    fn nothing_between(&self, other: &Self) -> bool {
         self + f64::EPSILON >= *other
     }
 }
-
 impl NothingBetween for char {
     fn nothing_between(&self, other: &Self) -> bool {
         (*other as u32) - (*self as u32) <= 1
+    }
+}
+impl NothingBetween for usize {
+    fn nothing_between(&self, other: &Self) -> bool {
+        other - self <= 1
+    }
+}
+impl NothingBetween for isize {
+    fn nothing_between(&self, other: &Self) -> bool {
+        other - self <= 1
+    }
+}
+impl NothingBetween for std::time::Duration {
+    fn nothing_between(&self, other: &Self) -> bool {
+        other.as_nanos() - self.as_nanos() <= 1
     }
 }
 
@@ -81,8 +97,16 @@ impl<T: NothingBetween> NothingBetween for &T {
 }
 
 #[cfg(feature = "chrono")]
-impl<T: TimeZone> NothingBetween for DateTime<T> {
-    fn nothing_between(&self, _other: &DateTime<T>) -> bool {
-        false
+impl<T: chrono::TimeZone> NothingBetween for chrono::DateTime<T> {
+    fn nothing_between(&self, other: &Self) -> bool {
+        other.clone().signed_duration_since(self)
+            <= chrono::TimeDelta::nanoseconds(1)
+    }
+}
+
+#[cfg(feature = "chrono")]
+impl NothingBetween for chrono::NaiveDate {
+    fn nothing_between(&self, other: &Self) -> bool {
+        other.signed_duration_since(*self) <= chrono::TimeDelta::days(1)
     }
 }

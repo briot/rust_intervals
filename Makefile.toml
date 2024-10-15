@@ -5,7 +5,18 @@
 default_to_workspace = false
 
 [tasks.workflow]
-dependencies = [ "format", "coverage", "doc", "fuzz" ]
+dependencies = [ "test", "format", "coverage", "doc", "fuzz" ]
+
+[tasks.test]
+dependencies = ["test-default", "test-nostd" ]
+
+[tasks.test-default]
+command = "cargo"
+args = ["test", "--features=chrono"]
+
+[tasks.test-nostd]
+command = "cargo"
+args = ["test", "--no-default-features"]
 
 [tasks.coverage]
 dependencies = ["codecov-clean"]

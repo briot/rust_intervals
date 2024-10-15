@@ -3,5 +3,8 @@
 ## 0.1.1
 ### Added
 
- - `left_of_interval`, `right_of_interval`, `strictly_right_of_interval`
-   new functions
+ - new functions `left_of_interval`, `right_of_interval`
+   and `strictly_right_of_interval`
+
+ - support for more types `u128`, `usize`, `isize`, `time::Duration` and
+   `chrono::NaiveDate`

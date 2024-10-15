@@ -247,6 +247,14 @@ mod test {
         assert!(Interval::new_open_open(0_u64, 1).is_empty());
         assert!(Interval::new_open_open(2_u64, 1).is_empty());
 
+        assert!(Interval::new_closed_open(1_u128, 1).is_empty());
+        assert!(Interval::new_open_open(0_u128, 1).is_empty());
+        assert!(Interval::new_open_open(2_u128, 1).is_empty());
+
+        assert!(Interval::new_closed_open(1_usize, 1).is_empty());
+        assert!(Interval::new_open_open(0_usize, 1).is_empty());
+        assert!(Interval::new_open_open(2_usize, 1).is_empty());
+
         assert!(Interval::new_closed_open(1_i8, 1).is_empty());
         assert!(Interval::new_open_open(0_i8, 1).is_empty());
         assert!(Interval::new_open_open(2_i8, 1).is_empty());
@@ -263,6 +271,10 @@ mod test {
         assert!(Interval::new_open_open(0_i64, 1).is_empty());
         assert!(Interval::new_open_open(2_i64, 1).is_empty());
 
+        assert!(Interval::new_closed_open(1_isize, 1).is_empty());
+        assert!(Interval::new_open_open(0_isize, 1).is_empty());
+        assert!(Interval::new_open_open(2_isize, 1).is_empty());
+
         assert!(Interval::new_closed_open(1.0_f32, 1.0).is_empty());
         assert!(!Interval::new_open_open(0.0_f32, 1.0).is_empty());
         assert!(Interval::new_open_open(2.0_f32, 1.0).is_empty());
@@ -278,6 +290,24 @@ mod test {
         assert!(Interval::new_closed_open(&1_u64, &1).is_empty());
         assert!(Interval::new_open_open(&0_u64, &1).is_empty());
         assert!(Interval::new_open_open(&2_u64, &1).is_empty());
+
+        #[cfg(feature = "chrono")]
+        {
+            let apr_1 = chrono::NaiveDate::from_ymd_opt(2024, 4, 1).unwrap();
+            let mar_31 = apr_1.pred_opt().unwrap();
+            let apr_2 = apr_1.succ_opt().unwrap();
+            assert!(Interval::new_closed_open(&apr_1, &apr_1).is_empty());
+            assert!(Interval::new_open_open(&mar_31, &apr_1).is_empty());
+            assert!(Interval::new_open_open(&apr_2, &apr_1).is_empty());
+
+            let now = chrono::Local::now();
+            let one_min_ago = now - chrono::TimeDelta::minutes(1);
+            let one_sec_ago = now - chrono::TimeDelta::seconds(1);
+            let one_ns_ago = now - chrono::TimeDelta::nanoseconds(1);
+            assert!(!Interval::new_closed_open(&one_min_ago, &now).is_empty());
+            assert!(!Interval::new_open_open(&one_sec_ago, &now).is_empty());
+            assert!(Interval::new_open_open(&one_ns_ago, &now).is_empty());
+        }
     }
 
     #[test]
