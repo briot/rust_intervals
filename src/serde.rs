@@ -3,15 +3,9 @@ use crate::nothing_between::NothingBetween;
 use ::core::cmp::PartialOrd;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-//#[derive(serde::Serialize, serde::Deserialize)]
-// #[derive(serde::Serialize, serde::Deserialize)]
-// enum Interval<T: serde::Serialize + serde::de::DeserializeOwned> {
 #[derive(Serialize, Deserialize)]
-//#[serde(bound(
-//    serialize = "T: Serialize",
-//    deserialize = "T: DeserializeOwned"
-//))]
-enum Interval<T> {
+#[serde(rename = "Interval")]
+enum SerdeInterval<T> {
     ClosedClosed(T, T),
     ClosedOpen(T, T),
     ClosedUnbounded(T),
@@ -33,35 +27,35 @@ where
         S: serde::Serializer,
     {
         if self.is_empty() {
-            Interval::<T>::Empty.serialize(serializer)
+            SerdeInterval::<T>::Empty.serialize(serializer)
         } else {
             let intv = match (&self.lower, &self.upper) {
                 (Bound::LeftOf(lo), Bound::LeftOf(up)) => {
-                    Interval::ClosedOpen(lo, up)
+                    SerdeInterval::ClosedOpen(lo, up)
                 }
                 (Bound::LeftOf(lo), Bound::RightOf(up)) => {
-                    Interval::ClosedClosed(lo, up)
+                    SerdeInterval::ClosedClosed(lo, up)
                 }
                 (Bound::LeftOf(lo), Bound::RightUnbounded) => {
-                    Interval::ClosedUnbounded(lo)
+                    SerdeInterval::ClosedUnbounded(lo)
                 }
                 (Bound::LeftUnbounded, Bound::RightUnbounded) => {
-                    Interval::DoublyUnbounded
+                    SerdeInterval::DoublyUnbounded
                 }
                 (Bound::LeftUnbounded, Bound::LeftOf(up)) => {
-                    Interval::UnboundedOpen(up)
+                    SerdeInterval::UnboundedOpen(up)
                 }
                 (Bound::LeftUnbounded, Bound::RightOf(up)) => {
-                    Interval::UnboundedClosed(up)
+                    SerdeInterval::UnboundedClosed(up)
                 }
                 (Bound::RightOf(lo), Bound::LeftOf(up)) => {
-                    Interval::OpenOpen(lo, up)
+                    SerdeInterval::OpenOpen(lo, up)
                 }
                 (Bound::RightOf(lo), Bound::RightOf(up)) => {
-                    Interval::OpenClosed(lo, up)
+                    SerdeInterval::OpenClosed(lo, up)
                 }
                 (Bound::RightOf(lo), Bound::RightUnbounded) => {
-                    Interval::OpenUnbounded(lo)
+                    SerdeInterval::OpenUnbounded(lo)
                 }
                 (_, Bound::LeftUnbounded) | (Bound::RightUnbounded, _) => {
                     panic!("unexpected interval");
@@ -80,26 +74,35 @@ where
     where
         D: serde::de::Deserializer<'de>,
     {
-        Ok(match Interval::<T>::deserialize(deserializer)? {
-            Interval::Empty => crate::intervals::Interval::empty(),
-            Interval::ClosedOpen(lo, up) =>
-                crate::intervals::Interval::new_closed_open(lo, up),
-            Interval::ClosedClosed(lo, up) =>
-                crate::intervals::Interval::new_closed_closed(lo, up),
-            Interval::OpenClosed(lo, up) =>
-                crate::intervals::Interval::new_open_closed(lo, up),
-            Interval::OpenOpen(lo, up) =>
-                crate::intervals::Interval::new_open_open(lo, up),
-            Interval::OpenUnbounded(lo) =>
-                crate::intervals::Interval::new_open_unbounded(lo),
-            Interval::ClosedUnbounded(lo) =>
-                crate::intervals::Interval::new_closed_unbounded(lo),
-            Interval::UnboundedOpen(up) =>
-                crate::intervals::Interval::new_unbounded_open(up),
-            Interval::UnboundedClosed(up) =>
-                crate::intervals::Interval::new_unbounded_closed(up),
-            Interval::DoublyUnbounded =>
-                crate::intervals::Interval::doubly_unbounded(),
+        Ok(match SerdeInterval::<T>::deserialize(deserializer)? {
+            SerdeInterval::Empty => crate::intervals::Interval::empty(),
+            SerdeInterval::ClosedOpen(lo, up) => {
+                crate::intervals::Interval::new_closed_open(lo, up)
+            }
+            SerdeInterval::ClosedClosed(lo, up) => {
+                crate::intervals::Interval::new_closed_closed(lo, up)
+            }
+            SerdeInterval::OpenClosed(lo, up) => {
+                crate::intervals::Interval::new_open_closed(lo, up)
+            }
+            SerdeInterval::OpenOpen(lo, up) => {
+                crate::intervals::Interval::new_open_open(lo, up)
+            }
+            SerdeInterval::OpenUnbounded(lo) => {
+                crate::intervals::Interval::new_open_unbounded(lo)
+            }
+            SerdeInterval::ClosedUnbounded(lo) => {
+                crate::intervals::Interval::new_closed_unbounded(lo)
+            }
+            SerdeInterval::UnboundedOpen(up) => {
+                crate::intervals::Interval::new_unbounded_open(up)
+            }
+            SerdeInterval::UnboundedClosed(up) => {
+                crate::intervals::Interval::new_unbounded_closed(up)
+            }
+            SerdeInterval::DoublyUnbounded => {
+                crate::intervals::Interval::doubly_unbounded()
+            }
         })
     }
 }
