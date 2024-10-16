@@ -291,6 +291,20 @@ mod test {
         assert!(Interval::new_open_open(&0_u64, &1).is_empty());
         assert!(Interval::new_open_open(&2_u64, &1).is_empty());
 
+        #[cfg(feature = "std")]
+        {
+            let one_sec = std::time::Duration::from_secs(1);
+            let ten_sec = std::time::Duration::from_secs(10);
+            let ten_sec_one_ns = ten_sec + std::time::Duration::from_nanos(1);
+            assert!(Interval::new_closed_open(&one_sec, &one_sec).is_empty());
+            assert!(
+                Interval::new_open_open(&ten_sec, &ten_sec_one_ns).is_empty()
+            );
+            assert!(
+                Interval::new_open_open(&ten_sec_one_ns, &ten_sec).is_empty()
+            );
+        }
+
         #[cfg(feature = "chrono")]
         {
             let apr_1 = chrono::NaiveDate::from_ymd_opt(2024, 4, 1).unwrap();
