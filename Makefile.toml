@@ -4,15 +4,19 @@
 [config]
 default_to_workspace = false
 
+[tasks.default]
+alias = "workflow"
+
 [tasks.workflow]
-dependencies = [ "test", "format", "coverage", "doc", "fuzz" ]
+# Do not run "coverage" as it forces recompilation all the time
+dependencies = [ "format", "clippy", "doc", "fuzz" ]
 
-[tasks.test]
-dependencies = ["test-default", "test-nostd" ]
+[tasks.test-all]
+dependencies = ["test-all-features", "test-nostd" ]
 
-[tasks.test-default]
+[tasks.test-all-features]
 command = "cargo"
-args = ["test", "--features=chrono,serde"]
+args = ["test", "--all-features"]
 
 [tasks.test-nostd]
 command = "cargo"
@@ -24,7 +28,7 @@ env = { "CARGO_INCREMENTAL" = "0", "RUSTFLAGS" = "-Cinstrument-coverage", "LLVM_
 run_task = "codecov-grcov"
 
 [tasks.codecov-grcov]
-dependencies = [ "test" ]
+dependencies = [ "test-all-features" ]
 command = "grcov"
 args = [".", "-s", ".", "--binary-path", "${CARGO_MAKE_CRATE_TARGET_DIRECTORY}/debug/", "-t",  "html", "--branch", "--ignore-not-existing", "-o", "${CARGO_MAKE_CRATE_TARGET_DIRECTORY}/debug/coverage/"]
 
@@ -41,3 +45,7 @@ toolchain = "nightly"
 install_crate = "cargo-fuzz"
 command = "cargo"
 args = ["fuzz", "run", "fuzz_target_1", "--", "-max_total_time=10", "-max_len=1000"]
+
+[tasks.clippy]
+command = "cargo"
+args = ["clippy", "--all-features"]
