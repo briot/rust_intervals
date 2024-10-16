@@ -90,8 +90,8 @@ impl NothingBetween for std::time::Duration {
     }
 }
 
-// Blanket implementation so that we can create intervals of references (used in
-// particular to avoid cloning in the implementation of left_of)
+/// Blanket implementation so that we can create intervals of references (used in
+/// particular to avoid cloning in the implementation of left_of)
 impl<T: NothingBetween> NothingBetween for &T {
     fn nothing_between(&self, other: &Self) -> bool {
         (*self).nothing_between(*other)
@@ -110,5 +110,12 @@ impl<T: chrono::TimeZone> NothingBetween for chrono::DateTime<T> {
 impl NothingBetween for chrono::NaiveDate {
     fn nothing_between(&self, other: &Self) -> bool {
         other.signed_duration_since(*self) <= chrono::TimeDelta::days(1)
+    }
+}
+
+#[cfg(feature = "rust_decimal")]
+impl NothingBetween for rust_decimal::Decimal {
+    fn nothing_between(&self, _other: &Self) -> bool {
+        false // there is always a decimal between two others
     }
 }
