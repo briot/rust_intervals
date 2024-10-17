@@ -40,6 +40,10 @@ It provides the following features:
   - Operator overloads for the queries above
   - Support for `serde`
   - Support for `no_std`
+  - Support for standard traits like `Default`, `Clone`, `Display`, `Debug`,
+    `From<String>`, `From<Interval> -> String` and `FromStr`
+    depending on what your type provides.   See examples below on how to
+    convert to and from a string.
 
 Example
 -------
@@ -54,6 +58,24 @@ Example
    assert!(intv1.contains_interval(&intv2));
 
    let _ = intv1.convex_hull(&intv2);
+```
+
+An interval can be converted to a string using the various standard Rust
+approaches:
+```rust
+   use rust_intervals::{interval, Interval};
+
+   let intv1 = Interval::new_closed_open(1, 10);
+   let s = format!("{}", intv1);  // using the Display trait
+   let s = intv1.to_string();     // using the ToString trait (via Display)
+   let s = String::from(intv1);   // using From<Interval<T>>->String trait
+   let s: String = intv1.into();  // using the Into<String> trait
+
+   let s = "[1, 4]";
+   let intv = Interval::<u32>::from(s);  // using From<String> trait
+   let intv: Interval<u32> = s.into();   // using Into<Interval<T>> trait
+   let intv: Interval<u32> = s.parse()?; // using FromStr trait (may fail)
+
 ```
 
 Authors

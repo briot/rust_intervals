@@ -15,6 +15,16 @@ mod test {
         }
     }
 
+    macro_rules! assert_err {
+        ($expression:expr, $($pattern:tt)+) => {
+            match $expression {
+                $($pattern)+ => (),
+                ref e => panic!(
+                  "expected `{}` but got `{:?}`", stringify!($($pattern)+), e),
+            }
+        }
+    }
+
     fn assert_equivalent<T: PartialOrd + NothingBetween + Debug>(
         left: &Interval<T>,
         right: &Interval<T>,
@@ -402,19 +412,70 @@ mod test {
         assert_not_equivalent(&empty, &intv1);
     }
 
+    /// Using FromStr trait
+    #[test]
+    fn test_fromstr() -> Result<(), ParseError<::core::num::ParseIntError>> {
+        assert_eq!("[1,4]".parse::<Interval<u32>>()?, interval!(1, 4, "[]"));
+        assert_eq!("[ 1, 4)".parse::<Interval<u32>>()?, interval!(1, 4, "[)"));
+        assert_eq!("(1,4)".parse::<Interval<u8>>()?, interval!(1, 4, "()"));
+        assert_eq!("(1,4  ]".parse::<Interval<u8>>()?, interval!(1, 4, "(]"));
+        assert_eq!("(1,)".parse::<Interval<u8>>()?, interval!(1, "(inf"));
+        assert_eq!("[1,  )".parse::<Interval<u64>>()?, interval!(1, "[inf"));
+        assert_eq!("(,1)".parse::<Interval<u8>>()?, interval!("-inf", 1, ")"));
+        assert_eq!("( ,1]".parse::<Interval<u8>>()?, interval!("-inf", 1, "]"));
+        assert_eq!(
+            "(,)".parse::<Interval<u8>>()?,
+            Interval::doubly_unbounded()
+        );
+        assert_eq!("empty".parse::<Interval<i32>>()?, Interval::empty());
+        assert_err!(
+            "&1,2".parse::<Interval<i32>>(),
+            Err(ParseError::InvalidInput)
+        );
+        assert!("&1,2".parse::<Interval<i32>>().is_err());
+        Ok(())
+    }
+
+    /// Test From<Interval<T>> -> String
     #[cfg(feature = "std")]
     #[test]
-    fn test_io() {
-        assert_eq!(format!("{}", Interval::new_closed_closed(1, 4)), "[1, 4]",);
-        assert_eq!(format!("{}", Interval::new_closed_open(1, 4)), "[1, 4)",);
-        assert_eq!(format!("{}", Interval::new_open_closed(1, 4)), "(1, 4]",);
-        assert_eq!(format!("{}", Interval::new_open_open(1, 4)), "(1, 4)",);
-        assert_eq!(format!("{}", Interval::new_closed_unbounded(1)), "[1,)",);
-        assert_eq!(format!("{}", Interval::new_open_unbounded(1)), "(1,)",);
-        assert_eq!(format!("{}", Interval::new_unbounded_closed(1)), "(, 1]",);
-        assert_eq!(format!("{}", Interval::new_unbounded_open(1)), "(, 1)",);
-        assert_eq!(format!("{}", Interval::<f32>::doubly_unbounded()), "(,)",);
-        assert_eq!(format!("{}", Interval::<f32>::empty()), "empty",);
+    fn test_from_interval() {
+        let intv = Interval::new_open_open(1, 4);
+        assert_eq!(String::from(intv), "(1, 4)");
+
+        // Implemented automatically via same trait
+        let intv = Interval::new_open_open(1, 4);
+        let s: String = intv.into();
+        assert_eq!(s, "(1, 4)");
+    }
+
+    /// Test From<&str> -> Interval
+    #[test]
+    fn test_into_interval() {
+        // Will panic if the string is incorrect
+        let intv = Interval::<u32>::from("[1,4]");
+        assert_eq!(intv, interval!(1, 4, "[]"));
+
+        // Using  Into<Interval<T>>  for String, via same trait
+        let intv: Interval<u32> = "[1,4]".into();
+        assert_eq!(intv, interval!(1, 4, "[]"));
+    }
+
+    /// Test Display and ToString traits
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_display() {
+        assert_eq!(format!("{}", Interval::new_closed_closed(1, 4)), "[1, 4]");
+        assert_eq!(format!("{}", Interval::new_closed_open(1, 4)), "[1, 4)");
+        assert_eq!(Interval::new_closed_open(1, 4).to_string(), "[1, 4)");
+        assert_eq!(Interval::new_open_closed(1, 4).to_string(), "(1, 4]");
+        assert_eq!(Interval::new_open_open(1, 4).to_string(), "(1, 4)");
+        assert_eq!(Interval::new_closed_unbounded(1).to_string(), "[1,)");
+        assert_eq!(Interval::new_open_unbounded(1).to_string(), "(1,)");
+        assert_eq!(Interval::new_unbounded_closed(1).to_string(), "(, 1]");
+        assert_eq!(Interval::new_unbounded_open(1).to_string(), "(, 1)");
+        assert_eq!(Interval::<f32>::doubly_unbounded().to_string(), "(,)");
+        assert_eq!(Interval::<f32>::empty().to_string(), "empty");
         assert_eq!(
             format!("{}", Interval::new_closed_closed(1.0_f32, 4.0 - 0.1)),
             "[1, 3.9]",

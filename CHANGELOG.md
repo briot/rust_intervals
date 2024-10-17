@@ -10,3 +10,4 @@
  - support for no_std
  - support for serde
  - support for rust_decimal
+ - support for `From<&str>`, `From<Interval>` and `FromStr` traits

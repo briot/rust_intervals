@@ -9,7 +9,7 @@ alias = "workflow"
 
 [tasks.workflow]
 # Do not run "coverage" as it forces recompilation all the time
-dependencies = [ "format", "clippy", "doc", "fuzz" ]
+dependencies = [ "test-all", "format", "clippy", "doc", "fuzz" ]
 
 [tasks.test-all]
 dependencies = ["test-all-features", "test-nostd" ]

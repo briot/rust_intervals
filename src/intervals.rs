@@ -499,7 +499,7 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<&Interval<T>>
 }
 
 ///   &Interval - &Interval
-impl<T: PartialOrd + NothingBetween + Clone> core::ops::Sub<&Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<&Interval<T>>
     for &Interval<T>
 {
     type Output = MultiInterval<T>;
@@ -511,7 +511,7 @@ impl<T: PartialOrd + NothingBetween + Clone> core::ops::Sub<&Interval<T>>
 }
 
 ///   Interval - &Interval
-impl<T: PartialOrd + NothingBetween + Clone> core::ops::Sub<&Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<&Interval<T>>
     for Interval<T>
 {
     type Output = MultiInterval<T>;
@@ -523,7 +523,7 @@ impl<T: PartialOrd + NothingBetween + Clone> core::ops::Sub<&Interval<T>>
 }
 
 ///   &Interval - Interval
-impl<T: PartialOrd + NothingBetween + Clone> core::ops::Sub<Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<Interval<T>>
     for &Interval<T>
 {
     type Output = MultiInterval<T>;
@@ -535,7 +535,7 @@ impl<T: PartialOrd + NothingBetween + Clone> core::ops::Sub<Interval<T>>
 }
 
 ///   Interval - Interval
-impl<T: PartialOrd + NothingBetween + Clone> core::ops::Sub<Interval<T>>
+impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<Interval<T>>
     for Interval<T>
 {
     type Output = MultiInterval<T>;
@@ -576,6 +576,7 @@ impl<T: ::core::fmt::Debug + NothingBetween + PartialOrd> ::core::fmt::Debug
     }
 }
 
+/// Also provides an implementation for ToString
 impl<T: ::core::fmt::Display + NothingBetween + PartialOrd> ::core::fmt::Display
     for Interval<T>
 {
@@ -597,5 +598,106 @@ impl<T: ::core::fmt::Display + NothingBetween + PartialOrd> ::core::fmt::Display
             }
         }
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub enum ParseError<E> {
+    InvalidInput, // An invalid string was provided
+    Bound(E),     // An error while parsing bounds
+}
+
+impl<T, E> core::str::FromStr for Interval<T>
+where
+    T: core::str::FromStr<Err = E>,
+{
+    type Err = ParseError<E>;
+
+    /// This may fail and return an Error.  It is used in general via `parse()`.
+    /// It assumes the first occurrence of ',' in the string is the separator
+    /// for the two bounds of the interval, and is not part of the display for
+    /// one of the bounds.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "empty" {
+            return Ok(Interval::empty());
+        }
+
+        let mut input = s.char_indices();
+        let (_, lo_incl) = input.next().unwrap();
+        let mut up_incl: char = ']';
+        let mut lo: Option<T> = None;
+        let mut up: Option<T> = None;
+        let mut start_offset: Option<usize> = None;
+
+        for (c_offset, c) in input {
+            if c == ',' {
+                match start_offset {
+                    None => lo = None,
+                    Some(offs) => {
+                        lo = match s[offs..c_offset].trim() {
+                            "" => None,
+                            a => Some(
+                                a.parse::<T>()
+                                    .map_err(|e| ParseError::Bound(e))?,
+                            ),
+                        };
+                    }
+                }
+                start_offset = None;
+            } else if c == ']' || c == ')' {
+                match start_offset {
+                    None => up = None,
+                    Some(offs) => {
+                        up = match s[offs..c_offset].trim() {
+                            "" => None,
+                            a => Some(
+                                a.parse::<T>()
+                                    .map_err(|e| ParseError::Bound(e))?,
+                            ),
+                        };
+                    }
+                }
+                up_incl = c;
+            } else if start_offset.is_none() {
+                start_offset = Some(c_offset);
+            }
+        }
+
+        Ok(match (lo_incl, lo, up, up_incl) {
+            ('[', Some(lo), Some(up), ']') => {
+                Interval::new_closed_closed(lo, up)
+            }
+            ('[', Some(lo), Some(up), ')') => Interval::new_closed_open(lo, up),
+            ('(', Some(lo), Some(up), ')') => Interval::new_open_open(lo, up),
+            ('(', Some(lo), Some(up), ']') => Interval::new_open_closed(lo, up),
+            ('(', Some(lo), None, ')') => Interval::new_open_unbounded(lo),
+            ('[', Some(lo), None, ')') => Interval::new_closed_unbounded(lo),
+            ('(', None, Some(up), ')') => Interval::new_unbounded_open(up),
+            ('(', None, Some(up), ']') => Interval::new_unbounded_closed(up),
+            ('(', None, None, ')') => Interval::doubly_unbounded(),
+            _ => Err(ParseError::InvalidInput)?,
+        })
+    }
+}
+
+impl<T, E> ::core::convert::From<&str> for Interval<T>
+where
+    T: ::core::str::FromStr<Err = E>,
+    E: ::core::fmt::Debug,
+{
+    /// Convert from a string to an interval.  This may not fail (see FromStrg
+    /// otherwise).
+    /// The format of the string is similar to what Display provides.jjj
+    fn from(value: &str) -> Self {
+        value.parse().expect("Could not parse string")
+    }
+}
+
+#[cfg(feature = "std")]
+impl<T: ::core::fmt::Display + PartialOrd + NothingBetween>
+    ::core::convert::From<Interval<T>> for String
+{
+    fn from(value: Interval<T>) -> String {
+        format!("{}", value)
     }
 }
