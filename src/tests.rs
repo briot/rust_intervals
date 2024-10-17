@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod test {
     use crate::{bounds::Bound, *};
+    use ::core::cmp::Ordering;
     use ::core::fmt::Debug;
 
     // In the world of real, there is always something in-between, even if
@@ -508,6 +509,57 @@ mod test {
         let b3 = Bound::LeftOf(4);
         assert!(b3 == b2);
         assert!(b2 == b3);
+
+        let intv1 = interval!(1, 20, "[]");
+        let intv2 = interval!(1, 20, "()");
+        assert_eq!(intv1.partial_cmp(&intv1), Some(Ordering::Equal));
+        assert_eq!(intv1.partial_cmp(&intv2), Some(Ordering::Less));
+        assert_eq!(intv2.partial_cmp(&intv1), Some(Ordering::Greater));
+        assert_eq!(intv1.cmp(&intv1), Ordering::Equal);
+        assert_eq!(intv1.cmp(&intv2), Ordering::Less);
+        assert_eq!(intv2.cmp(&intv1), Ordering::Greater);
+        assert!(intv1 < intv2);
+
+        let intv3 = interval!(1, 30, "[]");
+        assert_eq!(intv1.partial_cmp(&intv3), Some(Ordering::Less));
+        assert_eq!(intv3.partial_cmp(&intv1), Some(Ordering::Greater));
+        assert_eq!(intv1.cmp(&intv3), Ordering::Less);
+        assert_eq!(intv3.cmp(&intv1), Ordering::Greater);
+        assert!(intv1 < intv3);
+
+        let intv4 = interval!("-inf", 20, "]");
+        assert_eq!(intv1.partial_cmp(&intv4), Some(Ordering::Greater));
+        assert_eq!(intv4.partial_cmp(&intv1), Some(Ordering::Less));
+        assert_eq!(intv1.cmp(&intv4), Ordering::Greater);
+        assert_eq!(intv4.cmp(&intv1), Ordering::Less);
+        assert!(intv1 > intv4);
+
+        let intv5 = interval!(1, "[inf");
+        assert_eq!(intv1.partial_cmp(&intv5), Some(Ordering::Less));
+        assert_eq!(intv5.partial_cmp(&intv1), Some(Ordering::Greater));
+        assert_eq!(intv1.cmp(&intv5), Ordering::Less);
+        assert_eq!(intv5.cmp(&intv1), Ordering::Greater);
+        assert!(intv1 < intv5);
+
+        let empty = Interval::empty();
+        assert_eq!(intv1.partial_cmp(&empty), Some(Ordering::Greater));
+        assert_eq!(empty.partial_cmp(&intv1), Some(Ordering::Less));
+        assert_eq!(intv1.cmp(&empty), Ordering::Greater);
+        assert_eq!(empty.cmp(&intv1), Ordering::Less);
+
+        let intv1 = interval!(1.0, f32::NAN);   // actually empty
+        let intv2 = interval!(1.0, 3.0);
+        assert_eq!(intv1.partial_cmp(&intv2), Some(Ordering::Less));
+        assert_eq!(intv2.partial_cmp(&intv1), Some(Ordering::Greater));
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_hash() {
+        let mut map = std::collections::HashMap::new();
+        map.insert(interval!(1, 2), 2);
+        map.insert(interval!(1, 3), 3);
+        assert_eq!(map.len(), 2);
     }
 
     #[test]

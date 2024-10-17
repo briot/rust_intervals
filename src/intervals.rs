@@ -563,6 +563,44 @@ impl<T: PartialOrd + NothingBetween> PartialEq for Interval<T> {
     }
 }
 
+impl<T: PartialOrd + NothingBetween> Eq for Interval<T> {}
+
+impl<T: PartialOrd + NothingBetween> PartialOrd for Interval<T> {
+    /// Whether self starts to the left of other.
+    /// If they start on the same value, whether self ends before other.
+    /// This function might return True even if self has points to the right of
+    /// every point in other.
+    /// An empty interval is always before another interval.
+    /// It has no real geometrical meaning.
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if other.is_empty() {
+            Some(Ordering::Greater)
+        } else if self.is_empty() {
+            Some(Ordering::Less)
+        } else {
+            match self.lower.partial_cmp(&other.lower) {
+                None => None,
+                Some(Ordering::Less) => Some(Ordering::Less),
+                Some(Ordering::Greater) => Some(Ordering::Greater),
+                Some(Ordering::Equal) => self.upper.partial_cmp(&other.upper),
+            }
+        }
+    }
+}
+
+impl<T: PartialOrd + Ord + NothingBetween> Ord for Interval<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
+impl<T: ::core::hash::Hash> ::core::hash::Hash for Interval<T> {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.lower.hash(state);
+        self.upper.hash(state);
+    }
+}
+
 impl<T: ::core::fmt::Debug + NothingBetween + PartialOrd> ::core::fmt::Debug
     for Interval<T>
 {

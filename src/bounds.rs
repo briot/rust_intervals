@@ -6,6 +6,7 @@ use ::core::cmp::{Ordering, PartialOrd};
 /// the value and its predecessor value.
 /// Likewise, RightOf represents a conceptual point halfway between the value
 /// and its successor.
+#[derive(::core::hash::Hash)]
 pub(crate) enum Bound<T> {
     LeftUnbounded,
     LeftOf(T),
@@ -118,6 +119,8 @@ impl<T: PartialOrd + NothingBetween> PartialEq for Bound<T> {
         self.eq(&other.as_ref())
     }
 }
+
+impl<T: PartialOrd + NothingBetween> Eq for Bound<T> { }
 
 impl<T: PartialOrd + NothingBetween> PartialOrd for Bound<T> {
     fn partial_cmp(&self, other: &Bound<T>) -> Option<Ordering> {
