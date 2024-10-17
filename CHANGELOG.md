@@ -1,6 +1,6 @@
 # Version History
 
-## 0.1.1
+## 0.2.0
 ### Added
 
  - new functions `left_of_interval`, `right_of_interval`
