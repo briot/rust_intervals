@@ -1,8 +1,11 @@
 # Version History
 
+## 0.2.1
+### Fixed
+ - fix clippy warning about derived Hash and custom PartialEq
+
 ## 0.2.0
 ### Added
-
  - new functions `left_of_interval`, `right_of_interval`
    and `strictly_right_of_interval`
  - support for more types `u128`, `usize`, `isize`, `time::Duration` and

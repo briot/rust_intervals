@@ -6,7 +6,6 @@ use ::core::cmp::{Ordering, PartialOrd};
 /// the value and its predecessor value.
 /// Likewise, RightOf represents a conceptual point halfway between the value
 /// and its successor.
-#[derive(::core::hash::Hash)]
 pub(crate) enum Bound<T> {
     LeftUnbounded,
     LeftOf(T),
@@ -83,6 +82,18 @@ impl<T> Bound<T> {
             Bound::LeftOf(point) => Bound::LeftOf(point),
             Bound::RightOf(point) => Bound::RightOf(point),
             Bound::RightUnbounded => Bound::RightUnbounded,
+        }
+    }
+}
+
+impl<T: ::core::hash::Hash> ::core::hash::Hash for Bound<T> {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        core::mem::discriminant(self).hash(state);
+        match self {
+            Bound::LeftUnbounded => {}
+            Bound::LeftOf(point) => point.hash(state),
+            Bound::RightOf(point) => point.hash(state),
+            Bound::RightUnbounded => {}
         }
     }
 }

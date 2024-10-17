@@ -36,7 +36,6 @@ It provides the following features:
      * `contiguous()`: whether two intervals are contiguous, with no values
        between them
      * `union()`: union of two contiguous intervals
-     * `Display` and `Debug` support
   - Operator overloads for the queries above
   - Support for `serde`
   - Support for `no_std`
