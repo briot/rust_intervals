@@ -642,10 +642,7 @@ impl<T> Interval<T> {
     }
 }
 
-impl<T> Default for Interval<T>
-where
-    T: Default,
-{
+impl<T> Default for Interval<T> {
     /// Returns an empty interval
     fn default() -> Self {
         Self::empty()
