@@ -702,11 +702,11 @@ mod test {
     fn test_difference() {
         let intv1 = Interval::new_closed_closed(10, 30);
         let empty = Interval::<i32>::empty();
-        assert_eq!(intv1.difference(&empty), MultiInterval::One(intv1.clone()));
-        assert_eq!(empty.difference(&intv1), MultiInterval::One(empty.clone()));
+        assert_eq!(intv1.difference(&empty), MultiInterval::One(intv1));
+        assert_eq!(empty.difference(&intv1), MultiInterval::One(empty));
 
         let intv2 = Interval::new_closed_closed(1, 50); //  larger
-        assert_eq!(intv1.difference(&intv2), MultiInterval::One(empty.clone()));
+        assert_eq!(intv1.difference(&intv2), MultiInterval::One(empty));
         assert_eq!(
             intv2.difference(&intv1),
             MultiInterval::Two(
@@ -722,8 +722,8 @@ mod test {
         );
 
         let intv3 = Interval::new_closed_closed(1, 5); // disjoint
-        assert_eq!(intv1.difference(&intv3), MultiInterval::One(intv1.clone()));
-        assert_eq!(intv3.difference(&intv1), MultiInterval::One(intv3.clone()));
+        assert_eq!(intv1.difference(&intv3), MultiInterval::One(intv1));
+        assert_eq!(intv3.difference(&intv1), MultiInterval::One(intv3));
 
         #[cfg(feature = "std")]
         assert_eq!(
@@ -744,14 +744,10 @@ mod test {
         );
 
         //  Check the variants of subtraction
-        assert_eq!(&intv1 - &empty, MultiInterval::One(intv1.clone()));
-        let e = empty.clone();
-        assert_eq!(&intv1 - e, MultiInterval::One(intv1.clone()));
-        let i = intv1.clone();
-        assert_eq!(i - &empty, MultiInterval::One(intv1.clone()));
-        let i = intv1.clone();
-        let e = empty.clone();
-        assert_eq!(i - e, MultiInterval::One(intv1.clone()));
+        assert_eq!(&intv1 - &empty, MultiInterval::One(intv1));
+        assert_eq!(&intv1 - empty, MultiInterval::One(intv1));
+        assert_eq!(intv1 - &empty, MultiInterval::One(intv1));
+        assert_eq!(intv1 - empty, MultiInterval::One(intv1));
     }
 
     #[test]
@@ -823,14 +819,10 @@ mod test {
         );
 
         //  Check the variants of "&"
-        assert_eq!(&intv1 & &intv2, empty.clone());
-        let iv2 = intv2.clone();
-        assert_eq!(&intv1 & iv2, empty.clone());
-        let iv1 = intv1.clone();
-        let iv2 = intv2.clone();
-        assert_eq!(iv1 & &iv2, empty.clone());
-        let iv1 = intv1.clone();
-        assert_eq!(iv1 & iv2, empty.clone());
+        assert_eq!(&intv1 & &intv2, empty);
+        assert_eq!(&intv1 & intv2, empty.clone());
+        assert_eq!(intv1 & &intv2, empty.clone());
+        assert_eq!(intv1 & intv2, empty.clone());
     }
 
     #[test]
@@ -839,11 +831,11 @@ mod test {
         let empty = Interval::<i32>::empty();
         assert_eq!(
             intv1.symmetric_difference(&empty),
-            MultiInterval::One(intv1.clone())
+            MultiInterval::One(intv1)
         );
         assert_eq!(
             empty.symmetric_difference(&intv1),
-            MultiInterval::One(intv1.clone())
+            MultiInterval::One(intv1)
         );
 
         let intv2 = Interval::new_closed_closed(1, 50); //  larger
@@ -865,11 +857,11 @@ mod test {
         let intv3 = Interval::new_closed_closed(1, 5); // disjoint
         assert_eq!(
             intv1.symmetric_difference(&intv3),
-            MultiInterval::Two(intv3.clone(), intv1.clone(),),
+            MultiInterval::Two(intv3, intv1,),
         );
         assert_eq!(
             intv3.symmetric_difference(&intv1),
-            MultiInterval::Two(intv3.clone(), intv1.clone(),),
+            MultiInterval::Two(intv3, intv1,),
         );
 
         let intv4 = Interval::new_closed_closed(1, 15); // overlaps left
@@ -891,14 +883,10 @@ mod test {
         );
 
         //  Check the variants of subtraction
-        assert_eq!(&intv1 ^ &empty, MultiInterval::One(intv1.clone()));
-        let e = empty.clone();
-        assert_eq!(&intv1 ^ e, MultiInterval::One(intv1.clone()));
-        let i = intv1.clone();
-        assert_eq!(i ^ &empty, MultiInterval::One(intv1.clone()));
-        let i = intv1.clone();
-        let e = empty.clone();
-        assert_eq!(i ^ e, MultiInterval::One(intv1.clone()));
+        assert_eq!(&intv1 ^ &empty, MultiInterval::One(intv1));
+        assert_eq!(&intv1 ^ empty, MultiInterval::One(intv1));
+        assert_eq!(intv1 ^ &empty, MultiInterval::One(intv1));
+        assert_eq!(intv1 ^ empty, MultiInterval::One(intv1));
     }
 
     #[test]
