@@ -38,7 +38,7 @@ script = "rm -f *.profraw"
 
 [tasks.doc]
 command = "cargo"
-args = [ "doc" ]
+args = [ "doc", "-p", "rust_intervals" ]
 
 [tasks.fuzz]
 toolchain = "nightly"

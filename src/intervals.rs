@@ -346,6 +346,13 @@ impl<T> Interval<T> {
     }
 
     /// Whether the two intervals contain the same set of values
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = interval!(1, 10);
+    ///    let intv2 = interval!(1, 9, "[]");
+    ///    assert!(intv1.equivalent(&intv2));
+    ///    assert!(intv1 == intv2);   //  same
+    /// ```
     pub fn equivalent(&self, other: &Self) -> bool
     where
         T: PartialOrd + NothingBetween,
@@ -485,6 +492,14 @@ impl<T> Interval<T> {
     }
 
     /// Returns the result of removing all values in right from self.
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = interval!(1, 20);
+    ///    let intv2 = interval!(10, 30, "[]");
+    ///    let res1 = intv1.difference(&intv2);
+    ///    let res2 = intv1 - intv2;
+    ///    assert_eq!(res1, res2);
+    /// ```
     pub fn difference(&self, right: &Self) -> MultiInterval<T>
     where
         T: PartialOrd + NothingBetween + Clone,
@@ -507,6 +522,14 @@ impl<T> Interval<T> {
 
     /// Returns the values that are in either of the intervals, but not
     /// both.
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = interval!(1, 20);
+    ///    let intv2 = interval!(10, 30, "[]");
+    ///    let res1 = intv1.symmetric_difference(&intv2);
+    ///    let res2 = intv1 ^ intv2;
+    ///    assert_eq!(res1, res2);
+    /// ```
     pub fn symmetric_difference(&self, right: &Self) -> MultiInterval<T>
     where
         T: PartialOrd + NothingBetween + Clone,
@@ -547,6 +570,14 @@ impl<T> Interval<T> {
 
     /// Returns the intersection of the two intervals.  This is the same as the
     /// [`&`] operator.
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = interval!(1, 20);
+    ///    let intv2 = interval!(10, 30, "[]");
+    ///    let res1 = intv1.intersection(&intv2);
+    ///    let res2 = intv1 & intv2;
+    ///    assert_eq!(res1, res2);
+    /// ```
     pub fn intersection(&self, right: &Self) -> Self
     where
         T: PartialOrd + NothingBetween + Clone,
@@ -591,6 +622,14 @@ impl<T> Interval<T> {
 
     /// Returns the union of the two intervals, if they are contiguous.
     /// If not, returns None.
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = interval!(1, 20);
+    ///    let intv2 = interval!(20, 30);
+    ///    let res1 = intv1.union(&intv2);
+    ///    let res2 = intv1 | intv2;
+    ///    assert_eq!(res1, res2);
+    /// ```
     pub fn union(&self, right: &Self) -> Option<Self>
     where
         T: PartialOrd + NothingBetween + Clone,
@@ -658,6 +697,54 @@ where
 
     fn bitxor(self, rhs: &Interval<T>) -> Self::Output {
         self.symmetric_difference(rhs)
+    }
+}
+
+///  &Interval | &Interval
+impl<T> ::core::ops::BitOr<&Interval<T>> for &Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
+{
+    type Output = Option<Interval<T>>;
+
+    fn bitor(self, rhs: &Interval<T>) -> Self::Output {
+        self.union(rhs)
+    }
+}
+
+///  &Interval | Interval
+impl<T> ::core::ops::BitOr<Interval<T>> for &Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
+{
+    type Output = Option<Interval<T>>;
+
+    fn bitor(self, rhs: Interval<T>) -> Self::Output {
+        self.union(&rhs)
+    }
+}
+
+///  Interval | Interval
+impl<T> ::core::ops::BitOr<Interval<T>> for Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
+{
+    type Output = Option<Interval<T>>;
+
+    fn bitor(self, rhs: Interval<T>) -> Self::Output {
+        self.union(&rhs)
+    }
+}
+
+///  Interval | &Interval
+impl<T> ::core::ops::BitOr<&Interval<T>> for Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
+{
+    type Output = Option<Interval<T>>;
+
+    fn bitor(self, rhs: &Interval<T>) -> Self::Output {
+        self.union(rhs)
     }
 }
 

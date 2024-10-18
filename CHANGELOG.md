@@ -4,6 +4,7 @@
 ### Added
  - support for `Copy`
  - interact with Rust ranges `from_range()`
+ - provide `BitOr` trait (equivalent to `union()`)
 
 ## 0.2.1
 ### Fixed

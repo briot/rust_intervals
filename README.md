@@ -36,7 +36,7 @@ It provides the following features:
      * `contiguous()`: whether two intervals are contiguous, with no values
        between them
      * `union()`: union of two contiguous intervals
-  - Operator overloads for the queries above
+  - Operator overloads for the queries above (`&`, `|`, `^`, `==`)
   - Support for `serde`
   - Support for `no_std`
   - Support for standard traits like `Default`, `Clone`, `Copy`, `Display`,
