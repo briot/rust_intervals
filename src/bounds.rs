@@ -13,9 +13,12 @@ pub(crate) enum Bound<T> {
     RightUnbounded,
 }
 
-impl<T: PartialOrd> Bound<T> {
+impl<T> Bound<T> {
     /// True if value is to the right of the bound
-    pub(crate) fn left_of(&self, value: &T) -> bool {
+    pub(crate) fn left_of(&self, value: &T) -> bool
+    where
+        T: PartialOrd,
+    {
         match self {
             Bound::LeftUnbounded => true,
             Bound::LeftOf(point) => *point <= *value,
@@ -25,7 +28,10 @@ impl<T: PartialOrd> Bound<T> {
     }
 
     /// True if the value is to the left of the bound
-    pub(crate) fn right_of(&self, value: &T) -> bool {
+    pub(crate) fn right_of(&self, value: &T) -> bool
+    where
+        T: PartialOrd,
+    {
         match self {
             Bound::LeftUnbounded => false,
             Bound::LeftOf(point) => *value < *point,
@@ -33,10 +39,11 @@ impl<T: PartialOrd> Bound<T> {
             Bound::RightUnbounded => true,
         }
     }
-}
 
-impl<T: PartialOrd + NothingBetween + Clone> Bound<T> {
-    pub(crate) fn min(&self, right: &Self) -> Self {
+    pub(crate) fn min(&self, right: &Self) -> Self
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
         if self < right {
             self.clone()
         } else {
@@ -44,28 +51,17 @@ impl<T: PartialOrd + NothingBetween + Clone> Bound<T> {
         }
     }
 
-    pub(crate) fn max(&self, right: &Self) -> Self {
+    pub(crate) fn max(&self, right: &Self) -> Self
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
         if self > right {
             self.clone()
         } else {
             right.clone()
         }
     }
-}
 
-impl<T: ::core::fmt::Debug> ::core::fmt::Debug for Bound<T> {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        match self {
-            Bound::LeftUnbounded => write!(f, "-infinity")?,
-            Bound::LeftOf(point) => write!(f, "LeftOf({point:?})")?,
-            Bound::RightOf(point) => write!(f, "RightOf({point:?})")?,
-            Bound::RightUnbounded => write!(f, "+infinity")?,
-        }
-        Ok(())
-    }
-}
-
-impl<T> Bound<T> {
     /// Return the bound's value (which might be included in the interval
     /// or not).  This returns None for an unbounded bound.
     pub(crate) fn value(&self) -> Option<&T> {
@@ -86,7 +82,25 @@ impl<T> Bound<T> {
     }
 }
 
-impl<T: ::core::hash::Hash> ::core::hash::Hash for Bound<T> {
+impl<T> ::core::fmt::Debug for Bound<T>
+where
+    T: ::core::fmt::Debug,
+{
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        match self {
+            Bound::LeftUnbounded => write!(f, "-infinity")?,
+            Bound::LeftOf(point) => write!(f, "LeftOf({point:?})")?,
+            Bound::RightOf(point) => write!(f, "RightOf({point:?})")?,
+            Bound::RightUnbounded => write!(f, "+infinity")?,
+        }
+        Ok(())
+    }
+}
+
+impl<T> ::core::hash::Hash for Bound<T>
+where
+    T: ::core::hash::Hash,
+{
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         core::mem::discriminant(self).hash(state);
         match self {
@@ -98,7 +112,10 @@ impl<T: ::core::hash::Hash> ::core::hash::Hash for Bound<T> {
     }
 }
 
-impl<T: PartialOrd + NothingBetween> PartialEq<Bound<&T>> for Bound<T> {
+impl<T> PartialEq<Bound<&T>> for Bound<T>
+where
+    T: PartialOrd + NothingBetween,
+{
     //  Bound is never equal to an exact value.  Doesn't matter since we only
     //  compare for strict inequality
     fn eq(&self, other: &Bound<&T>) -> bool {
@@ -123,7 +140,10 @@ impl<T: PartialOrd + NothingBetween> PartialEq<Bound<&T>> for Bound<T> {
     }
 }
 
-impl<T: PartialOrd + NothingBetween> PartialEq for Bound<T> {
+impl<T> PartialEq for Bound<T>
+where
+    T: PartialOrd + NothingBetween,
+{
     //  Bound is never equal to an exact value.  Doesn't matter since we only
     //  compare for strict inequality
     fn eq(&self, other: &Bound<T>) -> bool {
@@ -131,15 +151,21 @@ impl<T: PartialOrd + NothingBetween> PartialEq for Bound<T> {
     }
 }
 
-impl<T: PartialOrd + NothingBetween> Eq for Bound<T> { }
+impl<T> Eq for Bound<T> where T: PartialOrd + NothingBetween {}
 
-impl<T: PartialOrd + NothingBetween> PartialOrd for Bound<T> {
+impl<T> PartialOrd for Bound<T>
+where
+    T: PartialOrd + NothingBetween,
+{
     fn partial_cmp(&self, other: &Bound<T>) -> Option<Ordering> {
         self.partial_cmp(&other.as_ref())
     }
 }
 
-impl<T: PartialOrd + NothingBetween> PartialOrd<Bound<&T>> for Bound<T> {
+impl<T> PartialOrd<Bound<&T>> for Bound<T>
+where
+    T: PartialOrd + NothingBetween,
+{
     /// Two bounds (either lower and upper of same interval, or possibly
     /// lowers from two intervals) might be equivalent if there is nothing
     /// between them.
@@ -186,7 +212,10 @@ impl<T: PartialOrd + NothingBetween> PartialOrd<Bound<&T>> for Bound<T> {
     }
 }
 
-impl<T: Clone> ::core::clone::Clone for Bound<T> {
+impl<T> ::core::clone::Clone for Bound<T>
+where
+    T: Clone,
+{
     fn clone(&self) -> Self {
         match self {
             Bound::LeftUnbounded => Bound::LeftUnbounded,
@@ -197,4 +226,4 @@ impl<T: Clone> ::core::clone::Clone for Bound<T> {
     }
 }
 
-impl<T: Copy> Copy for Bound<T> {}
+impl<T> Copy for Bound<T> where T: Copy {}

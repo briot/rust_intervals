@@ -163,6 +163,83 @@ impl<T> Interval<T> {
         }
     }
 
+    /// Returns an interval that contains a single value (`[value,value]`)
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::new_single(32);
+    ///    let intv2 = interval!(32, 33);
+    ///    let intv3 = interval!(32, 32, "[]");
+    ///    let intv4 = interval!(31, 33, "()");
+    /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
+    /// #  assert_eq!(intv1, intv4);
+    /// ```
+    pub fn new_single(value: T) -> Self
+    where
+        T: Clone,
+    {
+        Interval::new_closed_closed(value.clone(), value)
+    }
+
+    /// Build an interval from one of Rust's range types. In most cases, you can
+    /// also simply use `into()`
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::from_range(1..3);
+    ///    assert_eq!(intv1, interval!(1, 3, "[)"));
+    ///
+    ///    let intv1: Interval<_> = (1..3).into();   //  same as above
+    ///
+    ///    let intv1 = Interval::from_range(1..=3);
+    ///    assert_eq!(intv1, interval!(1, 3, "[]"));
+    ///
+    ///    let intv1 = Interval::from_range(1..);
+    ///    assert_eq!(intv1, interval!(1, "[inf"));
+    ///
+    ///    let intv1 = Interval::from_range(..3);
+    ///    assert_eq!(intv1, interval!("-inf", 3, ")"));
+    ///
+    ///    let intv1 = Interval::from_range(..=3);
+    ///    assert_eq!(intv1, interval!("-inf", 3, "]"));
+    ///
+    ///    let intv1 = Interval::<f32>::from_range(..);
+    ///    assert_eq!(intv1, Interval::doubly_unbounded());
+    /// ```
+    pub fn from_range<R: RangeBounds<T>>(range: R) -> Self
+    where
+        T: Clone,
+    {
+        match (range.start_bound(), range.end_bound()) {
+            (RgBound::Included(lo), RgBound::Included(up)) => {
+                Interval::new_closed_closed(lo.clone(), up.clone())
+            }
+            (RgBound::Included(lo), RgBound::Excluded(up)) => {
+                Interval::new_closed_open(lo.clone(), up.clone())
+            }
+            (RgBound::Excluded(lo), RgBound::Included(up)) => {
+                Interval::new_open_closed(lo.clone(), up.clone())
+            }
+            (RgBound::Excluded(lo), RgBound::Excluded(up)) => {
+                Interval::new_open_open(lo.clone(), up.clone())
+            }
+            (RgBound::Unbounded, RgBound::Included(up)) => {
+                Interval::new_unbounded_closed(up.clone())
+            }
+            (RgBound::Unbounded, RgBound::Excluded(up)) => {
+                Interval::new_unbounded_open(up.clone())
+            }
+            (RgBound::Unbounded, RgBound::Unbounded) => {
+                Interval::doubly_unbounded()
+            }
+            (RgBound::Included(lo), RgBound::Unbounded) => {
+                Interval::new_closed_unbounded(lo.clone())
+            }
+            (RgBound::Excluded(lo), RgBound::Unbounded) => {
+                Interval::new_open_unbounded(lo.clone())
+            }
+        }
+    }
+
     /// The lower bound.  Returns None for an unbounded interval (i.e. lower
     /// is -infinity).
     /// For an empty interval, it returns whatever what used to create the
@@ -210,20 +287,6 @@ impl<T> Interval<T> {
             upper: self.upper.as_ref(),
         }
     }
-}
-
-impl<T: PartialOrd + NothingBetween> Interval<T> {
-    /// Whether value is contained in the interval
-    pub fn contains(&self, value: &T) -> bool {
-        self.lower.left_of(value) && self.upper.right_of(value)
-    }
-
-    /// Whether self contains all values of the second interval (and possibly
-    /// more).
-    pub fn contains_interval(&self, other: &Self) -> bool {
-        other.is_empty()
-            || (self.lower <= other.lower && other.upper <= self.upper)
-    }
 
     /// True if the interval contains no element.
     /// This highly depends on how the NothingBetween trait was implemented.
@@ -253,7 +316,10 @@ impl<T: PartialOrd + NothingBetween> Interval<T> {
     /// then the same interval `[Real(1.0), Real(1.0 + f32::EPSILON)]` is
     /// no longer empty, even though we cannot represent any number from this
     /// interval.
-    pub fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         match self.upper.partial_cmp(&self.lower) {
             None => true, //  can't compare bounds
             Some(Ordering::Equal | Ordering::Less) => true,
@@ -261,8 +327,29 @@ impl<T: PartialOrd + NothingBetween> Interval<T> {
         }
     }
 
+    /// Whether value is contained in the interval
+    pub fn contains(&self, value: &T) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
+        self.lower.left_of(value) && self.upper.right_of(value)
+    }
+
+    /// Whether self contains all values of the second interval (and possibly
+    /// more).
+    pub fn contains_interval(&self, other: &Self) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
+        other.is_empty()
+            || (self.lower <= other.lower && other.upper <= self.upper)
+    }
+
     /// Whether the two intervals contain the same set of values
-    pub fn equivalent(&self, other: &Self) -> bool {
+    pub fn equivalent(&self, other: &Self) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         if self.is_empty() {
             other.is_empty()
         } else if other.is_empty() {
@@ -278,7 +365,10 @@ impl<T: PartialOrd + NothingBetween> Interval<T> {
     ///    [------] .
     ///             X    => strictly left of the interval
     /// ```
-    pub fn strictly_left_of(&self, x: &T) -> bool {
+    pub fn strictly_left_of(&self, x: &T) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         self.is_empty() || self.upper.left_of(x)
     }
 
@@ -288,7 +378,10 @@ impl<T: PartialOrd + NothingBetween> Interval<T> {
     ///    . [------]
     ///    X           => strictly right of the interval
     /// ```
-    pub fn strictly_right_of(&self, x: &T) -> bool {
+    pub fn strictly_right_of(&self, x: &T) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         self.is_empty() || self.lower.right_of(x)
     }
 
@@ -298,7 +391,10 @@ impl<T: PartialOrd + NothingBetween> Interval<T> {
     ///    [------]
     ///           X    => left of the interval (but not strictly left of)
     /// ```
-    pub fn left_of(&self, x: &T) -> bool {
+    pub fn left_of(&self, x: &T) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         self.is_empty() || self.upper <= Bound::RightOf(x)
     }
 
@@ -308,33 +404,48 @@ impl<T: PartialOrd + NothingBetween> Interval<T> {
     ///      [------]
     ///      X           => right of the interval (but not strictly right of)
     /// ```
-    pub fn right_of(&self, x: &T) -> bool {
+    pub fn right_of(&self, x: &T) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         self.is_empty() || self.lower >= Bound::LeftOf(x)
     }
 
     /// Whether every value in self is less than or equal (<=) to every value
     /// in right (returns true if either interval is empty).
-    pub fn left_of_interval(&self, right: &Self) -> bool {
+    pub fn left_of_interval(&self, right: &Self) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         self.strictly_left_of_interval(right)
             || self.upper.value() == right.lower.value()
     }
 
     /// Whethever every value in self is greater or equal (>=) to every value
     /// in right (returns true if either inverval is empty)
-    pub fn right_of_interval(&self, right: &Self) -> bool {
+    pub fn right_of_interval(&self, right: &Self) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         self.strictly_right_of_interval(right)
             || self.lower.value() == right.upper.value()
     }
 
     /// Whether every value in self is strictly less than (<) every value in
     /// right (returns True if either interval is empty).
-    pub fn strictly_left_of_interval(&self, right: &Self) -> bool {
+    pub fn strictly_left_of_interval(&self, right: &Self) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         self.is_empty() || right.is_empty() || self.upper <= right.lower
     }
 
     /// Whether every value in self is strictly greater than (>) every value in
     /// right (returns True if either interval is empty).
-    pub fn strictly_right_of_interval(&self, right: &Self) -> bool {
+    pub fn strictly_right_of_interval(&self, right: &Self) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         self.is_empty() || right.is_empty() || right.upper <= self.lower
     }
 
@@ -342,91 +453,25 @@ impl<T: PartialOrd + NothingBetween> Interval<T> {
     /// This returns false for any other kind of interval, even if they
     /// happen to contain a single value.
     /// ```
-    /// use rust_intervals::Interval;
-    /// assert!(!Interval::new_open_open(0, 2).is_single());
+    /// # use rust_intervals::Interval;
+    ///   assert!(!Interval::new_open_open(0, 2).is_single());
     /// ```
-    pub fn is_single(&self) -> bool {
+    pub fn is_single(&self) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         match (&self.lower, &self.upper) {
             (Bound::LeftOf(lp), Bound::RightOf(rp)) => *lp == *rp,
             _ => false,
         }
     }
-}
 
-impl<T: Default> Default for Interval<T> {
-    /// Returns an empty interval
-    fn default() -> Self {
-        Self::empty()
-    }
-}
-
-impl<T: Clone> Interval<T> {
-    /// Returns an interval that contains a single value (`[value,value]`)
-    pub fn new_single(value: T) -> Self {
-        Interval::new_closed_closed(value.clone(), value)
-    }
-
-    /// Build an interval from one of Rust's range types. In most cases, you can
-    /// also simply use `into()`
-    /// ```
-    ///    use rust_intervals::{interval, Interval};
-    ///    let intv1 = Interval::from_range(1..3);
-    ///    assert_eq!(intv1, interval!(1, 3, "[)"));
-    ///
-    ///    let intv1: Interval<_> = (1..3).into();   //  same as above
-    ///
-    ///    let intv1 = Interval::from_range(1..=3);
-    ///    assert_eq!(intv1, interval!(1, 3, "[]"));
-    ///
-    ///    let intv1 = Interval::from_range(1..);
-    ///    assert_eq!(intv1, interval!(1, "[inf"));
-    ///
-    ///    let intv1 = Interval::from_range(..3);
-    ///    assert_eq!(intv1, interval!("-inf", 3, ")"));
-    ///
-    ///    let intv1 = Interval::from_range(..=3);
-    ///    assert_eq!(intv1, interval!("-inf", 3, "]"));
-    ///
-    ///    let intv1 = Interval::<f32>::from_range(..);
-    ///    assert_eq!(intv1, Interval::doubly_unbounded());
-    /// ```
-    pub fn from_range<R: RangeBounds<T>>(range: R) -> Self {
-        match (range.start_bound(), range.end_bound()) {
-            (RgBound::Included(lo), RgBound::Included(up)) => {
-                Interval::new_closed_closed(lo.clone(), up.clone())
-            }
-            (RgBound::Included(lo), RgBound::Excluded(up)) => {
-                Interval::new_closed_open(lo.clone(), up.clone())
-            }
-            (RgBound::Excluded(lo), RgBound::Included(up)) => {
-                Interval::new_open_closed(lo.clone(), up.clone())
-            }
-            (RgBound::Excluded(lo), RgBound::Excluded(up)) => {
-                Interval::new_open_open(lo.clone(), up.clone())
-            }
-            (RgBound::Unbounded, RgBound::Included(up)) => {
-                Interval::new_unbounded_closed(up.clone())
-            }
-            (RgBound::Unbounded, RgBound::Excluded(up)) => {
-                Interval::new_unbounded_open(up.clone())
-            }
-            (RgBound::Unbounded, RgBound::Unbounded) => {
-                Interval::doubly_unbounded()
-            }
-            (RgBound::Included(lo), RgBound::Unbounded) => {
-                Interval::new_closed_unbounded(lo.clone())
-            }
-            (RgBound::Excluded(lo), RgBound::Unbounded) => {
-                Interval::new_open_unbounded(lo.clone())
-            }
-        }
-    }
-}
-
-impl<T: PartialOrd + NothingBetween + Clone> Interval<T> {
     /// Returns the convex hull of the two intervals, i.e. the smallest
     /// interval that contains the values of both intervals.
-    pub fn convex_hull(&self, right: &Self) -> Self {
+    pub fn convex_hull(&self, right: &Self) -> Self
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
         if self.is_empty() {
             right.clone()
         } else if right.is_empty() {
@@ -440,7 +485,10 @@ impl<T: PartialOrd + NothingBetween + Clone> Interval<T> {
     }
 
     /// Returns the result of removing all values in right from self.
-    pub fn difference(&self, right: &Self) -> MultiInterval<T> {
+    pub fn difference(&self, right: &Self) -> MultiInterval<T>
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
         if self.is_empty() || right.is_empty() {
             MultiInterval::One(self.clone())
         } else {
@@ -459,7 +507,10 @@ impl<T: PartialOrd + NothingBetween + Clone> Interval<T> {
 
     /// Returns the values that are in either of the intervals, but not
     /// both.
-    pub fn symmetric_difference(&self, right: &Self) -> MultiInterval<T> {
+    pub fn symmetric_difference(&self, right: &Self) -> MultiInterval<T>
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
         if self.is_empty() || right.is_empty() {
             MultiInterval::new_from_two(self.clone(), right.clone())
         } else {
@@ -484,7 +535,10 @@ impl<T: PartialOrd + NothingBetween + Clone> Interval<T> {
 
     /// Whether the two intervals overlap, i.e. have at least one point in
     /// common
-    pub fn intersects(&self, right: &Self) -> bool {
+    pub fn intersects(&self, right: &Self) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
         !self.is_empty()
             && !right.is_empty()
             && self.lower < right.upper
@@ -493,7 +547,10 @@ impl<T: PartialOrd + NothingBetween + Clone> Interval<T> {
 
     /// Returns the intersection of the two intervals.  This is the same as the
     /// [`&`] operator.
-    pub fn intersection(&self, right: &Self) -> Self {
+    pub fn intersection(&self, right: &Self) -> Self
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
         Interval {
             lower: self.lower.max(&right.lower),
             upper: self.upper.min(&right.upper),
@@ -505,7 +562,10 @@ impl<T: PartialOrd + NothingBetween + Clone> Interval<T> {
     /// This is empty if either of the two intervals is empty.
     /// If none of the intervals is empty, this consists of all values that
     /// are strictly between the given intervals
-    pub fn between(&self, right: &Self) -> Self {
+    pub fn between(&self, right: &Self) -> Self
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
         if self.is_empty() || right.is_empty() {
             Interval::empty()
         } else {
@@ -518,7 +578,10 @@ impl<T: PartialOrd + NothingBetween + Clone> Interval<T> {
 
     /// If neither interval is empty, returns true if no value lies between
     /// them.  True if either of the intervals is empty.
-    pub fn contiguous(&self, right: &Self) -> bool {
+    pub fn contiguous(&self, right: &Self) -> bool
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
         if self.is_empty() || right.is_empty() {
             true
         } else {
@@ -528,7 +591,10 @@ impl<T: PartialOrd + NothingBetween + Clone> Interval<T> {
 
     /// Returns the union of the two intervals, if they are contiguous.
     /// If not, returns None.
-    pub fn union(&self, right: &Self) -> Option<Self> {
+    pub fn union(&self, right: &Self) -> Option<Self>
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
         if self.contiguous(right) {
             Some(self.convex_hull(right))
         } else {
@@ -537,9 +603,20 @@ impl<T: PartialOrd + NothingBetween + Clone> Interval<T> {
     }
 }
 
+impl<T> Default for Interval<T>
+where
+    T: Default,
+{
+    /// Returns an empty interval
+    fn default() -> Self {
+        Self::empty()
+    }
+}
+
 ///  &Interval ^ &Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<&Interval<T>>
-    for &Interval<T>
+impl<T> ::core::ops::BitXor<&Interval<T>> for &Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = MultiInterval<T>;
 
@@ -549,8 +626,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<&Interval<T>>
 }
 
 ///  &Interval ^ Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<Interval<T>>
-    for &Interval<T>
+impl<T> ::core::ops::BitXor<Interval<T>> for &Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = MultiInterval<T>;
 
@@ -560,8 +638,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<Interval<T>>
 }
 
 ///  Interval ^ Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<Interval<T>>
-    for Interval<T>
+impl<T> ::core::ops::BitXor<Interval<T>> for Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = MultiInterval<T>;
 
@@ -571,8 +650,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<Interval<T>>
 }
 
 ///  Interval ^ &Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<&Interval<T>>
-    for Interval<T>
+impl<T> ::core::ops::BitXor<&Interval<T>> for Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = MultiInterval<T>;
 
@@ -582,8 +662,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitXor<&Interval<T>>
 }
 
 ///  &Interval & &Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<&Interval<T>>
-    for &Interval<T>
+impl<T> ::core::ops::BitAnd<&Interval<T>> for &Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = Interval<T>;
 
@@ -593,8 +674,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<&Interval<T>>
 }
 
 ///  &Interval & Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<Interval<T>>
-    for &Interval<T>
+impl<T> ::core::ops::BitAnd<Interval<T>> for &Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = Interval<T>;
 
@@ -604,8 +686,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<Interval<T>>
 }
 
 ///  Interval & Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<Interval<T>>
-    for Interval<T>
+impl<T> ::core::ops::BitAnd<Interval<T>> for Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = Interval<T>;
 
@@ -615,8 +698,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<Interval<T>>
 }
 
 ///  Interval & &Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<&Interval<T>>
-    for Interval<T>
+impl<T> ::core::ops::BitAnd<&Interval<T>> for Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = Interval<T>;
 
@@ -626,8 +710,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::BitAnd<&Interval<T>>
 }
 
 ///   &Interval - &Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<&Interval<T>>
-    for &Interval<T>
+impl<T> ::core::ops::Sub<&Interval<T>> for &Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = MultiInterval<T>;
 
@@ -638,8 +723,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<&Interval<T>>
 }
 
 ///   Interval - &Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<&Interval<T>>
-    for Interval<T>
+impl<T> ::core::ops::Sub<&Interval<T>> for Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = MultiInterval<T>;
 
@@ -650,8 +736,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<&Interval<T>>
 }
 
 ///   &Interval - Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<Interval<T>>
-    for &Interval<T>
+impl<T> ::core::ops::Sub<Interval<T>> for &Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = MultiInterval<T>;
 
@@ -662,8 +749,9 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<Interval<T>>
 }
 
 ///   Interval - Interval
-impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<Interval<T>>
-    for Interval<T>
+impl<T> ::core::ops::Sub<Interval<T>> for Interval<T>
+where
+    T: PartialOrd + NothingBetween + Clone,
 {
     type Output = MultiInterval<T>;
 
@@ -673,7 +761,10 @@ impl<T: PartialOrd + NothingBetween + Clone> ::core::ops::Sub<Interval<T>>
     }
 }
 
-impl<T: Clone> ::core::clone::Clone for Interval<T> {
+impl<T> ::core::clone::Clone for Interval<T>
+where
+    T: Clone,
+{
     fn clone(&self) -> Self {
         Self {
             lower: self.lower.clone(),
@@ -682,9 +773,12 @@ impl<T: Clone> ::core::clone::Clone for Interval<T> {
     }
 }
 
-impl<T: Copy> Copy for Interval<T> {}
+impl<T> Copy for Interval<T> where T: Copy {}
 
-impl<T: PartialOrd + NothingBetween> PartialEq for Interval<T> {
+impl<T> PartialEq for Interval<T>
+where
+    T: PartialOrd + NothingBetween,
+{
     /// True if the two intervals contain the same values (though they might
     /// have different bounds).
     fn eq(&self, other: &Self) -> bool {
@@ -692,9 +786,12 @@ impl<T: PartialOrd + NothingBetween> PartialEq for Interval<T> {
     }
 }
 
-impl<T: PartialOrd + NothingBetween> Eq for Interval<T> {}
+impl<T> Eq for Interval<T> where T: PartialOrd + NothingBetween {}
 
-impl<T: PartialOrd + NothingBetween> PartialOrd for Interval<T> {
+impl<T> PartialOrd for Interval<T>
+where
+    T: PartialOrd + NothingBetween,
+{
     /// Whether self starts to the left of other.
     /// If they start on the same value, whether self ends before other.
     /// This function might return True even if self has points to the right of
@@ -717,21 +814,28 @@ impl<T: PartialOrd + NothingBetween> PartialOrd for Interval<T> {
     }
 }
 
-impl<T: PartialOrd + Ord + NothingBetween> Ord for Interval<T> {
+impl<T> Ord for Interval<T>
+where
+    T: PartialOrd + Ord + NothingBetween,
+{
     fn cmp(&self, other: &Self) -> Ordering {
         self.partial_cmp(other).unwrap()
     }
 }
 
-impl<T: ::core::hash::Hash> ::core::hash::Hash for Interval<T> {
+impl<T> ::core::hash::Hash for Interval<T>
+where
+    T: ::core::hash::Hash,
+{
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.lower.hash(state);
         self.upper.hash(state);
     }
 }
 
-impl<T: ::core::fmt::Debug + NothingBetween + PartialOrd> ::core::fmt::Debug
-    for Interval<T>
+impl<T> ::core::fmt::Debug for Interval<T>
+where
+    T: ::core::fmt::Debug + NothingBetween + PartialOrd,
 {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         if self.is_empty() {
@@ -744,8 +848,9 @@ impl<T: ::core::fmt::Debug + NothingBetween + PartialOrd> ::core::fmt::Debug
 }
 
 /// Also provides an implementation for ToString
-impl<T: ::core::fmt::Display + NothingBetween + PartialOrd> ::core::fmt::Display
-    for Interval<T>
+impl<T> ::core::fmt::Display for Interval<T>
+where
+    T: ::core::fmt::Display + NothingBetween + PartialOrd,
 {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         if self.is_empty() {
@@ -852,7 +957,9 @@ impl<T: Clone> ::core::convert::From<::core::ops::Range<T>> for Interval<T> {
         Interval::new_closed_open(value.start.clone(), value.end.clone())
     }
 }
-impl<T: Clone> ::core::convert::From<::core::ops::RangeInclusive<T>> for Interval<T> {
+impl<T: Clone> ::core::convert::From<::core::ops::RangeInclusive<T>>
+    for Interval<T>
+{
     fn from(value: ::core::ops::RangeInclusive<T>) -> Self {
         Interval::new_closed_closed(value.start().clone(), value.end().clone())
     }
@@ -862,12 +969,16 @@ impl<T: Clone> ::core::convert::From<::core::ops::RangeTo<T>> for Interval<T> {
         Interval::new_unbounded_open(value.end.clone())
     }
 }
-impl<T: Clone> ::core::convert::From<::core::ops::RangeToInclusive<T>> for Interval<T> {
+impl<T: Clone> ::core::convert::From<::core::ops::RangeToInclusive<T>>
+    for Interval<T>
+{
     fn from(value: ::core::ops::RangeToInclusive<T>) -> Self {
         Interval::new_unbounded_closed(value.end.clone())
     }
 }
-impl<T: Clone> ::core::convert::From<::core::ops::RangeFrom<T>> for Interval<T> {
+impl<T: Clone> ::core::convert::From<::core::ops::RangeFrom<T>>
+    for Interval<T>
+{
     fn from(value: ::core::ops::RangeFrom<T>) -> Self {
         Interval::new_closed_unbounded(value.start.clone())
     }
@@ -877,7 +988,6 @@ impl<T: Clone> ::core::convert::From<::core::ops::RangeFull> for Interval<T> {
         Interval::doubly_unbounded()
     }
 }
-
 
 impl<T, E> ::core::convert::From<&str> for Interval<T>
 where
@@ -893,8 +1003,9 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<T: ::core::fmt::Display + PartialOrd + NothingBetween>
-    ::core::convert::From<Interval<T>> for String
+impl<T> ::core::convert::From<Interval<T>> for String
+where
+    T: ::core::fmt::Display + PartialOrd + NothingBetween,
 {
     fn from(value: Interval<T>) -> String {
         format!("{}", value)

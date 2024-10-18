@@ -555,7 +555,7 @@ mod test {
         assert_eq!(intv1.cmp(&empty), Ordering::Greater);
         assert_eq!(empty.cmp(&intv1), Ordering::Less);
 
-        let intv1 = interval!(1.0, f32::NAN);   // actually empty
+        let intv1 = interval!(1.0, f32::NAN); // actually empty
         let intv2 = interval!(1.0, 3.0);
         assert_eq!(intv1.partial_cmp(&intv2), Some(Ordering::Less));
         assert_eq!(intv2.partial_cmp(&intv1), Some(Ordering::Greater));
