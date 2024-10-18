@@ -17,8 +17,12 @@ impl<T> Interval<T> {
     ///    let intv1 = Interval::new_closed_open(1, 10);
     ///    let intv2 = (1..10).into();
     ///    let intv3 = interval!(1, 10, "[)");
+    ///    let intv4: Interval<u32> = "[1,10)".into();
+    ///    let intv5 = "[1,10)".parse::<Interval<u32>>().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
+    /// #  assert_eq!(intv1, intv4);
+    /// #  assert_eq!(intv1, intv5);
     /// ```
     pub fn new_closed_open(lower: T, upper: T) -> Self {
         Self {
@@ -33,8 +37,10 @@ impl<T> Interval<T> {
     ///    let intv1 = Interval::new_closed_closed(1, 10);
     ///    let intv2 = (1..=10).into();
     ///    let intv3 = interval!(1, 10, "[]");
+    ///    let intv4: Interval<u32> = "[1,10]".into();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
+    /// #  assert_eq!(intv1, intv4);
     /// ```
     pub fn new_closed_closed(lower: T, upper: T) -> Self {
         Self {
@@ -48,7 +54,9 @@ impl<T> Interval<T> {
     /// #  use rust_intervals::{interval, Interval};
     ///    let intv1 = Interval::new_open_open(1, 10);
     ///    let intv2 = interval!(1, 10, "()");
+    ///    let intv3: Interval<u32> = "(1,10)".into();
     /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
     /// ```
     pub fn new_open_open(lower: T, upper: T) -> Self {
         Self {
@@ -62,7 +70,9 @@ impl<T> Interval<T> {
     /// #  use rust_intervals::{interval, Interval};
     ///    let intv1 = Interval::new_open_closed(1, 10);
     ///    let intv2 = interval!(1, 10, "(]");
+    ///    let intv3: Interval<u32> = "(1,10]".into();
     /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
     /// ```
     pub fn new_open_closed(lower: T, upper: T) -> Self {
         Self {
@@ -77,8 +87,10 @@ impl<T> Interval<T> {
     ///    let intv1 = Interval::new_unbounded_closed(10);
     ///    let intv2 = (..=10).into();
     ///    let intv3 = interval!("-inf", 10, "]");
+    ///    let intv4: Interval<u32> = "(,10]".into();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
+    /// #  assert_eq!(intv1, intv4);
     /// ```
     pub fn new_unbounded_closed(upper: T) -> Self {
         Self {
@@ -93,8 +105,10 @@ impl<T> Interval<T> {
     ///    let intv1 = Interval::new_unbounded_open(10);
     ///    let intv2 = (..10).into();
     ///    let intv3 = interval!("-inf", 10, ")");
+    ///    let intv4: Interval<u32> = "(,10)".into();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
+    /// #  assert_eq!(intv1, intv4);
     /// ```
     pub fn new_unbounded_open(upper: T) -> Self {
         Self {
@@ -109,8 +123,10 @@ impl<T> Interval<T> {
     ///    let intv1 = Interval::new_closed_unbounded(10);
     ///    let intv2 = (10..).into();
     ///    let intv3 = interval!(10, "[inf");
+    ///    let intv4: Interval<u32> = "[10,)".into();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
+    /// #  assert_eq!(intv1, intv4);
     /// ```
     pub fn new_closed_unbounded(lower: T) -> Self {
         Self {
@@ -124,7 +140,9 @@ impl<T> Interval<T> {
     /// #  use rust_intervals::{interval, Interval};
     ///    let intv1 = Interval::new_open_unbounded(10);
     ///    let intv2 = interval!(10, "(inf");
+    ///    let intv3: Interval<u32> = "(10,)".into();
     /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
     /// ```
     pub fn new_open_unbounded(lower: T) -> Self {
         Self {
@@ -139,7 +157,9 @@ impl<T> Interval<T> {
     /// #  use rust_intervals::{interval, Interval};
     ///    let intv1 = Interval::<u32>::doubly_unbounded();
     ///    let intv2: Interval::<u32> = (..).into();
+    ///    let intv3: Interval<u32> = "(,)".into();
     /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
     /// ```
     pub fn doubly_unbounded() -> Self {
         Self {
@@ -154,7 +174,9 @@ impl<T> Interval<T> {
     /// #  use rust_intervals::{interval, Interval};
     ///    let intv1 = Interval::<u32>::empty();
     ///    let intv2: Interval<u32> = interval!("empty");
+    ///    let intv3: Interval<u32> = "empty".into();
     /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
     /// ```
     pub fn empty() -> Self {
         Self {
