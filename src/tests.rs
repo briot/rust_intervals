@@ -58,28 +58,28 @@ mod test {
         let empty = Interval::empty();
 
         let intv = Interval::new_closed_open(1, 10); // [1,10)
-        assert!(intv.contains(&1));
-        assert!(intv.contains(&2));
-        assert!(intv.contains(&9));
-        assert!(!intv.contains(&10));
-        assert!(!intv.contains(&11));
+        assert!(intv.contains(1));
+        assert!(intv.contains(2));
+        assert!(intv.contains(9));
+        assert!(!intv.contains(10));
+        assert!(!intv.contains(11));
         assert!(intv.contains_interval(&empty));
         assert!(!empty.contains_interval(&intv));
 
         let intv2 = Interval::new_closed_closed(1, 5); // [1,5]
-        assert!(intv2.contains(&1));
-        assert!(intv2.contains(&5));
-        assert!(!intv2.contains(&6));
+        assert!(intv2.contains(1));
+        assert!(intv2.contains(5));
+        assert!(!intv2.contains(6));
         assert!(intv2.contains_interval(&empty));
         assert!(!empty.contains_interval(&intv2));
         assert!(intv.contains_interval(&intv2));
         assert!(!intv2.contains_interval(&intv));
 
         let intv3 = Interval::new_unbounded_closed(10); // (,10]
-        assert!(intv3.contains(&0));
-        assert!(intv3.contains(&9));
-        assert!(intv3.contains(&10));
-        assert!(!intv3.contains(&11));
+        assert!(intv3.contains(0));
+        assert!(intv3.contains(9));
+        assert!(intv3.contains(10));
+        assert!(!intv3.contains(11));
         assert!(intv3.contains_interval(&empty));
         assert!(!empty.contains_interval(&intv3));
         assert!(intv3.contains_interval(&intv));
@@ -88,10 +88,10 @@ mod test {
         assert!(!intv2.contains_interval(&intv3));
 
         let intv4 = Interval::new_unbounded_open(10); // (,10)
-        assert!(intv4.contains(&0));
-        assert!(intv4.contains(&9));
-        assert!(!intv4.contains(&10));
-        assert!(!intv4.contains(&11));
+        assert!(intv4.contains(0));
+        assert!(intv4.contains(9));
+        assert!(!intv4.contains(10));
+        assert!(!intv4.contains(11));
         assert!(intv4.contains_interval(&empty));
         assert!(!empty.contains_interval(&intv4));
         assert!(intv4.contains_interval(&intv));
@@ -102,10 +102,10 @@ mod test {
         assert!(!intv4.contains_interval(&intv3));
 
         let intv5 = Interval::new_closed_unbounded(1); // [1,)
-        assert!(!intv5.contains(&0));
-        assert!(intv5.contains(&1));
-        assert!(intv5.contains(&10));
-        assert!(intv5.contains(&11));
+        assert!(!intv5.contains(0));
+        assert!(intv5.contains(1));
+        assert!(intv5.contains(10));
+        assert!(intv5.contains(11));
         assert!(intv5.contains_interval(&empty));
         assert!(!empty.contains_interval(&intv5));
         assert!(intv5.contains_interval(&intv));
@@ -118,10 +118,10 @@ mod test {
         assert!(!intv5.contains_interval(&intv4));
 
         let intv6 = Interval::doubly_unbounded();
-        assert!(intv6.contains(&0));
-        assert!(intv6.contains(&1));
-        assert!(intv6.contains(&10));
-        assert!(intv6.contains(&11));
+        assert!(intv6.contains(0));
+        assert!(intv6.contains(1));
+        assert!(intv6.contains(10));
+        assert!(intv6.contains(11));
         assert!(intv6.contains_interval(&empty));
         assert!(!empty.contains_interval(&intv6));
         assert!(intv6.contains_interval(&intv));
@@ -137,7 +137,7 @@ mod test {
 
         // An interval with not comparable bounds is always empty
         let intv7 = Interval::new_closed_open(1.0, f32::NAN);
-        assert!(!intv7.contains(&1.0));
+        assert!(!intv7.contains(1.0));
     }
 
     #[test]
@@ -199,7 +199,7 @@ mod test {
 
         let empty = Interval::<f32>::empty();
         assert!(empty.is_empty());
-        assert!(!empty.contains(&1.1));
+        assert!(!empty.contains(1.1));
 
         let empty2 = Interval::new_closed_open(10.0_f32, 10.0);
         assert_eq!(empty, empty2);
@@ -352,8 +352,8 @@ mod test {
         let intv = Interval::new_single(4);
         assert!(!intv.is_empty());
         assert!(intv.is_single());
-        assert!(intv.contains(&4));
-        assert!(!intv.contains(&5));
+        assert!(intv.contains(4));
+        assert!(!intv.contains(5));
 
         let intv = Interval::new_single(f32::NAN);
         assert!(intv.is_empty());
@@ -573,37 +573,37 @@ mod test {
     #[test]
     fn test_left_of() {
         let intv1 = Interval::new_closed_open(3_i8, 5); // [3,5)
-        assert!(intv1.strictly_left_of(&6));
-        assert!(intv1.strictly_left_of(&5));
-        assert!(!intv1.strictly_left_of(&0));
-        assert!(!intv1.strictly_left_of(&3));
+        assert!(intv1.strictly_left_of(6));
+        assert!(intv1.strictly_left_of(5));
+        assert!(!intv1.strictly_left_of(0));
+        assert!(!intv1.strictly_left_of(3));
 
-        assert!(intv1.left_of(&6));
-        assert!(intv1.left_of(&5));
-        assert!(!intv1.left_of(&0));
-        assert!(!intv1.left_of(&3));
+        assert!(intv1.left_of(6));
+        assert!(intv1.left_of(5));
+        assert!(!intv1.left_of(0));
+        assert!(!intv1.left_of(3));
 
-        assert!(intv1.strictly_right_of(&0));
-        assert!(intv1.strictly_right_of(&2));
-        assert!(!intv1.strictly_right_of(&3));
+        assert!(intv1.strictly_right_of(0));
+        assert!(intv1.strictly_right_of(2));
+        assert!(!intv1.strictly_right_of(3));
 
-        assert!(intv1.right_of(&0));
-        assert!(intv1.right_of(&2));
-        assert!(intv1.right_of(&3));
+        assert!(intv1.right_of(0));
+        assert!(intv1.right_of(2));
+        assert!(intv1.right_of(3));
 
         let intv2 = Interval::new_closed_closed(3, 5);
-        assert!(intv2.left_of(&6));
-        assert!(intv2.left_of(&5));
-        assert!(!intv2.strictly_left_of(&5));
+        assert!(intv2.left_of(6));
+        assert!(intv2.left_of(5));
+        assert!(!intv2.strictly_left_of(5));
 
         assert!(!intv1.strictly_left_of_interval(&intv2));
         assert!(!intv2.strictly_left_of_interval(&intv1));
 
         let empty = Interval::<i8>::empty();
-        assert!(empty.strictly_left_of(&1));
-        assert!(empty.left_of(&1));
-        assert!(empty.strictly_right_of(&1));
-        assert!(empty.right_of(&1));
+        assert!(empty.strictly_left_of(1));
+        assert!(empty.left_of(1));
+        assert!(empty.strictly_right_of(1));
+        assert!(empty.right_of(1));
         assert!(empty.strictly_left_of_interval(&intv1));
         assert!(intv1.strictly_left_of_interval(&empty));
 
@@ -620,13 +620,13 @@ mod test {
 
         let intv5 = Interval::new_closed_unbounded(1); // [1,)
         assert!(!intv5.strictly_left_of_interval(&intv1));
-        assert!(!intv5.right_of(&10));
-        assert!(intv5.strictly_right_of(&0));
-        assert!(intv5.right_of(&0));
+        assert!(!intv5.right_of(10));
+        assert!(intv5.strictly_right_of(0));
+        assert!(intv5.right_of(0));
 
         let intv7 = Interval::new_unbounded_closed(10_i16);
-        assert!(!intv7.right_of(&0));
-        assert!(!intv7.strictly_right_of(&0));
+        assert!(!intv7.right_of(0));
+        assert!(!intv7.strictly_right_of(0));
 
         let intv1 = Interval::new_open_closed(3, 5); // (3,5]
         let intv2 = Interval::new_closed_closed(5, 9); // [5,9]
@@ -647,8 +647,8 @@ mod test {
     fn test_ref() {
         let intv1 = Interval::<&char>::new_closed_closed(&'A', &'Z');
         assert!(!intv1.is_empty());
-        assert!(intv1.contains(&&'B'));
-        assert!(!intv1.contains(&&'a'));
+        assert!(intv1.contains(&'B'));
+        assert!(!intv1.contains(&'a'));
 
         let intv2 = Interval::<char>::new_closed_closed('A', 'Z');
         assert!(intv2.as_ref().contains_interval(&intv1));

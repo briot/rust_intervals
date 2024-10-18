@@ -351,12 +351,21 @@ impl<T> Interval<T> {
         }
     }
 
-    /// Whether value is contained in the interval
-    pub fn contains(&self, value: &T) -> bool
+    /// Whether value is contained in the interval.
+    /// You can pass either a T or &T, for convenience.
+    /// ```
+    /// #  use rust_intervals::interval;
+    ///    let intv1 = interval!(1, 10);
+    ///    assert!(intv1.contains(2));
+    ///    assert!(intv1.contains(&2));
+    /// ```
+    pub fn contains<V>(&self, value: V) -> bool
     where
         T: PartialOrd + NothingBetween,
+        V: ::core::borrow::Borrow<T>,
     {
-        self.lower.left_of(value) && self.upper.right_of(value)
+        let t = value.borrow();
+        self.lower.left_of(t) && self.upper.right_of(t)
     }
 
     /// Whether self contains all values of the second interval (and possibly
@@ -396,11 +405,18 @@ impl<T> Interval<T> {
     ///    [------] .
     ///             X    => strictly left of the interval
     /// ```
-    pub fn strictly_left_of(&self, x: &T) -> bool
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = interval!(1, 10);
+    ///    assert!(intv1.strictly_left_of(11));
+    ///    assert!(intv1.strictly_left_of(&11));  //  can pass references
+    /// ```
+    pub fn strictly_left_of<K>(&self, x: K) -> bool
     where
         T: PartialOrd + NothingBetween,
+        K: ::core::borrow::Borrow<T>,
     {
-        self.is_empty() || self.upper.left_of(x)
+        self.is_empty() || self.upper.left_of(x.borrow())
     }
 
     /// Whether X is strictly less than (<) every value in self.
@@ -409,11 +425,18 @@ impl<T> Interval<T> {
     ///    . [------]
     ///    X           => strictly right of the interval
     /// ```
-    pub fn strictly_right_of(&self, x: &T) -> bool
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = interval!(1, 10);
+    ///    assert!(intv1.strictly_right_of(0));
+    ///    assert!(intv1.strictly_right_of(&0));  //  can pass references
+    /// ```
+    pub fn strictly_right_of<K>(&self, x: K) -> bool
     where
         T: PartialOrd + NothingBetween,
+        K: ::core::borrow::Borrow<T>,
     {
-        self.is_empty() || self.lower.right_of(x)
+        self.is_empty() || self.lower.right_of(x.borrow())
     }
 
     /// Whether every value in self is less than (<=) X.
@@ -422,11 +445,18 @@ impl<T> Interval<T> {
     ///    [------]
     ///           X    => left of the interval (but not strictly left of)
     /// ```
-    pub fn left_of(&self, x: &T) -> bool
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = interval!(1, 10);
+    ///    assert!(intv1.left_of(9));
+    ///    assert!(intv1.left_of(&9));  //  can pass references
+    /// ```
+    pub fn left_of<K>(&self, x: K) -> bool
     where
         T: PartialOrd + NothingBetween,
+        K: ::core::borrow::Borrow<T>,
     {
-        self.is_empty() || self.upper <= Bound::RightOf(x)
+        self.is_empty() || self.upper <= Bound::RightOf(x.borrow())
     }
 
     /// Whether X is less than (<=) every value in self.
@@ -435,11 +465,18 @@ impl<T> Interval<T> {
     ///      [------]
     ///      X           => right of the interval (but not strictly right of)
     /// ```
-    pub fn right_of(&self, x: &T) -> bool
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = interval!(1, 10);
+    ///    assert!(intv1.right_of(1));
+    ///    assert!(intv1.right_of(&1));  //  can pass references
+    /// ```
+    pub fn right_of<K>(&self, x: K) -> bool
     where
         T: PartialOrd + NothingBetween,
+        K: ::core::borrow::Borrow<T>,
     {
-        self.is_empty() || self.lower >= Bound::LeftOf(x)
+        self.is_empty() || self.lower >= Bound::LeftOf(x.borrow())
     }
 
     /// Whether every value in self is less than or equal (<=) to every value

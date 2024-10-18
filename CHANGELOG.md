@@ -6,6 +6,8 @@
  - interact with Rust ranges `from_range()`
  - provide `BitOr` trait (equivalent to `union()`)
  - support for `Iterator` and `IntoIterator`
+### Changed
+ - use Borrow in parameters for `contains`
 
 ## 0.2.1
 ### Fixed

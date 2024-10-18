@@ -46,6 +46,7 @@ It provides the following features:
     convert to and from a string.
   - Convert from Rust's range `a..b`, `a..=b` and so on
   - Support for `Iterator` and `IntoIterator`
+  - Support for `Borrow` in parameters to make interface more convenient
 
 Example
 -------
