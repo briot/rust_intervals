@@ -26,6 +26,8 @@ mod test {
         }
     }
 
+    fn assert_copy<T: ::core::marker::Copy>() {}
+
     fn assert_equivalent<T: PartialOrd + NothingBetween + Debug>(
         left: &Interval<T>,
         right: &Interval<T>,
@@ -43,6 +45,12 @@ mod test {
         assert_ne!(right, left);
         assert!(!left.equivalent(right));
         assert!(!right.equivalent(left));
+    }
+
+    #[test]
+    fn test_copy() {
+        assert_copy::<Interval<u32>>();
+        //  assert_copy::<Interval<Vec<u32>>>();
     }
 
     #[test]

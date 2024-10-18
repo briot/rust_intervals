@@ -1,5 +1,9 @@
 # Version History
 
+## 0.3.0
+### Added
+ - support for `Copy`
+
 ## 0.2.1
 ### Fixed
  - fix clippy warning about derived Hash and custom PartialEq

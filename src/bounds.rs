@@ -196,3 +196,5 @@ impl<T: Clone> ::core::clone::Clone for Bound<T> {
         }
     }
 }
+
+impl<T: Copy> Copy for Bound<T> {}

@@ -39,8 +39,8 @@ It provides the following features:
   - Operator overloads for the queries above
   - Support for `serde`
   - Support for `no_std`
-  - Support for standard traits like `Default`, `Clone`, `Display`, `Debug`,
-    `Eq`, `PartialEq`, `Ord`, `PartialOrd`, `Hash`,
+  - Support for standard traits like `Default`, `Clone`, `Copy`, `Display`,
+    `Debug`, `Eq`, `PartialEq`, `Ord`, `PartialOrd`, `Hash`,
     `From<String>`, `From<Interval> -> String` and `FromStr`
     depending on what your type provides.   See examples below on how to
     convert to and from a string.

@@ -555,6 +555,8 @@ impl<T: Clone> ::core::clone::Clone for Interval<T> {
     }
 }
 
+impl<T: Copy> Copy for Interval<T> {}
+
 impl<T: PartialOrd + NothingBetween> PartialEq for Interval<T> {
     /// True if the two intervals contain the same values (though they might
     /// have different bounds).
