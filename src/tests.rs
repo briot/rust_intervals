@@ -939,4 +939,14 @@ mod test {
         let intv1 = interval!("-inf", 1, ")");
         assert!(intv1.equivalent(&Interval::new_unbounded_open(1)));
     }
+
+    #[test]
+    fn test_range() {
+        let _: Interval<_> = (1..10).into();
+        let _: Interval<u64> = (1..=10).into();
+        let _: Interval<u64> = (1..).into();
+        let _: Interval<u64> = (..10).into();
+        let _: Interval<u64> = (..=10).into();
+        let _: Interval<u64> = (..).into();
+    }
 }

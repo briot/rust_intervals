@@ -3,6 +3,7 @@
 ## 0.3.0
 ### Added
  - support for `Copy`
+ - interact with Rust ranges `from_range()`
 
 ## 0.2.1
 ### Fixed

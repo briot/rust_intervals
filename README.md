@@ -44,6 +44,7 @@ It provides the following features:
     `From<String>`, `From<Interval> -> String` and `FromStr`
     depending on what your type provides.   See examples below on how to
     convert to and from a string.
+  - Convert from Rust's range `a..b`, `a..=b` and so on
 
 Example
 -------

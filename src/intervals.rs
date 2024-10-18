@@ -2,6 +2,7 @@ use crate::bounds::Bound;
 use crate::multi_intervals::MultiInterval;
 use crate::nothing_between::NothingBetween;
 use ::core::cmp::{Ordering, PartialOrd};
+use ::core::ops::{Bound as RgBound, RangeBounds};
 
 /// An interval of values.
 pub struct Interval<T> {
@@ -293,6 +294,62 @@ impl<T: Clone> Interval<T> {
     /// Returns an interval that contains a single value (`[value,value]`)
     pub fn new_single(value: T) -> Self {
         Interval::new_closed_closed(value.clone(), value)
+    }
+
+    /// Build an interval from one of Rust's range types. In most cases, you can
+    /// also simply use `into()`
+    /// ```
+    ///    use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::from_range(1..3);
+    ///    assert_eq!(intv1, interval!(1, 3, "[)"));
+    ///
+    ///    let intv1: Interval<_> = (1..3).into();   //  same as above
+    ///
+    ///    let intv1 = Interval::from_range(1..=3);
+    ///    assert_eq!(intv1, interval!(1, 3, "[]"));
+    ///
+    ///    let intv1 = Interval::from_range(1..);
+    ///    assert_eq!(intv1, interval!(1, "[inf"));
+    ///
+    ///    let intv1 = Interval::from_range(..3);
+    ///    assert_eq!(intv1, interval!("-inf", 3, ")"));
+    ///
+    ///    let intv1 = Interval::from_range(..=3);
+    ///    assert_eq!(intv1, interval!("-inf", 3, "]"));
+    ///
+    ///    let intv1 = Interval::<f32>::from_range(..);
+    ///    assert_eq!(intv1, Interval::doubly_unbounded());
+    /// ```
+    pub fn from_range<R: RangeBounds<T>>(range: R) -> Self {
+        match (range.start_bound(), range.end_bound()) {
+            (RgBound::Included(lo), RgBound::Included(up)) => {
+                Interval::new_closed_closed(lo.clone(), up.clone())
+            }
+            (RgBound::Included(lo), RgBound::Excluded(up)) => {
+                Interval::new_closed_open(lo.clone(), up.clone())
+            }
+            (RgBound::Excluded(lo), RgBound::Included(up)) => {
+                Interval::new_open_closed(lo.clone(), up.clone())
+            }
+            (RgBound::Excluded(lo), RgBound::Excluded(up)) => {
+                Interval::new_open_open(lo.clone(), up.clone())
+            }
+            (RgBound::Unbounded, RgBound::Included(up)) => {
+                Interval::new_unbounded_closed(up.clone())
+            }
+            (RgBound::Unbounded, RgBound::Excluded(up)) => {
+                Interval::new_unbounded_open(up.clone())
+            }
+            (RgBound::Unbounded, RgBound::Unbounded) => {
+                Interval::doubly_unbounded()
+            }
+            (RgBound::Included(lo), RgBound::Unbounded) => {
+                Interval::new_closed_unbounded(lo.clone())
+            }
+            (RgBound::Excluded(lo), RgBound::Unbounded) => {
+                Interval::new_open_unbounded(lo.clone())
+            }
+        }
     }
 }
 
@@ -719,6 +776,38 @@ where
         })
     }
 }
+
+impl<T: Clone> ::core::convert::From<::core::ops::Range<T>> for Interval<T> {
+    fn from(value: ::core::ops::Range<T>) -> Self {
+        Interval::new_closed_open(value.start.clone(), value.end.clone())
+    }
+}
+impl<T: Clone> ::core::convert::From<::core::ops::RangeInclusive<T>> for Interval<T> {
+    fn from(value: ::core::ops::RangeInclusive<T>) -> Self {
+        Interval::new_closed_closed(value.start().clone(), value.end().clone())
+    }
+}
+impl<T: Clone> ::core::convert::From<::core::ops::RangeTo<T>> for Interval<T> {
+    fn from(value: ::core::ops::RangeTo<T>) -> Self {
+        Interval::new_unbounded_open(value.end.clone())
+    }
+}
+impl<T: Clone> ::core::convert::From<::core::ops::RangeToInclusive<T>> for Interval<T> {
+    fn from(value: ::core::ops::RangeToInclusive<T>) -> Self {
+        Interval::new_unbounded_closed(value.end.clone())
+    }
+}
+impl<T: Clone> ::core::convert::From<::core::ops::RangeFrom<T>> for Interval<T> {
+    fn from(value: ::core::ops::RangeFrom<T>) -> Self {
+        Interval::new_closed_unbounded(value.start.clone())
+    }
+}
+impl<T: Clone> ::core::convert::From<::core::ops::RangeFull> for Interval<T> {
+    fn from(_: ::core::ops::RangeFull) -> Self {
+        Interval::doubly_unbounded()
+    }
+}
+
 
 impl<T, E> ::core::convert::From<&str> for Interval<T>
 where
