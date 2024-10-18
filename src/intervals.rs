@@ -12,6 +12,14 @@ pub struct Interval<T> {
 
 impl<T> Interval<T> {
     /// Construct a left-closed, right-open intervals (`[A,B)`)
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::new_closed_open(1, 10);
+    ///    let intv2 = (1..10).into();
+    ///    let intv3 = interval!(1, 10, "[)");
+    /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
+    /// ```
     pub fn new_closed_open(lower: T, upper: T) -> Self {
         Self {
             lower: Bound::LeftOf(lower),
@@ -20,6 +28,14 @@ impl<T> Interval<T> {
     }
 
     /// Construct a left-closed, right-closed intervals (`[A,B]`)
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::new_closed_closed(1, 10);
+    ///    let intv2 = (1..=10).into();
+    ///    let intv3 = interval!(1, 10, "[]");
+    /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
+    /// ```
     pub fn new_closed_closed(lower: T, upper: T) -> Self {
         Self {
             lower: Bound::LeftOf(lower),
@@ -28,6 +44,12 @@ impl<T> Interval<T> {
     }
 
     /// Construct a left-open, right-open intervals (`(A,B)`)
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::new_open_open(1, 10);
+    ///    let intv2 = interval!(1, 10, "()");
+    /// #  assert_eq!(intv1, intv2);
+    /// ```
     pub fn new_open_open(lower: T, upper: T) -> Self {
         Self {
             lower: Bound::RightOf(lower),
@@ -36,6 +58,12 @@ impl<T> Interval<T> {
     }
 
     /// Construct a left-open, right-closed intervals (`(A,B]`)
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::new_open_closed(1, 10);
+    ///    let intv2 = interval!(1, 10, "(]");
+    /// #  assert_eq!(intv1, intv2);
+    /// ```
     pub fn new_open_closed(lower: T, upper: T) -> Self {
         Self {
             lower: Bound::RightOf(lower),
@@ -44,6 +72,14 @@ impl<T> Interval<T> {
     }
 
     /// Construct a left-unbounded, right-closed intervals (`(,B]`)
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::new_unbounded_closed(10);
+    ///    let intv2 = (..=10).into();
+    ///    let intv3 = interval!("-inf", 10, "]");
+    /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
+    /// ```
     pub fn new_unbounded_closed(upper: T) -> Self {
         Self {
             lower: Bound::LeftUnbounded,
@@ -52,6 +88,14 @@ impl<T> Interval<T> {
     }
 
     /// Construct a left-unbounded, right-open intervals (`(,B)`)
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::new_unbounded_open(10);
+    ///    let intv2 = (..10).into();
+    ///    let intv3 = interval!("-inf", 10, ")");
+    /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
+    /// ```
     pub fn new_unbounded_open(upper: T) -> Self {
         Self {
             lower: Bound::LeftUnbounded,
@@ -60,6 +104,14 @@ impl<T> Interval<T> {
     }
 
     /// Construct a left-closed, right-unbounded intervals (`[A,)`)
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::new_closed_unbounded(10);
+    ///    let intv2 = (10..).into();
+    ///    let intv3 = interval!(10, "[inf");
+    /// #  assert_eq!(intv1, intv2);
+    /// #  assert_eq!(intv1, intv3);
+    /// ```
     pub fn new_closed_unbounded(lower: T) -> Self {
         Self {
             lower: Bound::LeftOf(lower),
@@ -68,6 +120,12 @@ impl<T> Interval<T> {
     }
 
     /// Construct a left-open, right-unbounded intervals (`(A,)`)
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::new_open_unbounded(10);
+    ///    let intv2 = interval!(10, "(inf");
+    /// #  assert_eq!(intv1, intv2);
+    /// ```
     pub fn new_open_unbounded(lower: T) -> Self {
         Self {
             lower: Bound::RightOf(lower),
@@ -77,6 +135,12 @@ impl<T> Interval<T> {
 
     /// Construct a doubly unbounded intervals (`(,)`) that contains all
     /// possible values.
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::<u32>::doubly_unbounded();
+    ///    let intv2: Interval::<u32> = (..).into();
+    /// #  assert_eq!(intv1, intv2);
+    /// ```
     pub fn doubly_unbounded() -> Self {
         Self {
             lower: Bound::LeftUnbounded,
@@ -86,6 +150,12 @@ impl<T> Interval<T> {
 
     /// Returns an empty interval.  Note that there are multiple representations
     /// for empty interval, though they are all equivalent.
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    let intv1 = Interval::<u32>::empty();
+    ///    let intv2: Interval<u32> = interval!("empty");
+    /// #  assert_eq!(intv1, intv2);
+    /// ```
     pub fn empty() -> Self {
         Self {
             lower: Bound::RightUnbounded,

@@ -942,11 +942,5 @@ mod test {
 
     #[test]
     fn test_range() {
-        let _: Interval<_> = (1..10).into();
-        let _: Interval<u64> = (1..=10).into();
-        let _: Interval<u64> = (1..).into();
-        let _: Interval<u64> = (..10).into();
-        let _: Interval<u64> = (..=10).into();
-        let _: Interval<u64> = (..).into();
     }
 }
