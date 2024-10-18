@@ -1,6 +1,8 @@
 use crate::bounds::Bound;
+use crate::iterator::IntervalIterator;
 use crate::multi_intervals::MultiInterval;
 use crate::nothing_between::NothingBetween;
+use crate::step::Step;
 use ::core::cmp::{Ordering, PartialOrd};
 use ::core::ops::{Bound as RgBound, RangeBounds};
 
@@ -662,6 +664,33 @@ impl<T> Interval<T> {
             None
         }
     }
+
+    /// Provides iteration over all values in the interval.
+    /// ```
+    /// #  use rust_intervals::{interval, Interval};
+    ///    for _ in interval!(1, 10).iter() {
+    ///    }
+    ///    for _ in interval!(1, 10) {
+    ///    }
+    /// ```
+    pub fn iter(&self) -> IntervalIterator<T>
+    where
+        T: Clone + Step + PartialOrd,
+    {
+        IntervalIterator::new(&self.lower, &self.upper)
+    }
+}
+
+impl<T> IntoIterator for Interval<T>
+where
+    T: Step + Clone + PartialOrd,
+{
+    type Item = T;
+    type IntoIter = IntervalIterator<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
 }
 
 impl<T> Default for Interval<T> {
@@ -669,6 +698,107 @@ impl<T> Default for Interval<T> {
     fn default() -> Self {
         Self::empty()
     }
+}
+
+impl<T> Interval<T>
+where
+    T: Clone,
+{
+    //    /// If self is a closed-open interval, returns the equivalent Range
+    //    /// `lower..uper`.  Otherwise return None.
+    //    pub fn as_range(&self) -> Option<::core::ops::Range<T>> {
+    //        match (&self.lower, &self.upper) {
+    //            (Bound::LeftOf(lo), Bound::LeftOf(up)) => {
+    //                Some(lo.clone()..up.clone())
+    //            }
+    //            _ => None,
+    //        }
+    //    }
+    //
+    //    pub fn as_range_inclusive(&self) -> Option<::core::ops::RangeInclusive<T>> {
+    //        match (&self.lower, &self.upper) {
+    //            (Bound::LeftOf(lo), Bound::RightOf(up)) => {
+    //                Some(lo.clone()..=up.clone())
+    //            }
+    //            _ => None,
+    //        }
+    //    }
+    //
+    //    pub fn as_range_full(&self) -> Option<::core::ops::RangeFull> {
+    //        match (&self.lower, &self.upper) {
+    //            (Bound::LeftUnbounded, Bound::RightUnbounded) => Some(..),
+    //            _ => None,
+    //        }
+    //    }
+    //
+    //    pub fn as_range_from(&self) -> Option<::core::ops::RangeFrom<T>> {
+    //        match (&self.lower, &self.upper) {
+    //            (Bound::LeftOf(lo), Bound::RightUnbounded) => Some(lo.clone()..),
+    //            _ => None,
+    //        }
+    //    }
+    //
+    //    pub fn as_range_to(&self) -> Option<::core::ops::RangeTo<T>> {
+    //        match (&self.lower, &self.upper) {
+    //            (Bound::LeftUnbounded, Bound::LeftOf(up)) => Some(..up.clone()),
+    //            _ => None,
+    //        }
+    //    }
+    //
+    //    pub fn as_range_to_inclusive(
+    //        &self,
+    //    ) -> Option<::core::ops::RangeToInclusive<T>> {
+    //        match (&self.lower, &self.upper) {
+    //            (Bound::LeftUnbounded, Bound::RightOf(up)) => Some(..=up.clone()),
+    //            _ => None,
+    //        }
+    //    }
+
+    //    /// Return the equivalent Rust range `a..b`, `a..=b`, `..b`, and so on
+    //    pub fn as_range(
+    //        &self,
+    //    ) -> Option<(::core::ops::Bound<T>, ::core::ops::Bound<T>)> {
+    //        match (&self.lower, &self.upper) {
+    //            (Bound::LeftOf(lo), Bound::LeftOf(up)) => Some((
+    //                ::core::ops::Bound::Included(lo.clone()),
+    //                ::core::ops::Bound::Excluded(up.clone()),
+    //            )),
+    //            (Bound::LeftOf(lo), Bound::RightOf(up)) => Some((
+    //                ::core::ops::Bound::Included(lo.clone()),
+    //                ::core::ops::Bound::Included(up.clone()),
+    //            )),
+    //            (Bound::RightOf(lo), Bound::LeftOf(up)) => Some((
+    //                ::core::ops::Bound::Excluded(lo.clone()),
+    //                ::core::ops::Bound::Excluded(up.clone()),
+    //            )),
+    //            (Bound::RightOf(lo), Bound::RightOf(up)) => Some((
+    //                ::core::ops::Bound::Excluded(lo.clone()),
+    //                ::core::ops::Bound::Included(up.clone()),
+    //            )),
+    //            (Bound::LeftUnbounded, Bound::RightUnbounded) => Some((
+    //                ::core::ops::Bound::Unbounded,
+    //                ::core::ops::Bound::Unbounded,
+    //            )),
+    //            (Bound::LeftOf(lo), Bound::RightUnbounded) => Some((
+    //                ::core::ops::Bound::Included(lo.clone()),
+    //                ::core::ops::Bound::Unbounded,
+    //            )),
+    //            (Bound::RightOf(lo), Bound::RightUnbounded) => Some((
+    //                ::core::ops::Bound::Excluded(lo.clone()),
+    //                ::core::ops::Bound::Unbounded,
+    //            )),
+    //            (Bound::LeftUnbounded, Bound::LeftOf(up)) => Some((
+    //                ::core::ops::Bound::Unbounded,
+    //                ::core::ops::Bound::Excluded(up.clone()),
+    //            )),
+    //            (Bound::LeftUnbounded, Bound::RightOf(up)) => Some((
+    //                ::core::ops::Bound::Unbounded,
+    //                ::core::ops::Bound::Included(up.clone()),
+    //            )),
+    //            (Bound::RightUnbounded, _) => None,
+    //            (_, Bound::LeftUnbounded) => None,
+    //        }
+    //    }
 }
 
 ///  &Interval ^ &Interval

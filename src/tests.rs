@@ -928,7 +928,46 @@ mod test {
         assert!(intv1.equivalent(&Interval::new_unbounded_open(1)));
     }
 
+    #[cfg(feature = "std")]
     #[test]
-    fn test_range() {
+    fn test_iter() {
+        let intv1 = interval!(1, 4, "[)");
+        assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![1, 2, 3]);
+
+        let intv1 = interval!(1, 4, "[]");
+        assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![1, 2, 3, 4]);
+
+        let intv1 = interval!(1, 4, "(]");
+        assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![2, 3, 4]);
+
+        let intv1 = interval!(1_i8, 4, "()");
+        assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![2, 3]);
+
+        let intv1 = interval!("-inf", 4_u16, "]");
+        assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![0, 1, 2, 3, 4]);
+
+        let intv1 = interval!("-inf", 4_u16, ")");
+        assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![0, 1, 2, 3]);
+
+        let intv1 = interval!(2, "[inf");
+        assert_eq!(
+            intv1.iter().take(10).collect::<Vec<_>>(),
+            vec![2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        );
+
+        let intv1 = interval!(2, "(inf");
+        assert_eq!(
+            intv1.iter().take(10).collect::<Vec<_>>(),
+            vec![3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        );
+
+        let intv1 = Interval::<u32>::empty();
+        assert_eq!(intv1.iter().collect::<Vec<_>>(), Vec::<u32>::new(),);
+
+        let intv1 = Interval::<u32>::doubly_unbounded();
+        assert_eq!(
+            intv1.iter().take(10).collect::<Vec<_>>(),
+            vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        );
     }
 }
