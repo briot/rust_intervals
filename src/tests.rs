@@ -742,12 +742,6 @@ mod test {
             intv1.difference(&intv5),
             MultiInterval::One(Interval::new_closed_open(10, 25))
         );
-
-        //  Check the variants of subtraction
-        assert_eq!(&intv1 - &empty, MultiInterval::One(intv1));
-        assert_eq!(&intv1 - empty, MultiInterval::One(intv1));
-        assert_eq!(intv1 - &empty, MultiInterval::One(intv1));
-        assert_eq!(intv1 - empty, MultiInterval::One(intv1));
     }
 
     #[test]
@@ -817,12 +811,6 @@ mod test {
             intv2.intersection(&intv3),
             Interval::new_closed_open(40, 50)
         );
-
-        //  Check the variants of "&"
-        assert_eq!(&intv1 & &intv2, empty);
-        assert_eq!(&intv1 & intv2, empty.clone());
-        assert_eq!(intv1 & &intv2, empty.clone());
-        assert_eq!(intv1 & intv2, empty.clone());
     }
 
     #[test]
@@ -881,12 +869,6 @@ mod test {
                 Interval::new_open_closed(30, 40),
             ),
         );
-
-        //  Check the variants of subtraction
-        assert_eq!(&intv1 ^ &empty, MultiInterval::One(intv1));
-        assert_eq!(&intv1 ^ empty, MultiInterval::One(intv1));
-        assert_eq!(intv1 ^ &empty, MultiInterval::One(intv1));
-        assert_eq!(intv1 ^ empty, MultiInterval::One(intv1));
     }
 
     #[test]

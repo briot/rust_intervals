@@ -523,6 +523,10 @@ impl<T> Interval<T> {
     ///    let res1 = intv1.difference(&intv2);
     ///    let res2 = intv1 - intv2;
     ///    assert_eq!(res1, res2);
+    ///
+    ///    let _ = intv1 - &intv2;    //  Cam combine all variants of refs.
+    ///    let _ = &intv1 - intv2;
+    ///    let _ = &intv1 - &intv2;
     /// ```
     pub fn difference(&self, right: &Self) -> MultiInterval<T>
     where
@@ -553,6 +557,10 @@ impl<T> Interval<T> {
     ///    let res1 = intv1.symmetric_difference(&intv2);
     ///    let res2 = intv1 ^ intv2;
     ///    assert_eq!(res1, res2);
+    ///
+    ///    let _ = intv1 ^ &intv2;  // all variants of refs
+    ///    let _ = &intv1 ^ &intv2;  // all variants of refs
+    ///    let _ = &intv1 ^ intv2;  // all variants of refs
     /// ```
     pub fn symmetric_difference(&self, right: &Self) -> MultiInterval<T>
     where
@@ -601,6 +609,10 @@ impl<T> Interval<T> {
     ///    let res1 = intv1.intersection(&intv2);
     ///    let res2 = intv1 & intv2;
     ///    assert_eq!(res1, res2);
+    ///
+    ///    let _ = intv1 & &intv2;  // all variants of refs
+    ///    let _ = &intv1 & &intv2;  // all variants of refs
+    ///    let _ = &intv1 & intv2;  // all variants of refs
     /// ```
     pub fn intersection(&self, right: &Self) -> Self
     where
