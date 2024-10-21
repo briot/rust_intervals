@@ -16,10 +16,11 @@ impl<T> Interval<T> {
     /// Construct a left-closed, right-open intervals (`[A,B)`)
     /// ```
     /// #  use rust_intervals::{interval, Interval};
+    /// #  use ::core::convert::TryInto;
     ///    let intv1 = Interval::new_closed_open(1, 10);
     ///    let intv2 = (1..10).into();
     ///    let intv3 = interval!(1, 10, "[)");
-    ///    let intv4: Interval<u32> = "[1,10)".into();
+    ///    let intv4: Interval<u32> = "[1,10)".try_into().unwrap();
     ///    let intv5 = "[1,10)".parse::<Interval<u32>>().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
@@ -36,10 +37,11 @@ impl<T> Interval<T> {
     /// Construct a left-closed, right-closed intervals (`[A,B]`)
     /// ```
     /// #  use rust_intervals::{interval, Interval};
+    /// #  use ::core::convert::TryInto;
     ///    let intv1 = Interval::new_closed_closed(1, 10);
     ///    let intv2 = (1..=10).into();
     ///    let intv3 = interval!(1, 10, "[]");
-    ///    let intv4: Interval<u32> = "[1,10]".into();
+    ///    let intv4: Interval<u32> = "[1,10]".try_into().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
@@ -54,9 +56,10 @@ impl<T> Interval<T> {
     /// Construct a left-open, right-open intervals (`(A,B)`)
     /// ```
     /// #  use rust_intervals::{interval, Interval};
+    /// #  use ::core::convert::TryInto;
     ///    let intv1 = Interval::new_open_open(1, 10);
     ///    let intv2 = interval!(1, 10, "()");
-    ///    let intv3: Interval<u32> = "(1,10)".into();
+    ///    let intv3: Interval<u32> = "(1,10)".try_into().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// ```
@@ -70,9 +73,10 @@ impl<T> Interval<T> {
     /// Construct a left-open, right-closed intervals (`(A,B]`)
     /// ```
     /// #  use rust_intervals::{interval, Interval};
+    /// #  use ::core::convert::TryInto;
     ///    let intv1 = Interval::new_open_closed(1, 10);
     ///    let intv2 = interval!(1, 10, "(]");
-    ///    let intv3: Interval<u32> = "(1,10]".into();
+    ///    let intv3: Interval<u32> = "(1,10]".try_into().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// ```
@@ -86,10 +90,11 @@ impl<T> Interval<T> {
     /// Construct a left-unbounded, right-closed intervals (`(,B]`)
     /// ```
     /// #  use rust_intervals::{interval, Interval};
+    /// #  use ::core::convert::TryInto;
     ///    let intv1 = Interval::new_unbounded_closed(10);
     ///    let intv2 = (..=10).into();
     ///    let intv3 = interval!("-inf", 10, "]");
-    ///    let intv4: Interval<u32> = "(,10]".into();
+    ///    let intv4: Interval<u32> = "(,10]".try_into().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
@@ -104,10 +109,11 @@ impl<T> Interval<T> {
     /// Construct a left-unbounded, right-open intervals (`(,B)`)
     /// ```
     /// #  use rust_intervals::{interval, Interval};
+    /// #  use ::core::convert::TryInto;
     ///    let intv1 = Interval::new_unbounded_open(10);
     ///    let intv2 = (..10).into();
     ///    let intv3 = interval!("-inf", 10, ")");
-    ///    let intv4: Interval<u32> = "(,10)".into();
+    ///    let intv4: Interval<u32> = "(,10)".try_into().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
@@ -122,10 +128,11 @@ impl<T> Interval<T> {
     /// Construct a left-closed, right-unbounded intervals (`[A,)`)
     /// ```
     /// #  use rust_intervals::{interval, Interval};
+    /// #  use ::core::convert::TryInto;
     ///    let intv1 = Interval::new_closed_unbounded(10);
     ///    let intv2 = (10..).into();
     ///    let intv3 = interval!(10, "[inf");
-    ///    let intv4: Interval<u32> = "[10,)".into();
+    ///    let intv4: Interval<u32> = "[10,)".try_into().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
@@ -140,9 +147,10 @@ impl<T> Interval<T> {
     /// Construct a left-open, right-unbounded intervals (`(A,)`)
     /// ```
     /// #  use rust_intervals::{interval, Interval};
+    /// #  use ::core::convert::TryInto;
     ///    let intv1 = Interval::new_open_unbounded(10);
     ///    let intv2 = interval!(10, "(inf");
-    ///    let intv3: Interval<u32> = "(10,)".into();
+    ///    let intv3: Interval<u32> = "(10,)".try_into().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// ```
@@ -157,9 +165,10 @@ impl<T> Interval<T> {
     /// possible values.
     /// ```
     /// #  use rust_intervals::{interval, Interval};
+    /// #  use ::core::convert::TryInto;
     ///    let intv1 = Interval::<u32>::doubly_unbounded();
     ///    let intv2: Interval::<u32> = (..).into();
-    ///    let intv3: Interval<u32> = "(,)".into();
+    ///    let intv3: Interval<u32> = "(,)".try_into().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// ```
@@ -174,9 +183,10 @@ impl<T> Interval<T> {
     /// for empty interval, though they are all equivalent.
     /// ```
     /// #  use rust_intervals::{interval, Interval};
+    /// #  use ::core::convert::TryInto;
     ///    let intv1 = Interval::<u32>::empty();
     ///    let intv2: Interval<u32> = interval!("empty");
-    ///    let intv3: Interval<u32> = "empty".into();
+    ///    let intv3: Interval<u32> = "empty".try_into().unwrap();
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// ```
@@ -1274,16 +1284,17 @@ impl<T: Clone> ::core::convert::From<::core::ops::RangeFull> for Interval<T> {
     }
 }
 
-impl<T, E> ::core::convert::From<&str> for Interval<T>
+impl<T, E> ::core::convert::TryFrom<&str> for Interval<T>
 where
     T: ::core::str::FromStr<Err = E>,
     E: ::core::fmt::Debug,
 {
-    /// Convert from a string to an interval.  This may not fail (see FromStrg
-    /// otherwise).
-    /// The format of the string is similar to what Display provides.jjj
-    fn from(value: &str) -> Self {
-        value.parse().expect("Could not parse string")
+    type Error = ParseError<E>;
+
+    /// Convert from a string to an interval.
+    /// The format of the string is similar to what Display provides.
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        value.parse()
     }
 }
 

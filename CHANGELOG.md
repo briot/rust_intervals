@@ -4,6 +4,10 @@
 ## Added
  - support `DoubleEndedIterator` and reverse iteration
  - iterators have gained a `as_interval()` function
+### Changed
+ - conversion from strings now uses `TryFrom` and `TryInto` instead of `From`.
+   Those functions no longer panic, but return an error, and the user can
+   decide how to handle that.
 
 ## 0.3.0
 ### Added

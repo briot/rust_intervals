@@ -3,6 +3,7 @@ mod test {
     use crate::{bounds::Bound, *};
     use ::core::cmp::Ordering;
     use ::core::fmt::Debug;
+    use ::core::convert::{TryFrom, TryInto};
 
     // In the world of real, there is always something in-between, even if
     // we cannot represent it.  However, in this case we may have an interval
@@ -460,14 +461,17 @@ mod test {
 
     /// Test From<&str> -> Interval
     #[test]
-    fn test_into_interval() {
+    fn test_into_interval() -> Result<(), ParseError<::core::num::ParseIntError>>
+    {
         // Will panic if the string is incorrect
-        let intv = Interval::<u32>::from("[1,4]");
+        let intv = Interval::<u32>::try_from("[1,4]")?;
         assert_eq!(intv, interval!(1, 4, "[]"));
 
         // Using  Into<Interval<T>>  for String, via same trait
-        let intv: Interval<u32> = "[1,4]".into();
+        let intv: Interval<u32> = "[1,4]".try_into()?;
         assert_eq!(intv, interval!(1, 4, "[]"));
+
+        Ok(())
     }
 
     /// Test Display and ToString traits
