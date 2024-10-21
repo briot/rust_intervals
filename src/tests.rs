@@ -976,5 +976,26 @@ mod test {
             intv1.iter().rev().take(3).collect::<Vec<_>>(),
             vec![u32::MAX, u32::MAX - 1, u32::MAX - 2],
         );
+
+        // Test that skipping is efficient.  We do not need Rust to call
+        // next() a billion times.
+        let intv1 = Interval::<u32>::doubly_unbounded();
+        assert_eq!(
+            intv1.iter().skip(1_000_000_000).take(3).collect::<Vec<_>>(),
+            vec![1_000_000_000, 1_000_000_001, 1_000_000_002],
+        );
+        assert_eq!(
+            intv1
+                .iter()
+                .rev()
+                .skip(1_000_000_000)
+                .take(3)
+                .collect::<Vec<_>>(),
+            vec![
+                u32::MAX - 1_000_000_000,
+                u32::MAX - 1_000_000_001,
+                u32::MAX - 1_000_000_002
+            ],
+        );
     }
 }

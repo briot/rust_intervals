@@ -9,8 +9,8 @@ where
     fn min_value() -> Self;
     fn max_value() -> Self;
 
-    fn forward(&self) -> Option<Self>;
-    fn backward(&self) -> Option<Self>;
+    fn forward(&self, step: usize) -> Option<Self>;
+    fn backward(&self, step: usize) -> Option<Self>;
 }
 
 macro_rules! step_for_int {
@@ -22,11 +22,11 @@ macro_rules! step_for_int {
             fn max_value() -> Self {
                 Self::MAX
             }
-            fn forward(&self) -> Option<Self> {
-                self.checked_add(1)
+            fn forward(&self, step: usize) -> Option<Self> {
+                self.checked_add(step as $t)
             }
-            fn backward(&self) -> Option<Self> {
-                self.checked_sub(1)
+            fn backward(&self, step: usize) -> Option<Self> {
+                self.checked_sub(step as $t)
             }
         }
     };
