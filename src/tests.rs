@@ -915,26 +915,42 @@ mod test {
     fn test_iter() {
         let intv1 = interval!(1, 4, "[)");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![1, 2, 3]);
+        assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![3, 2, 1]);
+
+        let mut iter = intv1.iter();
+        assert_eq!(
+            &[iter.next(), iter.next_back(), iter.next(), iter.next_back()],
+            &[Some(1), Some(3), Some(2), None],
+        );
 
         let intv1 = interval!(1, 4, "[]");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![1, 2, 3, 4]);
+        assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2, 1]);
 
         let intv1 = interval!(1, 4, "(]");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![2, 3, 4]);
+        assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2]);
 
         let intv1 = interval!(1_i8, 4, "()");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![2, 3]);
+        assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![3, 2]);
 
         let intv1 = interval!("-inf", 4_u16, "]");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![0, 1, 2, 3, 4]);
+        assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2, 1, 0]);
 
         let intv1 = interval!("-inf", 4_u16, ")");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![0, 1, 2, 3]);
+        assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![3, 2, 1, 0]);
 
         let intv1 = interval!(2, "[inf");
         assert_eq!(
             intv1.iter().take(10).collect::<Vec<_>>(),
             vec![2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        );
+        assert_eq!(
+            intv1.iter().rev().take(3).collect::<Vec<_>>(),
+            vec![u32::MAX, u32::MAX - 1, u32::MAX - 2],
         );
 
         let intv1 = interval!(2, "(inf");
@@ -942,14 +958,23 @@ mod test {
             intv1.iter().take(10).collect::<Vec<_>>(),
             vec![3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         );
+        assert_eq!(
+            intv1.iter().rev().take(3).collect::<Vec<_>>(),
+            vec![u32::MAX, u32::MAX - 1, u32::MAX - 2],
+        );
 
         let intv1 = Interval::<u32>::empty();
         assert_eq!(intv1.iter().collect::<Vec<_>>(), Vec::<u32>::new(),);
+        assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), Vec::<u32>::new(),);
 
         let intv1 = Interval::<u32>::doubly_unbounded();
         assert_eq!(
             intv1.iter().take(10).collect::<Vec<_>>(),
             vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        );
+        assert_eq!(
+            intv1.iter().rev().take(3).collect::<Vec<_>>(),
+            vec![u32::MAX, u32::MAX - 1, u32::MAX - 2],
         );
     }
 }

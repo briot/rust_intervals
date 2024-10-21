@@ -45,7 +45,7 @@ It provides the following features:
     depending on what your type provides.   See examples below on how to
     convert to and from a string.
   - Convert from Rust's range `a..b`, `a..=b` and so on
-  - Support for `Iterator` and `IntoIterator`
+  - Support for `Iterator`, `DoubleEndedIterator` and `IntoIterator`
   - Support for `Borrow` in parameters to make interface more convenient
 
 Example

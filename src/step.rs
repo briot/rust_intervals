@@ -5,18 +5,28 @@ pub trait Step
 where
     Self: ::core::marker::Sized,
 {
-    fn lowest() -> Self;
+    /// Those two methods could also be from num_traits::Bounded
+    fn min_value() -> Self;
+    fn max_value() -> Self;
+
     fn forward(&self) -> Option<Self>;
+    fn backward(&self) -> Option<Self>;
 }
 
 macro_rules! step_for_int {
     ($t:tt) => {
         impl Step for $t {
-            fn lowest() -> Self {
+            fn min_value() -> Self {
                 Self::MIN
+            }
+            fn max_value() -> Self {
+                Self::MAX
             }
             fn forward(&self) -> Option<Self> {
                 self.checked_add(1)
+            }
+            fn backward(&self) -> Option<Self> {
+                self.checked_sub(1)
             }
         }
     };

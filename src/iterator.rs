@@ -1,59 +1,97 @@
 use crate::bounds::Bound;
+use crate::intervals::Interval;
+use crate::nothing_between::NothingBetween;
 use crate::step::Step;
 
-pub struct IntervalIterator<T> {
-    current: Option<T>,
-    max: Bound<T>,
-}
-
-impl<T> IntervalIterator<T>
-    where T: Step + Clone + PartialOrd
+pub struct IntervalIterator<T>
+where
+    T: Step + Clone + PartialOrd + NothingBetween,
 {
-    /// Create a new iterator
-    pub(crate) fn new(lower: &Bound<T>, upper: &Bound<T>) -> Self {
-        match lower {
-            Bound::LeftUnbounded => IntervalIterator {
-                current: Some(T::lowest()),
-                max: upper.clone(),
-            },
-            Bound::LeftOf(lo) => IntervalIterator {
-                current: Some(lo.clone()),
-                max: upper.clone(),
-            },
-            Bound::RightOf(lo) => IntervalIterator {
-                current: lo.forward(),
-                max: upper.clone(),
-            },
-            Bound::RightUnbounded => IntervalIterator {
-                current: None,
-                max: upper.clone(),
-            },
-        }
-    }
+    pub(crate) intv: Interval<T>,
 }
 
 impl<T> Iterator for IntervalIterator<T>
 where
-    T: Step + Clone + PartialOrd
+    T: Step + Clone + PartialOrd + NothingBetween,
 {
     type Item = T;
 
+    /// Removes and returns an element from the start of the interval
     fn next(&mut self) -> Option<Self::Item> {
-        match &self.current {
-            None => None,
-            Some(c) => {
-                let mut n = c.forward().and_then(|v| {
-                    if self.max.left_of(&v) {
-                        None
-                    } else {
-                        Some(v)
-                    }
-                });
-                ::core::mem::swap(&mut self.current, &mut n);
-                n
+        if self.intv.is_empty() {
+            return None;
+        }
+
+        match &self.intv.lower {
+            Bound::LeftUnbounded => {
+                let current = T::min_value();
+                self.intv.lower = match current.forward() {
+                    None => Bound::RightUnbounded,
+                    Some(c) => Bound::LeftOf(c),
+                };
+                Some(current)
+            }
+            Bound::RightUnbounded => {
+                panic!("Can only happen when interval is empty");
+            }
+            Bound::LeftOf(lo) => {
+                let current = Some(lo.clone());
+                self.intv.lower = match lo.forward() {
+                    None => Bound::RightUnbounded,
+                    Some(c) => Bound::LeftOf(c),
+                };
+                current
+            }
+            Bound::RightOf(lo) => {
+                let current = lo.forward();
+                self.intv.lower = match current {
+                    None => Bound::RightUnbounded,
+                    Some(ref c) => Bound::RightOf(c.clone()),
+                };
+                current
             }
         }
     }
 }
 
+impl<T> DoubleEndedIterator for IntervalIterator<T>
+where
+    T: Step + Clone + PartialOrd + NothingBetween,
+{
+    /// Removes and returns an element from the end of the interval
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.intv.is_empty() {
+            return None;
+        }
 
+        match &self.intv.upper {
+            Bound::LeftUnbounded => {
+                panic!("Can only happen when interval is empty");
+            }
+            Bound::RightUnbounded => {
+                let current = T::max_value();
+                self.intv.upper = match current.backward() {
+                    None => Bound::LeftUnbounded,
+                    Some(c) => Bound::RightOf(c),
+                };
+                Some(current)
+            }
+            Bound::RightOf(up) => {
+                let current = Some(up.clone());
+                self.intv.upper = match up.backward() {
+                    None => Bound::LeftUnbounded,
+                    Some(c) => Bound::RightOf(c),
+                };
+                current
+            }
+            Bound::LeftOf(lo) => {
+                let current = lo.backward();
+                self.intv.upper = match current {
+                    None => Bound::LeftUnbounded,
+                    Some(ref c) => Bound::LeftOf(c.clone()),
+                };
+                current
+            }
+        }
+    }
+}

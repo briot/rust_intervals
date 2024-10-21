@@ -1,5 +1,9 @@
 # Version History
 
+## 0.4.0
+## Added
+ - support `DoubleEndedIterator` and reverse iteration
+
 ## 0.3.0
 ### Added
  - support for `Copy`

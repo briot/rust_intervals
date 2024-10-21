@@ -724,15 +724,15 @@ impl<T> Interval<T> {
     /// ```
     pub fn iter(&self) -> IntervalIterator<T>
     where
-        T: Clone + Step + PartialOrd,
+        T: Clone + Step + PartialOrd + NothingBetween,
     {
-        IntervalIterator::new(&self.lower, &self.upper)
+        IntervalIterator { intv: self.clone() }
     }
 }
 
 impl<T> IntoIterator for Interval<T>
 where
-    T: Step + Clone + PartialOrd,
+    T: Step + Clone + PartialOrd + NothingBetween,
 {
     type Item = T;
     type IntoIter = IntervalIterator<T>;
