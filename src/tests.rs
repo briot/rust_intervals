@@ -916,6 +916,10 @@ mod test {
         let intv1 = interval!(1, 4, "[)");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![1, 2, 3]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![3, 2, 1]);
+        let mut iter = intv1.iter();
+        let _ = iter.next();
+        let _ = iter.next_back();
+        assert_eq!(iter.as_interval(), interval!(2, 3, "[)"));
 
         let mut iter = intv1.iter();
         assert_eq!(
@@ -930,14 +934,26 @@ mod test {
         let intv1 = interval!(1, 4, "(]");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![2, 3, 4]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2]);
+        let mut iter = intv1.iter();
+        let _ = iter.next();
+        let _ = iter.next_back();
+        assert_eq!(iter.as_interval(), interval!(2, 3, "(]"));
 
         let intv1 = interval!(1_i8, 4, "()");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![2, 3]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![3, 2]);
+        let mut iter = intv1.iter();
+        let _ = iter.next();
+        let _ = iter.next_back();
+        assert_eq!(iter.as_interval(), interval!(2, 3, "()"));
 
         let intv1 = interval!("-inf", 4_u16, "]");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![0, 1, 2, 3, 4]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2, 1, 0]);
+        let mut iter = intv1.iter();
+        let _ = iter.next();
+        let _ = iter.next_back();
+        assert_eq!(iter.as_interval(), interval!(1, 3, "[]"));
 
         let intv1 = interval!("-inf", 4_u16, ")");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![0, 1, 2, 3]);

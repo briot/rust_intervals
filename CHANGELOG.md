@@ -3,6 +3,7 @@
 ## 0.4.0
 ## Added
  - support `DoubleEndedIterator` and reverse iteration
+ - iterators have gained a `as_interval()` function
 
 ## 0.3.0
 ### Added

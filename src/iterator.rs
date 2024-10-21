@@ -14,6 +14,12 @@ impl<T> IntervalIterator<T>
 where
     T: Step + Clone + PartialOrd + NothingBetween,
 {
+    /// Return an interval matching what the iterators will return
+    pub fn as_interval(&self) -> Interval<T> {
+        self.intv.clone()
+    }
+
+    /// Internal implementation for nth() and next()
     fn internal_nth(&mut self, n: usize) -> Option<T> {
         if self.intv.is_empty() {
             return None;
@@ -52,6 +58,7 @@ where
         }
     }
 
+    /// Internal implementation for nth_back() and next_back()
     fn internal_nth_back(&mut self, n: usize) -> Option<T> {
         if self.intv.is_empty() {
             return None;
