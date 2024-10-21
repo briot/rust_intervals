@@ -2,8 +2,8 @@
 mod test {
     use crate::{bounds::Bound, *};
     use ::core::cmp::Ordering;
-    use ::core::fmt::Debug;
     use ::core::convert::{TryFrom, TryInto};
+    use ::core::fmt::Debug;
 
     // In the world of real, there is always something in-between, even if
     // we cannot represent it.  However, in this case we may have an interval
@@ -1001,20 +1001,26 @@ mod test {
         // next() a billion times.
         let intv1 = Interval::<u32>::doubly_unbounded();
         assert_eq!(
-            intv1.iter().skip(1_000_000_000).take(3).collect::<Vec<_>>(),
-            vec![1_000_000_000, 1_000_000_001, 1_000_000_002],
+            intv1
+                .iter()
+                .skip(1_000_000_000)
+                .step_by(1_000_000_000)
+                .take(3)
+                .collect::<Vec<_>>(),
+            vec![1_000_000_000, 2_000_000_000, 3_000_000_000],
         );
         assert_eq!(
             intv1
                 .iter()
                 .rev()
                 .skip(1_000_000_000)
+                .step_by(1_000_000_000)
                 .take(3)
                 .collect::<Vec<_>>(),
             vec![
                 u32::MAX - 1_000_000_000,
-                u32::MAX - 1_000_000_001,
-                u32::MAX - 1_000_000_002
+                u32::MAX - 2_000_000_000,
+                u32::MAX - 3_000_000_000
             ],
         );
     }
