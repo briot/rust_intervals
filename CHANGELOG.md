@@ -4,6 +4,8 @@
 ## Added
  - support `DoubleEndedIterator` and reverse iteration
  - iterators have gained a `as_interval()` function
+ - support for `ExactSizeIterator`
+
 ### Changed
  - conversion from strings now uses `TryFrom` and `TryInto` instead of `From`.
    Those functions no longer panic, but return an error, and the user can

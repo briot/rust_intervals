@@ -1,3 +1,5 @@
+use ::core::convert::TryInto;
+
 /// Similar to std::iter::Step, but the latter is unstable and cannot be used
 /// in this package.  It also doesn't provide support for starting from lowest
 /// value valid for the type for instance.
@@ -11,6 +13,15 @@ where
 
     fn forward(&self, step: usize) -> Option<Self>;
     fn backward(&self, step: usize) -> Option<Self>;
+
+    /// Computes the number of elements from self to other.  This function
+    /// returns None if the diff cannot be computed or is larger than what
+    /// usize allows.
+    /// ```
+    /// use rust_intervals::Step;
+    /// assert_eq!(1_u8.elements_between(&3), Some(2));
+    /// ```
+    fn elements_between(&self, other: &Self) -> Option<usize>;
 }
 
 macro_rules! step_for_int {
@@ -27,6 +38,12 @@ macro_rules! step_for_int {
             }
             fn backward(&self, step: usize) -> Option<Self> {
                 self.checked_sub(step as $t)
+            }
+            fn elements_between(&self, other: &Self) -> Option<usize> {
+                match other.checked_sub(*self) {
+                    None => None,
+                    Some(d) => d.try_into().ok(),
+                }
             }
         }
     };

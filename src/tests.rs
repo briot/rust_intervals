@@ -917,9 +917,11 @@ mod test {
     #[cfg(feature = "std")]
     #[test]
     fn test_iter() {
-        let intv1 = interval!(1, 4, "[)");
+        let intv1 = interval!(1_u32, 4, "[)");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![1, 2, 3]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![3, 2, 1]);
+        assert_eq!(intv1.iter().len(), 3);
+        assert_eq!(intv1.iter().rev().len(), 3);
         let mut iter = intv1.iter();
         let _ = iter.next();
         let _ = iter.next_back();
@@ -934,10 +936,14 @@ mod test {
         let intv1 = interval!(1, 4, "[]");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![1, 2, 3, 4]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2, 1]);
+        assert_eq!(intv1.iter().len(), 4);
+        assert_eq!(intv1.iter().rev().len(), 4);
 
         let intv1 = interval!(1, 4, "(]");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![2, 3, 4]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2]);
+        assert_eq!(intv1.iter().len(), 3);
+        assert_eq!(intv1.iter().rev().len(), 3);
         let mut iter = intv1.iter();
         let _ = iter.next();
         let _ = iter.next_back();
@@ -946,6 +952,8 @@ mod test {
         let intv1 = interval!(1_i8, 4, "()");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![2, 3]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![3, 2]);
+        assert_eq!(intv1.iter().len(), 2);
+        assert_eq!(intv1.iter().rev().len(), 2);
         let mut iter = intv1.iter();
         let _ = iter.next();
         let _ = iter.next_back();
@@ -954,6 +962,8 @@ mod test {
         let intv1 = interval!("-inf", 4_u16, "]");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![0, 1, 2, 3, 4]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2, 1, 0]);
+        assert_eq!(intv1.iter().len(), 5);
+        assert_eq!(intv1.iter().rev().len(), 5);
         let mut iter = intv1.iter();
         let _ = iter.next();
         let _ = iter.next_back();
@@ -962,6 +972,8 @@ mod test {
         let intv1 = interval!("-inf", 4_u16, ")");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![0, 1, 2, 3]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![3, 2, 1, 0]);
+        assert_eq!(intv1.iter().len(), 4);
+        assert_eq!(intv1.iter().rev().len(), 4);
 
         let intv1 = interval!(2, "[inf");
         assert_eq!(
@@ -972,6 +984,8 @@ mod test {
             intv1.iter().rev().take(3).collect::<Vec<_>>(),
             vec![u32::MAX, u32::MAX - 1, u32::MAX - 2],
         );
+        assert_eq!(intv1.iter().take(10).len(), 10);
+        assert_eq!(intv1.iter().rev().take(3).len(), 3);
 
         let intv1 = interval!(2, "(inf");
         assert_eq!(
@@ -982,10 +996,14 @@ mod test {
             intv1.iter().rev().take(3).collect::<Vec<_>>(),
             vec![u32::MAX, u32::MAX - 1, u32::MAX - 2],
         );
+        assert_eq!(intv1.iter().take(10).len(), 10);
+        assert_eq!(intv1.iter().rev().take(10).len(), 10);
 
         let intv1 = Interval::<u32>::empty();
         assert_eq!(intv1.iter().collect::<Vec<_>>(), Vec::<u32>::new(),);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), Vec::<u32>::new(),);
+        assert_eq!(intv1.iter().len(), 0);
+        assert_eq!(intv1.iter().rev().len(), 0);
 
         let intv1 = Interval::<u32>::doubly_unbounded();
         assert_eq!(
@@ -996,6 +1014,12 @@ mod test {
             intv1.iter().rev().take(3).collect::<Vec<_>>(),
             vec![u32::MAX, u32::MAX - 1, u32::MAX - 2],
         );
+        assert_eq!(intv1.iter().take(10).len(), 10);
+        assert_eq!(intv1.iter().len(), u32::MAX as usize);
+        assert_eq!(intv1.iter().rev().take(3).len(), 3);
+
+        let intv1 = Interval::<u64>::doubly_unbounded();
+        assert_eq!(intv1.iter().len(), u64::MAX as usize);
 
         // Test that skipping is efficient.  We do not need Rust to call
         // next() a billion times.
@@ -1023,5 +1047,12 @@ mod test {
                 u32::MAX - 3_000_000_000
             ],
         );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_len_panic() {
+        let intv1 = Interval::<i64>::doubly_unbounded();
+        assert_eq!(intv1.iter().len(), usize::MAX);
     }
 }
