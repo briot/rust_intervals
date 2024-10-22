@@ -8,7 +8,6 @@ default_to_workspace = false
 alias = "workflow"
 
 [tasks.workflow]
-# Do not run "coverage" as it forces recompilation all the time
 dependencies = [ "test-all", "format", "clippy", "doc", "fuzz" ]
 
 [tasks.test-all]
@@ -22,19 +21,13 @@ args = ["test", "--all-features"]
 command = "cargo"
 args = ["test", "--no-default-features"]
 
-[tasks.coverage]
-dependencies = ["codecov-clean"]
-env = { "CARGO_INCREMENTAL" = "0", "RUSTFLAGS" = "-Cinstrument-coverage", "LLVM_PROFILE_FILE" = "cargo-test-%p-%m.profraw" }
-run_task = "codecov-grcov"
-
-[tasks.codecov-grcov]
-dependencies = [ "test-all-features" ]
-command = "grcov"
-args = [".", "-s", ".", "--binary-path", "${CARGO_MAKE_CRATE_TARGET_DIRECTORY}/debug/", "-t",  "html", "--branch", "--ignore-not-existing", "-o", "${CARGO_MAKE_CRATE_TARGET_DIRECTORY}/debug/coverage/"]
-
-[tasks.codecov-clean]
-script_runner = "@shell"
-script = "rm -f *.profraw"
+[tasks.cov]
+toolchain = "nightly"
+install_crate = "cargo-llvm-cov"
+command = "cargo"
+# Could add  --branch  (superceded by --mcdc)
+# Could add --show-instantiations to show how functions are instantiated
+args = [ "llvm-cov", "test", "--show-missing-lines", "--doctests", "--html", "--all-features", "--color=always" ]
 
 [tasks.doc]
 command = "cargo"

@@ -34,10 +34,10 @@ macro_rules! step_for_int {
                 Self::MAX
             }
             fn forward(&self, step: usize) -> Option<Self> {
-                self.checked_add(step as $t)
+                self.checked_add(step as Self)
             }
             fn backward(&self, step: usize) -> Option<Self> {
-                self.checked_sub(step as $t)
+                self.checked_sub(step as Self)
             }
             fn elements_between(&self, other: &Self) -> Option<usize> {
                 match other.checked_sub(*self) {

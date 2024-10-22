@@ -57,11 +57,15 @@ impl<T> Interval<T> {
     /// ```
     /// #  use rust_intervals::{interval, Interval};
     /// #  use ::core::convert::TryInto;
+    ///    use ::core::ops::Bound;
     ///    let intv1 = Interval::new_open_open(1, 10);
     ///    let intv2 = interval!(1, 10, "()");
     ///    let intv3: Interval<u32> = "(1,10)".try_into().unwrap();
+    ///    let intv4 = Interval::from_range((
+    ///        Bound::Excluded(1),Bound::Excluded(10)));
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
+    /// #  assert_eq!(intv1, intv4);
     /// ```
     pub fn new_open_open(lower: T, upper: T) -> Self {
         Self {
@@ -73,12 +77,16 @@ impl<T> Interval<T> {
     /// Construct a left-open, right-closed intervals (`(A,B]`)
     /// ```
     /// #  use rust_intervals::{interval, Interval};
-    /// #  use ::core::convert::TryInto;
+    ///    use ::core::convert::TryInto;
+    ///    use ::core::ops::Bound;
     ///    let intv1 = Interval::new_open_closed(1, 10);
     ///    let intv2 = interval!(1, 10, "(]");
     ///    let intv3: Interval<u32> = "(1,10]".try_into().unwrap();
+    ///    let intv4 = Interval::from_range((
+    ///        Bound::Excluded(1),Bound::Included(10)));
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
+    /// #  assert_eq!(intv1, intv4);
     /// ```
     pub fn new_open_closed(lower: T, upper: T) -> Self {
         Self {
@@ -148,11 +156,15 @@ impl<T> Interval<T> {
     /// ```
     /// #  use rust_intervals::{interval, Interval};
     /// #  use ::core::convert::TryInto;
+    ///    use ::core::ops::Bound;
     ///    let intv1 = Interval::new_open_unbounded(10);
     ///    let intv2 = interval!(10, "(inf");
     ///    let intv3: Interval<u32> = "(10,)".try_into().unwrap();
+    ///    let intv4 = Interval::from_range((
+    ///        Bound::Excluded(10),Bound::Unbounded));
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
+    /// #  assert_eq!(intv1, intv4);
     /// ```
     pub fn new_open_unbounded(lower: T) -> Self {
         Self {
@@ -338,14 +350,17 @@ impl<T> Interval<T> {
     ///
     /// But if you implement your own wrapper type as
     /// ```
-    ///     use rust_intervals::NothingBetween;
-    ///     #[derive(PartialEq, PartialOrd)]
-    ///     struct Real(f32);
-    ///     impl NothingBetween for Real {
-    ///         fn nothing_between(&self, _other: &Self) -> bool {
-    ///             false
-    ///         }
-    ///     }
+    ///    use rust_intervals::Interval;
+    ///    use rust_intervals::NothingBetween;
+    ///    #[derive(PartialEq, PartialOrd)]
+    ///    struct Real(f32);
+    ///    impl NothingBetween for Real {
+    ///        fn nothing_between(&self, _other: &Self) -> bool {
+    ///            false
+    ///        }
+    ///    }
+    ///    assert!(!Interval::new_open_open(Real(1.0), Real(1.0 + f32::EPSILON))
+    ///        .is_empty());
     /// ```
     /// then the same interval `[Real(1.0), Real(1.0 + f32::EPSILON)]` is
     /// no longer empty, even though we cannot represent any number from this
@@ -711,6 +726,9 @@ impl<T> Interval<T> {
     ///    let intv2 = interval!(20, 30);
     ///    let res1 = intv1.union(&intv2);
     ///    let res2 = intv1 | intv2;
+    ///    let _ = intv1 | &intv2;  // all variants of refs
+    ///    let _ = &intv1 | &intv2;  // all variants of refs
+    ///    let _ = &intv1 | intv2;  // all variants of refs
     ///    assert_eq!(res1, res2);
     /// ```
     pub fn union(&self, right: &Self) -> Option<Self>

@@ -569,9 +569,11 @@ mod test {
     #[test]
     fn test_hash() {
         let mut map = std::collections::HashMap::new();
-        map.insert(interval!(1, 2), 2);
-        map.insert(interval!(1, 3), 3);
-        assert_eq!(map.len(), 2);
+        map.insert(interval!(1, 2, "[]"), 2);
+        map.insert(interval!(1, 10, "()"), 3);
+        map.insert(interval!(1, "(inf"), 4);
+        map.insert(interval!("-inf", 20, "]"), 5);
+        assert_eq!(map.len(), 4);
     }
 
     #[test]

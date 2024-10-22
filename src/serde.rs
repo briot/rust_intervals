@@ -58,7 +58,7 @@ where
                     SerdeInterval::OpenUnbounded(lo)
                 }
                 (_, Bound::LeftUnbounded) | (Bound::RightUnbounded, _) => {
-                    panic!("unexpected interval");
+                    SerdeInterval::Empty
                 }
             };
             intv.serialize(serializer)
@@ -127,14 +127,10 @@ mod test {
         assert_eq!(
             serde_json::from_str::<Interval<T>>(json_str).unwrap(),
             intv,
-            "while parsing JSON {}",
-            json_str,
         );
         assert_eq!(
             ron::from_str::<Interval<T>>(ron_str).unwrap(),
             intv,
-            "while parsing ron {}",
-            ron_str
         );
     }
 
