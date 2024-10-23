@@ -34,7 +34,7 @@
 //! Given two intervals, and assuming T is orderable, we can compute the
 //! following:
 //!
-//! ```text
+//! ```none
 //!        [------ A ------]
 //!               [----- B -------]
 //!
@@ -48,7 +48,7 @@
 //! ```
 //!
 //! When the two intervals do not overlap, we can compute:
-//! ```text
+//! ```none
 //!      [---A---]   [----B----]
 //!
 //!      [---------------------]    Convex hull

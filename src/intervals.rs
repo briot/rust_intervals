@@ -13,19 +13,22 @@ pub struct Interval<T> {
 }
 
 impl<T> Interval<T> {
-    /// Construct a left-closed, right-open intervals (`[A,B)`)
+    /// Construct a left-closed, right-open intervals (`[A,B)`).
     /// ```
-    /// #  use rust_intervals::{interval, Interval};
+    /// #  use rust_intervals::{interval, Interval, ParseError};
     /// #  use ::core::convert::TryInto;
+    /// #  fn main() -> Result<(), ParseError<::core::num::ParseIntError>> {
     ///    let intv1 = Interval::new_closed_open(1, 10);
     ///    let intv2 = (1..10).into();
     ///    let intv3 = interval!(1, 10, "[)");
-    ///    let intv4: Interval<u32> = "[1,10)".try_into().unwrap();
-    ///    let intv5 = "[1,10)".parse::<Interval<u32>>().unwrap();
+    ///    let intv4: Interval<u32> = "[1,10)".try_into()?;
+    ///    let intv5 = "[1,10)".parse::<Interval<u32>>()?;
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
     /// #  assert_eq!(intv1, intv5);
+    /// #  Ok(())
+    /// #  }
     /// ```
     pub fn new_closed_open(lower: T, upper: T) -> Self {
         Self {
@@ -36,15 +39,18 @@ impl<T> Interval<T> {
 
     /// Construct a left-closed, right-closed intervals (`[A,B]`)
     /// ```
-    /// #  use rust_intervals::{interval, Interval};
+    /// #  use rust_intervals::{interval, Interval, ParseError};
     /// #  use ::core::convert::TryInto;
+    /// #  fn main() -> Result<(), ParseError<::core::num::ParseIntError>> {
     ///    let intv1 = Interval::new_closed_closed(1, 10);
     ///    let intv2 = (1..=10).into();
     ///    let intv3 = interval!(1, 10, "[]");
-    ///    let intv4: Interval<u32> = "[1,10]".try_into().unwrap();
+    ///    let intv4: Interval<u32> = "[1,10]".try_into()?;
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
+    /// #  Ok(())
+    /// #  }
     /// ```
     pub fn new_closed_closed(lower: T, upper: T) -> Self {
         Self {
@@ -55,17 +61,20 @@ impl<T> Interval<T> {
 
     /// Construct a left-open, right-open intervals (`(A,B)`)
     /// ```
-    /// #  use rust_intervals::{interval, Interval};
+    /// #  use rust_intervals::{interval, Interval, ParseError};
     /// #  use ::core::convert::TryInto;
     ///    use ::core::ops::Bound;
+    /// #  fn main() -> Result<(), ParseError<::core::num::ParseIntError>> {
     ///    let intv1 = Interval::new_open_open(1, 10);
     ///    let intv2 = interval!(1, 10, "()");
-    ///    let intv3: Interval<u32> = "(1,10)".try_into().unwrap();
+    ///    let intv3: Interval<u32> = "(1,10)".try_into()?;
     ///    let intv4 = Interval::from_range((
-    ///        Bound::Excluded(1),Bound::Excluded(10)));
+    ///        Bound::Excluded(1), Bound::Excluded(10)));
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
+    /// #  Ok(())
+    /// #  }
     /// ```
     pub fn new_open_open(lower: T, upper: T) -> Self {
         Self {
@@ -76,17 +85,20 @@ impl<T> Interval<T> {
 
     /// Construct a left-open, right-closed intervals (`(A,B]`)
     /// ```
-    /// #  use rust_intervals::{interval, Interval};
-    ///    use ::core::convert::TryInto;
+    /// #  use rust_intervals::{interval, Interval, ParseError};
+    /// #  use ::core::convert::TryInto;
     ///    use ::core::ops::Bound;
+    /// #  fn main() -> Result<(), ParseError<::core::num::ParseIntError>> {
     ///    let intv1 = Interval::new_open_closed(1, 10);
     ///    let intv2 = interval!(1, 10, "(]");
-    ///    let intv3: Interval<u32> = "(1,10]".try_into().unwrap();
+    ///    let intv3: Interval<u32> = "(1,10]".try_into()?;
     ///    let intv4 = Interval::from_range((
-    ///        Bound::Excluded(1),Bound::Included(10)));
+    ///        Bound::Excluded(1), Bound::Included(10)));
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
+    /// #  Ok(())
+    /// #  }
     /// ```
     pub fn new_open_closed(lower: T, upper: T) -> Self {
         Self {
@@ -97,15 +109,18 @@ impl<T> Interval<T> {
 
     /// Construct a left-unbounded, right-closed intervals (`(,B]`)
     /// ```
-    /// #  use rust_intervals::{interval, Interval};
+    /// #  use rust_intervals::{interval, Interval, ParseError};
     /// #  use ::core::convert::TryInto;
+    /// #  fn main() -> Result<(), ParseError<::core::num::ParseIntError>> {
     ///    let intv1 = Interval::new_unbounded_closed(10);
     ///    let intv2 = (..=10).into();
     ///    let intv3 = interval!("-inf", 10, "]");
-    ///    let intv4: Interval<u32> = "(,10]".try_into().unwrap();
+    ///    let intv4: Interval<u32> = "(,10]".try_into()?;
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
+    /// #  Ok(())
+    /// #  }
     /// ```
     pub fn new_unbounded_closed(upper: T) -> Self {
         Self {
@@ -116,15 +131,18 @@ impl<T> Interval<T> {
 
     /// Construct a left-unbounded, right-open intervals (`(,B)`)
     /// ```
-    /// #  use rust_intervals::{interval, Interval};
+    /// #  use rust_intervals::{interval, Interval, ParseError};
     /// #  use ::core::convert::TryInto;
+    /// #  fn main() -> Result<(), ParseError<::core::num::ParseIntError>> {
     ///    let intv1 = Interval::new_unbounded_open(10);
     ///    let intv2 = (..10).into();
     ///    let intv3 = interval!("-inf", 10, ")");
-    ///    let intv4: Interval<u32> = "(,10)".try_into().unwrap();
+    ///    let intv4: Interval<u32> = "(,10)".try_into()?;
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
+    /// #  Ok(())
+    /// #  }
     /// ```
     pub fn new_unbounded_open(upper: T) -> Self {
         Self {
@@ -135,15 +153,18 @@ impl<T> Interval<T> {
 
     /// Construct a left-closed, right-unbounded intervals (`[A,)`)
     /// ```
-    /// #  use rust_intervals::{interval, Interval};
+    /// #  use rust_intervals::{interval, Interval, ParseError};
     /// #  use ::core::convert::TryInto;
+    /// #  fn main() -> Result<(), ParseError<::core::num::ParseIntError>> {
     ///    let intv1 = Interval::new_closed_unbounded(10);
     ///    let intv2 = (10..).into();
     ///    let intv3 = interval!(10, "[inf");
-    ///    let intv4: Interval<u32> = "[10,)".try_into().unwrap();
+    ///    let intv4: Interval<u32> = "[10,)".try_into()?;
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
+    /// #  Ok(())
+    /// #  }
     /// ```
     pub fn new_closed_unbounded(lower: T) -> Self {
         Self {
@@ -154,17 +175,20 @@ impl<T> Interval<T> {
 
     /// Construct a left-open, right-unbounded intervals (`(A,)`)
     /// ```
-    /// #  use rust_intervals::{interval, Interval};
+    /// #  use rust_intervals::{interval, Interval, ParseError};
     /// #  use ::core::convert::TryInto;
     ///    use ::core::ops::Bound;
+    /// #  fn main() -> Result<(), ParseError<::core::num::ParseIntError>> {
     ///    let intv1 = Interval::new_open_unbounded(10);
     ///    let intv2 = interval!(10, "(inf");
-    ///    let intv3: Interval<u32> = "(10,)".try_into().unwrap();
+    ///    let intv3: Interval<u32> = "(10,)".try_into()?;
     ///    let intv4 = Interval::from_range((
-    ///        Bound::Excluded(10),Bound::Unbounded));
+    ///        Bound::Excluded(10), Bound::Unbounded));
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
     /// #  assert_eq!(intv1, intv4);
+    /// #  Ok(())
+    /// #  }
     /// ```
     pub fn new_open_unbounded(lower: T) -> Self {
         Self {
@@ -176,13 +200,16 @@ impl<T> Interval<T> {
     /// Construct a doubly unbounded intervals (`(,)`) that contains all
     /// possible values.
     /// ```
-    /// #  use rust_intervals::{interval, Interval};
+    /// #  use rust_intervals::{interval, Interval, ParseError};
     /// #  use ::core::convert::TryInto;
+    /// #  fn main() -> Result<(), ParseError<::core::num::ParseIntError>> {
     ///    let intv1 = Interval::<u32>::doubly_unbounded();
     ///    let intv2: Interval::<u32> = (..).into();
-    ///    let intv3: Interval<u32> = "(,)".try_into().unwrap();
+    ///    let intv3: Interval<u32> = "(,)".try_into()?;
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
+    /// #  Ok(())
+    /// #  }
     /// ```
     pub fn doubly_unbounded() -> Self {
         Self {
@@ -194,13 +221,16 @@ impl<T> Interval<T> {
     /// Returns an empty interval.  Note that there are multiple representations
     /// for empty interval, though they are all equivalent.
     /// ```
-    /// #  use rust_intervals::{interval, Interval};
+    /// #  use rust_intervals::{interval, Interval, ParseError};
     /// #  use ::core::convert::TryInto;
+    /// #  fn main() -> Result<(), ParseError<::core::num::ParseIntError>> {
     ///    let intv1 = Interval::<u32>::empty();
     ///    let intv2: Interval<u32> = interval!("empty");
-    ///    let intv3: Interval<u32> = "empty".try_into().unwrap();
+    ///    let intv3: Interval<u32> = "empty".try_into()?;
     /// #  assert_eq!(intv1, intv2);
     /// #  assert_eq!(intv1, intv3);
+    /// #  Ok(())
+    /// #  }
     /// ```
     pub fn empty() -> Self {
         Self {
@@ -426,7 +456,7 @@ impl<T> Interval<T> {
 
     /// Whether every value in self is strictly less than (<) X
     /// (returns True is if self is empty).
-    /// ```txt
+    /// ```none
     ///    [------] .
     ///             X    => strictly left of the interval
     /// ```
@@ -446,7 +476,7 @@ impl<T> Interval<T> {
 
     /// Whether X is strictly less than (<) every value in self.
     /// (returns True is if self is empty).
-    /// ```txt
+    /// ```none
     ///    . [------]
     ///    X           => strictly right of the interval
     /// ```
@@ -466,7 +496,7 @@ impl<T> Interval<T> {
 
     /// Whether every value in self is less than (<=) X.
     /// (returns True is if self is empty).
-    /// ```txt
+    /// ```none
     ///    [------]
     ///           X    => left of the interval (but not strictly left of)
     /// ```
@@ -486,7 +516,7 @@ impl<T> Interval<T> {
 
     /// Whether X is less than (<=) every value in self.
     /// (returns True is if self is empty).
-    /// ```txt
+    /// ```none
     ///      [------]
     ///      X           => right of the interval (but not strictly right of)
     /// ```
@@ -651,7 +681,9 @@ impl<T> Interval<T> {
     }
 
     /// Whether the two intervals overlap, i.e. have at least one point in
-    /// common
+    /// common.
+    ///
+    /// This function is often named `overlaps()`.
     pub fn intersects(&self, right: &Self) -> bool
     where
         T: PartialOrd + NothingBetween,

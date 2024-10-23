@@ -128,10 +128,7 @@ mod test {
             serde_json::from_str::<Interval<T>>(json_str).unwrap(),
             intv,
         );
-        assert_eq!(
-            ron::from_str::<Interval<T>>(ron_str).unwrap(),
-            intv,
-        );
+        assert_eq!(ron::from_str::<Interval<T>>(ron_str).unwrap(), intv,);
     }
 
     #[test]
