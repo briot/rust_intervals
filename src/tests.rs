@@ -320,14 +320,6 @@ mod test {
             assert!(Interval::new_open_open(ten_sec, ten_sec_one_ns).is_empty());
             assert!(Interval::new_open_open(ten_sec_one_ns, ten_sec).is_empty());
         }
-
-        #[cfg(feature = "rust_decimal")]
-        {
-            let dec1 = rust_decimal::Decimal::ONE;
-            let dec2 = rust_decimal::Decimal::new(101, 2); // 1.01
-            assert!(interval!(dec1, dec1).is_empty());
-            assert!(!interval!(dec1, dec2, "()").is_empty());
-        }
     }
 
     #[test]

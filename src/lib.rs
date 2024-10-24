@@ -79,6 +79,9 @@ mod serde;
 #[cfg(feature = "chrono")]
 mod chrono;
 
+#[cfg(feature = "rust_decimal")]
+mod decimal;
+
 pub use crate::intervals::{Interval, ParseError};
 pub use crate::iterator::IntervalIterator;
 pub use crate::multi_intervals::MultiInterval;

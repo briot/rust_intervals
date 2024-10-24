@@ -97,10 +97,3 @@ impl<T: NothingBetween> NothingBetween for &T {
         (*self).nothing_between(*other)
     }
 }
-
-#[cfg(feature = "rust_decimal")]
-impl NothingBetween for rust_decimal::Decimal {
-    fn nothing_between(&self, _other: &Self) -> bool {
-        false // there is always a decimal between two others
-    }
-}

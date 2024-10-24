@@ -15,8 +15,8 @@ impl NothingBetween for chrono::NaiveDate {
 
 #[cfg(test)]
 mod test {
-    use ::chrono::{Local, NaiveDate, TimeDelta};
     use crate::*;
+    use ::chrono::{Local, NaiveDate, TimeDelta};
 
     #[test]
     fn test_chrono() {
