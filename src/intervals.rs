@@ -456,6 +456,12 @@ impl<T> Interval<T> {
 
     /// Whether every value in self is strictly less than (<) X
     /// (returns True is if self is empty).
+    ///
+    /// Note that the handling of empty ranges is different than in postgres
+    /// where it would return False.  But this crate views ranges as sets of
+    /// values, so it makes more sense to return true in this case.  Postgres
+    /// treats empty ranges more like NaN, which cannot be compared.
+    ///
     /// ```none
     ///    [------] .
     ///             X    => strictly left of the interval
