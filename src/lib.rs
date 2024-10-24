@@ -76,6 +76,9 @@ mod tests;
 #[cfg(feature = "serde")]
 mod serde;
 
+#[cfg(feature = "chrono")]
+mod chrono;
+
 pub use crate::intervals::{Interval, ParseError};
 pub use crate::iterator::IntervalIterator;
 pub use crate::multi_intervals::MultiInterval;

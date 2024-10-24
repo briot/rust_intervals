@@ -98,21 +98,6 @@ impl<T: NothingBetween> NothingBetween for &T {
     }
 }
 
-#[cfg(feature = "chrono")]
-impl<T: chrono::TimeZone> NothingBetween for chrono::DateTime<T> {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other.clone().signed_duration_since(self)
-            <= chrono::TimeDelta::nanoseconds(1)
-    }
-}
-
-#[cfg(feature = "chrono")]
-impl NothingBetween for chrono::NaiveDate {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other.signed_duration_since(*self) <= chrono::TimeDelta::days(1)
-    }
-}
-
 #[cfg(feature = "rust_decimal")]
 impl NothingBetween for rust_decimal::Decimal {
     fn nothing_between(&self, _other: &Self) -> bool {

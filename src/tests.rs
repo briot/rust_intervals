@@ -321,24 +321,6 @@ mod test {
             assert!(Interval::new_open_open(ten_sec_one_ns, ten_sec).is_empty());
         }
 
-        #[cfg(feature = "chrono")]
-        {
-            let apr_1 = chrono::NaiveDate::from_ymd_opt(2024, 4, 1).unwrap();
-            let mar_31 = apr_1.pred_opt().unwrap();
-            let apr_2 = apr_1.succ_opt().unwrap();
-            assert!(Interval::new_closed_open(&apr_1, &apr_1).is_empty());
-            assert!(Interval::new_open_open(&mar_31, &apr_1).is_empty());
-            assert!(Interval::new_open_open(&apr_2, &apr_1).is_empty());
-
-            let now = chrono::Local::now();
-            let one_min_ago = now - chrono::TimeDelta::minutes(1);
-            let one_sec_ago = now - chrono::TimeDelta::seconds(1);
-            let one_ns_ago = now - chrono::TimeDelta::nanoseconds(1);
-            assert!(!Interval::new_closed_open(one_min_ago, now).is_empty());
-            assert!(!Interval::new_open_open(one_sec_ago, now).is_empty());
-            assert!(Interval::new_open_open(one_ns_ago, now).is_empty());
-        }
-
         #[cfg(feature = "rust_decimal")]
         {
             let dec1 = rust_decimal::Decimal::ONE;
