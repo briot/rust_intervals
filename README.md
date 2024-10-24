@@ -82,6 +82,18 @@ approaches:
 
 ```
 
+Similar packages
+-----------------
+
+- `std::ops::Range` are the Rust built-in ranges.  They only provide
+  a `contains()` function, do not provide `Copy` and do not provide all the
+  kinds of bounds.
+
+- `Extent` [https://docs.rs/extent/latest/extent/] only provide closed-closed
+  intervals.  They also do not provide all the operations like `between()`,
+  `convex_hull()` and so forth.  In exchange, they do not require extra flags
+  in the struct, which makes them slightly smaller.
+
 Authors
 -------
 
