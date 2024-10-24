@@ -1,7 +1,7 @@
 use crate::bounds::Bound;
 use crate::iterator::IntervalIterator;
-use crate::multi_intervals::MultiInterval;
 use crate::nothing_between::NothingBetween;
+use crate::pairs::Pair;
 use crate::step::Step;
 use ::core::cmp::{Ordering, PartialOrd};
 use ::core::ops::{Bound as RgBound, RangeBounds};
@@ -626,14 +626,14 @@ impl<T> Interval<T> {
     ///    let _ = &intv1 - intv2;
     ///    let _ = &intv1 - &intv2;
     /// ```
-    pub fn difference(&self, right: &Self) -> MultiInterval<T>
+    pub fn difference(&self, right: &Self) -> Pair<T>
     where
         T: PartialOrd + NothingBetween + Clone,
     {
         if self.is_empty() || right.is_empty() {
-            MultiInterval::One(self.clone())
+            Pair::One(self.clone())
         } else {
-            MultiInterval::new_from_two(
+            Pair::new_from_two(
                 Interval {
                     lower: self.lower.clone(),
                     upper: right.lower.min(&self.upper),
@@ -660,14 +660,14 @@ impl<T> Interval<T> {
     ///    let _ = &intv1 ^ &intv2;  // all variants of refs
     ///    let _ = &intv1 ^ intv2;  // all variants of refs
     /// ```
-    pub fn symmetric_difference(&self, right: &Self) -> MultiInterval<T>
+    pub fn symmetric_difference(&self, right: &Self) -> Pair<T>
     where
         T: PartialOrd + NothingBetween + Clone,
     {
         if self.is_empty() || right.is_empty() {
-            MultiInterval::new_from_two(self.clone(), right.clone())
+            Pair::new_from_two(self.clone(), right.clone())
         } else {
-            MultiInterval::new_from_two(
+            Pair::new_from_two(
                 Interval {
                     lower: self.lower.min(&right.lower),
                     upper: self
@@ -921,7 +921,7 @@ impl<T> ::core::ops::BitXor<&Interval<T>> for &Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
 {
-    type Output = MultiInterval<T>;
+    type Output = Pair<T>;
 
     fn bitxor(self, rhs: &Interval<T>) -> Self::Output {
         self.symmetric_difference(rhs)
@@ -933,7 +933,7 @@ impl<T> ::core::ops::BitXor<Interval<T>> for &Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
 {
-    type Output = MultiInterval<T>;
+    type Output = Pair<T>;
 
     fn bitxor(self, rhs: Interval<T>) -> Self::Output {
         self.symmetric_difference(&rhs)
@@ -945,7 +945,7 @@ impl<T> ::core::ops::BitXor<Interval<T>> for Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
 {
-    type Output = MultiInterval<T>;
+    type Output = Pair<T>;
 
     fn bitxor(self, rhs: Interval<T>) -> Self::Output {
         self.symmetric_difference(&rhs)
@@ -957,7 +957,7 @@ impl<T> ::core::ops::BitXor<&Interval<T>> for Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
 {
-    type Output = MultiInterval<T>;
+    type Output = Pair<T>;
 
     fn bitxor(self, rhs: &Interval<T>) -> Self::Output {
         self.symmetric_difference(rhs)
@@ -1065,7 +1065,7 @@ impl<T> ::core::ops::Sub<&Interval<T>> for &Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
 {
-    type Output = MultiInterval<T>;
+    type Output = Pair<T>;
 
     /// Same as [`Interval::difference()`]
     fn sub(self, rhs: &Interval<T>) -> Self::Output {
@@ -1078,7 +1078,7 @@ impl<T> ::core::ops::Sub<&Interval<T>> for Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
 {
-    type Output = MultiInterval<T>;
+    type Output = Pair<T>;
 
     /// Same as [`Interval::difference()`]
     fn sub(self, rhs: &Interval<T>) -> Self::Output {
@@ -1091,7 +1091,7 @@ impl<T> ::core::ops::Sub<Interval<T>> for &Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
 {
-    type Output = MultiInterval<T>;
+    type Output = Pair<T>;
 
     /// Same as [`Interval::difference()`]
     fn sub(self, rhs: Interval<T>) -> Self::Output {
@@ -1104,7 +1104,7 @@ impl<T> ::core::ops::Sub<Interval<T>> for Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
 {
-    type Output = MultiInterval<T>;
+    type Output = Pair<T>;
 
     /// Same as [`Interval::difference()`]
     fn sub(self, rhs: Interval<T>) -> Self::Output {

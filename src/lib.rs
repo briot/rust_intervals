@@ -68,8 +68,8 @@
 mod bounds;
 mod intervals;
 mod iterator;
-mod multi_intervals;
 mod nothing_between;
+mod pairs;
 mod step;
 mod tests;
 
@@ -84,8 +84,8 @@ mod decimal;
 
 pub use crate::intervals::{Interval, ParseError};
 pub use crate::iterator::IntervalIterator;
-pub use crate::multi_intervals::MultiInterval;
 pub use crate::nothing_between::NothingBetween;
+pub use crate::pairs::Pair;
 pub use crate::step::Step;
 
 /// This macro lets you create intervals with a syntax closer to what Postgresql

@@ -682,14 +682,14 @@ mod test {
     fn test_difference() {
         let intv1 = Interval::new_closed_closed(10, 30);
         let empty = Interval::<i32>::empty();
-        assert_eq!(intv1.difference(&empty), MultiInterval::One(intv1));
-        assert_eq!(empty.difference(&intv1), MultiInterval::One(empty));
+        assert_eq!(intv1.difference(&empty), Pair::One(intv1));
+        assert_eq!(empty.difference(&intv1), Pair::One(empty));
 
         let intv2 = Interval::new_closed_closed(1, 50); //  larger
-        assert_eq!(intv1.difference(&intv2), MultiInterval::One(empty));
+        assert_eq!(intv1.difference(&intv2), Pair::One(empty));
         assert_eq!(
             intv2.difference(&intv1),
-            MultiInterval::Two(
+            Pair::Two(
                 Interval::new_closed_open(1, 10),
                 Interval::new_open_closed(30, 50),
             )
@@ -702,8 +702,8 @@ mod test {
         );
 
         let intv3 = Interval::new_closed_closed(1, 5); // disjoint
-        assert_eq!(intv1.difference(&intv3), MultiInterval::One(intv1));
-        assert_eq!(intv3.difference(&intv1), MultiInterval::One(intv3));
+        assert_eq!(intv1.difference(&intv3), Pair::One(intv1));
+        assert_eq!(intv3.difference(&intv1), Pair::One(intv3));
 
         #[cfg(feature = "std")]
         assert_eq!(
@@ -714,13 +714,13 @@ mod test {
         let intv4 = Interval::new_closed_closed(1, 15); // overlaps left
         assert_eq!(
             intv1.difference(&intv4),
-            MultiInterval::One(Interval::new_open_closed(15, 30))
+            Pair::One(Interval::new_open_closed(15, 30))
         );
 
         let intv5 = Interval::new_closed_closed(25, 40); // overlaps right
         assert_eq!(
             intv1.difference(&intv5),
-            MultiInterval::One(Interval::new_closed_open(10, 25))
+            Pair::One(Interval::new_closed_open(10, 25))
         );
     }
 
@@ -797,26 +797,20 @@ mod test {
     fn test_symmetric_difference() {
         let intv1 = Interval::new_closed_closed(10, 30);
         let empty = Interval::<i32>::empty();
-        assert_eq!(
-            intv1.symmetric_difference(&empty),
-            MultiInterval::One(intv1)
-        );
-        assert_eq!(
-            empty.symmetric_difference(&intv1),
-            MultiInterval::One(intv1)
-        );
+        assert_eq!(intv1.symmetric_difference(&empty), Pair::One(intv1));
+        assert_eq!(empty.symmetric_difference(&intv1), Pair::One(intv1));
 
         let intv2 = Interval::new_closed_closed(1, 50); //  larger
         assert_eq!(
             intv1.symmetric_difference(&intv2),
-            MultiInterval::Two(
+            Pair::Two(
                 Interval::new_closed_open(1, 10),
                 Interval::new_open_closed(30, 50),
             ),
         );
         assert_eq!(
             intv2.symmetric_difference(&intv1),
-            MultiInterval::Two(
+            Pair::Two(
                 Interval::new_closed_open(1, 10),
                 Interval::new_open_closed(30, 50),
             )
@@ -825,17 +819,17 @@ mod test {
         let intv3 = Interval::new_closed_closed(1, 5); // disjoint
         assert_eq!(
             intv1.symmetric_difference(&intv3),
-            MultiInterval::Two(intv3, intv1,),
+            Pair::Two(intv3, intv1,),
         );
         assert_eq!(
             intv3.symmetric_difference(&intv1),
-            MultiInterval::Two(intv3, intv1,),
+            Pair::Two(intv3, intv1,),
         );
 
         let intv4 = Interval::new_closed_closed(1, 15); // overlaps left
         assert_eq!(
             intv1.symmetric_difference(&intv4),
-            MultiInterval::Two(
+            Pair::Two(
                 Interval::new_closed_open(1, 10),
                 Interval::new_open_closed(15, 30),
             ),
@@ -844,7 +838,7 @@ mod test {
         let intv5 = Interval::new_closed_closed(25, 40); // overlaps right
         assert_eq!(
             intv1.symmetric_difference(&intv5),
-            MultiInterval::Two(
+            Pair::Two(
                 Interval::new_closed_open(10, 25),
                 Interval::new_open_closed(30, 40),
             ),

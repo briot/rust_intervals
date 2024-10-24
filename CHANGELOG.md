@@ -3,6 +3,11 @@
 ## 0.5.0
 ## Added
  - support for iteration in `chrono::NaiveDate` intervals
+## Changed
+ - renamed `MultiInterval` to `Pair`.  The former name will be used for sets of
+   any number of intervals, but might not be compatible with no_std.  So we
+   kept the simply `Pair` so that subprograms like `difference()` can remain
+   compatible with no_std.
 
 ## 0.4.0
 ## Added
