@@ -1,5 +1,9 @@
 # Version History
 
+## 0.5.0
+## Added
+ - support for iteration in `chrono::NaiveDate` intervals
+
 ## 0.4.0
 ## Added
  - support `DoubleEndedIterator` and reverse iteration
