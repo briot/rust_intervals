@@ -66,7 +66,23 @@ mod test {
         let intv1 = interval!(feb_27, mar_03);
         assert_eq!(
             intv1.iter().collect::<Vec<_>>(),
-            [feb_27, feb_28, feb_29, mar_01, mar_02,]
+            [feb_27, feb_28, feb_29, mar_01, mar_02]
+        );
+
+        let intv1 = interval!(feb_27, mar_03);
+        assert_eq!(
+            intv1.iter().rev().collect::<Vec<_>>(),
+            [mar_02, mar_01, feb_29, feb_28, feb_27],
+        );
+
+        let intv1 = Interval::<NaiveDate>::doubly_unbounded();
+        assert_eq!(
+            intv1.iter().take(1).collect::<Vec<_>>(),
+            [NaiveDate::MIN],
+        );
+        assert_eq!(
+            intv1.iter().rev().take(1).collect::<Vec<_>>(),
+            [NaiveDate::MAX],
         );
     }
 }
