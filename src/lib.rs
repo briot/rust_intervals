@@ -68,6 +68,7 @@
 mod bounds;
 mod intervals;
 mod iterator;
+mod leftmostiter;
 mod multi;
 mod nothing_between;
 mod pairs;

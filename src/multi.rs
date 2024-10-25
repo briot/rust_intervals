@@ -1,4 +1,5 @@
 use crate::intervals::Interval;
+use crate::leftmostiter::LeftMostIter;
 use crate::nothing_between::NothingBetween;
 
 /// A sorted list of non-overlapping intervals.
@@ -39,6 +40,32 @@ impl<T> MultiInterval<T> {
         self.extend([intv]);
     }
 
+    /// Internal implementation for extend().  It assumes that iter returns
+    /// ordered intervals (possibly overlapping).  It will append those
+    /// intervals at the end of self, so it also assumes that the intervals
+    /// returned by I should be to the right of self.
+    /// Also assumes iter returns at least one element.
+    fn extend_internal<I>(&mut self, iter: I)
+    where
+        T: Ord + NothingBetween + Clone,
+        I: IntoIterator<Item = Interval<T>>,
+    {
+        let mut to_insert = None;
+        for e in iter {
+            to_insert = match to_insert {
+                None => Some(e),
+                Some(ins) => match ins.union(&e) {
+                    None => {
+                        self.0.push(ins); // left-most is inst
+                        Some(e)
+                    }
+                    Some(u) => Some(u),
+                },
+            };
+        }
+        self.0.push(to_insert.unwrap());
+    }
+
     /// Add multiple sets of valid values to self, via an iterator
     pub fn extend<I>(&mut self, iter: I)
     where
@@ -54,61 +81,22 @@ impl<T> MultiInterval<T> {
         }
         elements.sort();
 
-        let mut to_insert = None;
-        let last = self.0.last();
-
         // Special case: we are inserting at the end of self.  No need to
         // create a new vector.
+        let last = self.0.last();
         if last.is_none()   // self is empty
            || last.unwrap().strictly_left_not_contiguous(
                 elements.first().unwrap())
         {
-            for e in elements {
-                to_insert = match to_insert {
-                    None => Some(e),
-                    Some(ins) => match ins.union(&e) {
-                        None => {
-                            self.0.push(ins); // left-most is inst
-                            Some(e)
-                        }
-                        Some(u) => Some(u),
-                    },
-                };
-            }
+            self.extend_internal(elements);
         } else {
             let mut old = Vec::new();
             ::core::mem::swap(&mut self.0, &mut old);
-            let mut self_iter = old.into_iter().peekable();
-            let mut elem_iter = elements.into_iter().peekable();
-
-            loop {
-                let left = match (&self_iter.peek(), &elem_iter.peek()) {
-                    (None, None) => break,
-                    (None, Some(_)) => elem_iter.next().unwrap(),
-                    (Some(_), None) => self_iter.next().unwrap(),
-                    (Some(s), Some(e)) => {
-                        if e <= s {
-                            elem_iter.next().unwrap()
-                        } else {
-                            self_iter.next().unwrap()
-                        }
-                    }
-                };
-                to_insert = match to_insert {
-                    None => Some(left),
-                    Some(ins) => match ins.union(&left) {
-                        None => {
-                            self.0.push(ins); // left-most is inst
-                            Some(left)
-                        }
-                        Some(u) => Some(u),
-                    },
-                };
-            }
+            self.extend_internal(LeftMostIter::new(
+                old.into_iter(),
+                elements.into_iter(),
+            ));
         }
-
-        // to_insert can never be none, unless we had nothing to insert
-        self.0.push(to_insert.unwrap());
     }
 
     /// Iterate over all intervals
