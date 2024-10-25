@@ -107,6 +107,7 @@ impl<T> MultiInterval<T> {
     /// Check that self is well-formed:
     /// - intervals are sorted
     /// - they do not overlap
+    /// - none of the intervals is empty
     ///
     /// This is meant for tests, and should be useless in normal code, as the
     /// various functions preserve those invariants.
@@ -114,7 +115,12 @@ impl<T> MultiInterval<T> {
     where
         T: PartialOrd + NothingBetween,
     {
-        for (i1, i2) in self.iter().zip(self.iter().skip(1)) {
+        let mut it = self.iter();
+        if let Some(first) = it.next() {
+            assert!(!first.is_empty());
+        }
+        for (i1, i2) in self.iter().zip(it) {
+            assert!(!i2.is_empty());
             assert!(i1.strictly_left_of_interval(i2));
         }
     }
