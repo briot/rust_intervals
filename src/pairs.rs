@@ -5,12 +5,17 @@ use crate::nothing_between::NothingBetween;
 /// single interval, or two (in which case the first one is always the
 /// left-most).
 #[derive(PartialEq)]
-pub enum Pair<T: PartialOrd + NothingBetween> {
+pub enum Pair<T>
+where
+    T: PartialOrd + NothingBetween,
+{
     One(Interval<T>),
     Two(Interval<T>, Interval<T>),
 }
-impl<T: ::core::fmt::Debug + PartialOrd + NothingBetween> ::core::fmt::Debug
-    for Pair<T>
+
+impl<T> ::core::fmt::Debug for Pair<T>
+where
+    T: ::core::fmt::Debug + PartialOrd + NothingBetween,
 {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         match self {
@@ -21,7 +26,10 @@ impl<T: ::core::fmt::Debug + PartialOrd + NothingBetween> ::core::fmt::Debug
     }
 }
 
-impl<T: PartialOrd + NothingBetween> Pair<T> {
+impl<T> Pair<T>
+where
+    T: PartialOrd + NothingBetween,
+{
     pub(crate) fn new_from_two(intv1: Interval<T>, intv2: Interval<T>) -> Self {
         if intv1.is_empty() {
             Pair::One(intv2)
