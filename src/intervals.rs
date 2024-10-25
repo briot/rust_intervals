@@ -550,7 +550,7 @@ impl<T> Interval<T> {
             || self.upper.value() == right.lower.value()
     }
 
-    /// Whethever every value in self is greater or equal (>=) to every value
+    /// Whether every value in self is greater or equal (>=) to every value
     /// in right (returns true if either inverval is empty)
     pub fn right_of_interval(&self, right: &Self) -> bool
     where
@@ -558,6 +558,17 @@ impl<T> Interval<T> {
     {
         self.strictly_right_of_interval(right)
             || self.lower.value() == right.upper.value()
+    }
+
+    /// All values of self are strictly lower than every value in right,
+    /// and there is some thing between the two intervals.
+    pub fn strictly_left_not_contiguous(&self, right: &Self) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+    {
+        !self.is_empty()
+        && !right.is_empty()
+        && self.upper < right.lower
     }
 
     /// Whether every value in self is strictly less than (<) every value in
@@ -747,7 +758,7 @@ impl<T> Interval<T> {
     /// them.  True if either of the intervals is empty.
     pub fn contiguous(&self, right: &Self) -> bool
     where
-        T: PartialOrd + NothingBetween + Clone,
+        T: PartialOrd + NothingBetween,
     {
         if self.is_empty() || right.is_empty() {
             true

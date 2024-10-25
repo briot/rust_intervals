@@ -30,55 +30,85 @@ impl<T> MultiInterval<T> {
     }
 
     /// Add an extra set of valid values to self.
-    pub fn add<U>(&mut self, intv: U)
+    /// If you have multiple intervals to insert, it is more efficient to
+    /// call `MultiInterval::extend()` as this requires less allocations.
+    pub fn add(&mut self, intv: Interval<T>)
     where
-        T: PartialOrd + NothingBetween + Clone + ::core::fmt::Debug,
-        U: ::core::borrow::Borrow<Interval<T>>,
+        T: PartialOrd + Ord + NothingBetween + Clone,
     {
-        let element_ref = intv.borrow();
+        self.extend([intv]);
+    }
 
-        if element_ref.is_empty() {
+    /// Add multiple sets of valid values to self, via an iterator
+    pub fn extend<I>(&mut self, iter: I)
+    where
+        T: Ord + NothingBetween + Clone,
+        I: IntoIterator<Item = Interval<T>>,
+    {
+        let mut elements = iter
+            .into_iter()
+            .filter(|intv| !intv.is_empty())
+            .collect::<Vec<_>>();
+        if elements.is_empty() {
             return;
         }
+        elements.sort();
 
-        let mut element = (*element_ref).clone();
-        let mut output = Vec::new();
-        let mut merged = false;
+        let mut to_insert = None;
+        let last = self.0.last();
 
-        let mut iter = self.0.iter();
-        while let Some(v) = iter.next() {
-            match v.union(&element) {
-                None => {
-                    if element.strictly_left_of_interval(v) {
-                        output.push(element.clone());
-                        output.push(v.clone()); // push current element
-                        output.extend(iter.cloned()); // push remaining elems
-                        merged = true;
-                        break;
+        // Special case: we are inserting at the end of self.  No need to
+        // create a new vector.
+        if last.is_none()   // self is empty
+           || last.unwrap().strictly_left_not_contiguous(
+                elements.first().unwrap())
+        {
+            for e in elements {
+                to_insert = match to_insert {
+                    None => Some(e),
+                    Some(ins) => match ins.union(&e) {
+                        None => {
+                            self.0.push(ins); // left-most is inst
+                            Some(e)
+                        }
+                        Some(u) => Some(u),
+                    },
+                };
+            }
+        } else {
+            let mut old = Vec::new();
+            ::core::mem::swap(&mut self.0, &mut old);
+            let mut self_iter = old.into_iter().peekable();
+            let mut elem_iter = elements.into_iter().peekable();
+
+            loop {
+                let left = match (&self_iter.peek(), &elem_iter.peek()) {
+                    (None, None) => break,
+                    (None, Some(_)) => elem_iter.next().unwrap(),
+                    (Some(_), None) => self_iter.next().unwrap(),
+                    (Some(s), Some(e)) => {
+                        if e <= s {
+                            elem_iter.next().unwrap()
+                        } else {
+                            self_iter.next().unwrap()
+                        }
                     }
-                    output.push(v.clone());
-                }
-                Some(u) => {
-                    element = u;
-                }
+                };
+                to_insert = match to_insert {
+                    None => Some(left),
+                    Some(ins) => match ins.union(&left) {
+                        None => {
+                            self.0.push(ins); // left-most is inst
+                            Some(left)
+                        }
+                        Some(u) => Some(u),
+                    },
+                };
             }
         }
 
-        if !merged {
-            output.push(element);
-        }
-        self.0 = output;
-    }
-
-    /// Add multiple sets of valid valid to self, via an iterator
-    pub fn extend<I>(&mut self, iter: I)
-    where
-        T: PartialOrd + NothingBetween + Clone + ::core::fmt::Debug,
-        I: IntoIterator<Item = Interval<T>>,
-    {
-        for intv in iter {
-            self.add(intv);
-        }
+        // to_insert can never be none, unless we had nothing to insert
+        self.0.push(to_insert.unwrap());
     }
 
     /// Iterate over all intervals
@@ -104,7 +134,7 @@ impl<T> MultiInterval<T> {
 
 impl<T> Extend<Interval<T>> for MultiInterval<T>
 where
-    T: PartialOrd + NothingBetween + Clone + ::core::fmt::Debug,
+    T: PartialOrd + Ord + NothingBetween + Clone,
 {
     fn extend<I>(&mut self, iter: I)
     where
@@ -127,6 +157,14 @@ where
 mod tests {
     use crate::*;
 
+    fn insert_via_extend<T, E, I>(into: &mut E, from: I)
+    where
+        E: Extend<Interval<T>>,
+        I: IntoIterator<Item = Interval<T>>,
+    {
+        into.extend(from);
+    }
+
     #[test]
     fn test_joining() {
         // From Boost ICL library:
@@ -141,7 +179,10 @@ mod tests {
         //      = {[1                5)}
 
         let mut m = MultiInterval::default();
-        m.extend([interval!(1, 3), interval!(2, 4), interval!(4, 5)]);
+        insert_via_extend(
+            &mut m,
+            [interval!(1, 3), interval!(2, 4), interval!(4, 5)],
+        );
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 5)],);
         assert_eq!(m.len(), 1);
 
@@ -173,9 +214,23 @@ mod tests {
             vec![&interval!(1, 6), &interval!(8, 10)],
         );
 
+        m.add(interval!(9, 10)); // subset of second interval
+        assert_eq!(
+            m.iter().collect::<Vec<_>>(),
+            vec![&interval!(1, 6), &interval!(8, 10)],
+        );
+
         m.add(interval!(4, 8, "[]")); // joins the two
         assert_eq!(m.len(), 1);
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 10)],);
+        m.check_invariants();
+
+        // Inserting intervals only after the end of all existing ones
+        let mut m = MultiInterval::default();
+        m.extend([interval!(1, 3), interval!(4, 5)]);
+        m.extend([interval!(6, 7), interval!(8, 9)]);
+        assert_eq!(m.len(), 4);
+        m.check_invariants();
     }
 
     #[test]
