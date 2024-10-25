@@ -1,20 +1,8 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use rust_intervals::*;
-
-#[derive(Debug, arbitrary::Arbitrary)]
-enum RangeType {
-    OpenClosed,
-    OpenOpen,
-    ClosedOpen,
-    ClosedClosed,
-    ClosedUnbounded,
-    OpenUnbounded,
-    UnboundedClosed,
-    UnboundedOpen,
-    Empty,
-}
+mod fuzz_support;
+use fuzz_support::RangeType;
 
 type T = f32;
 
@@ -29,23 +17,9 @@ struct Data {
     val: T,
 }
 
-fn build(typ: RangeType, lower: T, upper: T) -> Interval<T> {
-    match typ {
-        RangeType::OpenClosed => Interval::new_open_closed(lower, upper),
-        RangeType::OpenOpen => Interval::new_open_open(lower, upper),
-        RangeType::ClosedOpen => Interval::new_closed_open(lower, upper),
-        RangeType::ClosedClosed => Interval::new_closed_closed(lower, upper),
-        RangeType::ClosedUnbounded => Interval::new_closed_unbounded(lower),
-        RangeType::OpenUnbounded => Interval::new_open_unbounded(lower),
-        RangeType::UnboundedClosed => Interval::new_unbounded_closed(upper),
-        RangeType::UnboundedOpen => Interval::new_unbounded_open(upper),
-        RangeType::Empty => Interval::empty(),
-    }
-}
-
 fuzz_target!(|data: Data| {
-    let intv1 = build(data.type1, data.lower1, data.upper1);
-    let intv2 = build(data.type2, data.lower2, data.upper2);
+    let intv1 = data.type1.build(data.lower1, data.upper1);
+    let intv2 = data.type2.build(data.lower2, data.upper2);
     _ = intv1.lower();
     _ = intv1.lower_inclusive();
     _ = intv1.lower_unbounded();
