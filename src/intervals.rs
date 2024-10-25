@@ -1186,14 +1186,10 @@ where
 
 impl<T> ::core::fmt::Debug for Interval<T>
 where
-    T: ::core::fmt::Debug + NothingBetween + PartialOrd,
+    T: ::core::fmt::Debug,
 {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        if self.is_empty() {
-            write!(f, "empty")?;
-        } else {
-            write!(f, "({:?},{:?})", self.lower, self.upper)?;
-        }
+        write!(f, "({:?},{:?})", self.lower, self.upper)?;
         Ok(())
     }
 }

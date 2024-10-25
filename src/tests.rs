@@ -478,7 +478,9 @@ mod test {
             ),
             "(LeftOf(1.0),RightOf(4.0))",
         );
-        assert_eq!(format!("{:?}", Interval::<f32>::empty()), "empty");
+        assert_eq!(
+            format!("{:?}", Interval::<f32>::empty()),
+            "(+infinity,-infinity)");
         assert_eq!(
             format!("{:?}", Interval::<f32>::doubly_unbounded()),
             "(-infinity,+infinity)"

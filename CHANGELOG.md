@@ -8,6 +8,8 @@
    any number of intervals, but might not be compatible with no_std.  So we
    kept the simply `Pair` so that subprograms like `difference()` can remain
    compatible with no_std.
+ - `Debug` no longer requires that T be PartialOrd (but it also no longer has
+   special handling for empty intervals)
 
 ## 0.4.0
 ## Added
