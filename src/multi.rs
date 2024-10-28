@@ -1,32 +1,96 @@
 use crate::intervals::Interval;
-use crate::leftmostiter::LeftMostIter;
-use crate::nothing_between::NothingBetween;
 use crate::pairs::Pair;
+use crate::multi_joining::Joining;
+use crate::nothing_between::NothingBetween;
+use ::core::marker::PhantomData;
+
+/// There are multiple ways to combine intervals.
+///
+///  1. Joining
+///     Intervals are joined on overlap or touch (in the case of maps: if
+///     associated values are equal).
+///     ```none
+///        {[1------3)          }
+///      +       [2------4)
+///      +                 [4-5)
+///      = {[1----------------5)}
+///     ```
+///
+///  2. Separating
+///     Intervals are joined on overlap, but not on touch
+///     ```none
+///        {[1------3)}         }
+///      +       [2------4)
+///      +                 [4-5)
+///      = {[1-----------4)[4-5)}
+///     ```
+///
+///  3. Splitting
+///     Intervals are split on overlap.  All interval borders are
+///     preserved.
+///     ```none
+///        {[1------3)          }
+///      +       [2------4)
+///      +                 [4-5)
+///      = {[1-2)[2-3)[3-4)[4-5)}
+///     ```
+pub trait Policy<T> {
+
+    /// Internal implementation for extend().  It assumes that elements contains
+    /// ordered intervals (possibly overlapping).
+    /// elements always contains at least one interval.
+    fn merge(vec: &mut Vec<Interval<T>>, elements: Vec<Interval<T>>)
+    where
+        T: Ord + NothingBetween + Clone;
+}
+
+//  #[derive(Debug)]
+//  pub struct Separating;
+//  impl Policy for Separating {}
+//  
+//  #[derive(Debug)]
+//  pub struct Splitting;
+//  impl Policy for Splitting {}
 
 /// A sorted list of non-overlapping intervals.
-///
-/// So for instance, if the IntervalSet initially contains
-/// ```none
-///    [-------)(-----]      [--------]
-/// ```
-/// and then extend it with a new interval
-/// ```none
-///          [----]
-/// ```
-/// We end up with
-/// ```none
-///    [--------------]      [--------]
-/// ```
-#[derive(Default, Debug)]
-pub struct IntervalSet<T>(Vec<Interval<T>>);
+#[derive(Debug)]
+pub struct IntervalSet<T, P: Policy<T> = Joining> {
+    intvs: Vec<Interval<T>>,
+    _policy: PhantomData<P>,
+}
 
-impl<T> IntervalSet<T> {
+impl<T> IntervalSet<T, Joining> {
+    pub fn empty_joining() -> Self {
+        Self::empty()
+    }
+
+    pub fn new_joining<I>(iter: I) -> Self
+    where
+        T: Ord + NothingBetween + Clone,
+        I: IntoIterator<Item = Interval<T>>,
+    {
+        Self::new(iter)
+    }
+
+    pub fn new_single_joining(value: T) -> Self
+    where
+        T: Clone,
+    {
+        Self::new_single(value)
+    }
+}
+
+
+impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// Returns an empty multi interval
     /// ```none
     ///    {}
     /// ```
     pub fn empty() -> Self {
-        IntervalSet(Vec::new())
+        IntervalSet {
+            intvs: Vec::new(),
+            _policy: PhantomData,
+        }
     }
 
     /// Create a multi-interval that contains a single value
@@ -37,7 +101,10 @@ impl<T> IntervalSet<T> {
     where
         T: Clone,
     {
-        IntervalSet(vec![Interval::new_single(value)])
+        IntervalSet {
+            intvs: vec![Interval::new_single(value)],
+            _policy: PhantomData,
+        }
     }
 
     /// Create a multi-interval from a collection of intervals.
@@ -60,9 +127,12 @@ impl<T> IntervalSet<T> {
     where
         T : PartialOrd + NothingBetween,
     {
-        match pair {
-            Pair::One(intv) => IntervalSet(vec![intv]),
-            Pair::Two(intv1, intv2) => IntervalSet(vec![intv1, intv2]),
+        IntervalSet {
+            intvs: match pair {
+                Pair::One(intv) => vec![intv],
+                Pair::Two(intv1, intv2) => vec![intv1, intv2],
+            },
+            _policy: PhantomData,
         }
     }
 
@@ -71,7 +141,7 @@ impl<T> IntervalSet<T> {
     /// This value might not actually be valid for self, if we have an
     /// open bound for instance.
     pub fn lower(&self) -> Option<&T> {
-        match self.0.first() {
+        match self.intvs.first() {
             None => None,
             Some(f) => f.lower(),
         }
@@ -80,7 +150,7 @@ impl<T> IntervalSet<T> {
     /// True if the left-most interval is unbounded.
     /// This is false if self is empty.
     pub fn lower_unbounded(&self) -> bool {
-        match self.0.first() {
+        match self.intvs.first() {
             None => false,
             Some(f) => f.lower_unbounded(),
         }
@@ -91,7 +161,7 @@ impl<T> IntervalSet<T> {
     /// This value might not actually be valid for self, if we have an
     /// open bound for instance.
     pub fn upper(&self) -> Option<&T> {
-        match self.0.last() {
+        match self.intvs.last() {
             None => None,
             Some(f) => f.upper(),
         }
@@ -100,7 +170,7 @@ impl<T> IntervalSet<T> {
     /// True if the right-most interval is unbounded.
     /// This is false if self is empty.
     pub fn upper_unbounded(&self) -> bool {
-        match self.0.last() {
+        match self.intvs.last() {
             None => false,
             Some(f) => f.upper_unbounded(),
         }
@@ -108,12 +178,12 @@ impl<T> IntervalSet<T> {
 
     /// Return the number of intervals in self.
     pub fn len(&self) -> usize {
-        self.0.len()
+        self.intvs.len()
     }
 
     /// True if there are not values in self
     pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
+        self.intvs.is_empty()
     }
 
     /// Add an extra set of valid values to self.
@@ -126,32 +196,6 @@ impl<T> IntervalSet<T> {
         self.extend([intv]);
     }
 
-    /// Internal implementation for extend().  It assumes that iter returns
-    /// ordered intervals (possibly overlapping).  It will append those
-    /// intervals at the end of self, so it also assumes that the intervals
-    /// returned by I should be to the right of self.
-    /// Also assumes iter returns at least one element.
-    fn extend_internal<I>(&mut self, iter: I)
-    where
-        T: Ord + NothingBetween + Clone,
-        I: IntoIterator<Item = Interval<T>>,
-    {
-        let mut to_insert = None;
-        for e in iter {
-            to_insert = match to_insert {
-                None => Some(e),
-                Some(ins) => match ins.union(&e) {
-                    None => {
-                        self.0.push(ins); // left-most is inst
-                        Some(e)
-                    }
-                    Some(u) => Some(u),
-                },
-            };
-        }
-        self.0.push(to_insert.unwrap());
-    }
-
     /// Add multiple sets of valid values to self, via an iterator
     pub fn extend<I>(&mut self, iter: I)
     where
@@ -162,33 +206,15 @@ impl<T> IntervalSet<T> {
             .into_iter()
             .filter(|intv| !intv.is_empty())
             .collect::<Vec<_>>();
-        if elements.is_empty() {
-            return;
-        }
-        elements.sort();
-
-        // Special case: we are inserting at the end of self.  No need to
-        // create a new vector.
-        let last = self.0.last();
-        if last.is_none()
-            || last
-                .unwrap()
-                .strictly_left_not_contiguous(elements.first().unwrap())
-        {
-            self.extend_internal(elements);
-        } else {
-            let mut old = Vec::new();
-            ::core::mem::swap(&mut self.0, &mut old);
-            self.extend_internal(LeftMostIter::new(
-                old.into_iter(),
-                elements.into_iter(),
-            ));
+        if !elements.is_empty() {
+            elements.sort();
+            P::merge(&mut self.intvs, elements);
         }
     }
 
     /// Iterate over all intervals
     pub fn iter(&self) -> impl Iterator<Item = &Interval<T>> {
-        self.0.iter()
+        self.intvs.iter()
     }
 
     /// Whether value is valid for any of the intervals in self
@@ -198,7 +224,7 @@ impl<T> IntervalSet<T> {
         V: ::core::borrow::Borrow<T>,
     {
         let t = value.borrow();
-        self.0.iter().any(|v| v.contains(t))
+        self.iter().any(|v| v.contains(t))
     }
 
     /// Whether all values in other are valid for self
@@ -207,10 +233,10 @@ impl<T> IntervalSet<T> {
         T: PartialOrd + NothingBetween,
         U: ::core::borrow::Borrow<Interval<T>>,
     {
-        // In the of joining, other must be fully contained in one of the
+        // In the case of joining, other must be fully contained in one of the
         // nested intervals.
         let u = other.borrow();
-        self.0.iter().any(|v| v.contains_interval(u))
+        self.iter().any(|v| v.contains_interval(u))
     }
 
     /// Returns the convex hull, i.e. the smallest intervals that contains
@@ -220,12 +246,12 @@ impl<T> IntervalSet<T> {
     where
         T: PartialOrd + NothingBetween + Clone
     {
-        if self.0.is_empty() {
+        if self.is_empty() {
             Interval::empty()
         } else {
             Interval {
-                lower: self.0.first().unwrap().lower.clone(),
-                upper: self.0.last().unwrap().upper.clone(),
+                lower: self.intvs.first().unwrap().lower.clone(),
+                upper: self.intvs.last().unwrap().upper.clone(),
             }
         }
     }
@@ -252,7 +278,13 @@ impl<T> IntervalSet<T> {
     }
 }
 
-impl<T> Extend<Interval<T>> for IntervalSet<T>
+impl<T> Default for IntervalSet<T, Joining> {
+    fn default() -> Self {
+       IntervalSet::empty()
+    }
+}
+
+impl<T, P: Policy<T>> Extend<Interval<T>> for IntervalSet<T, P>
 where
     T: PartialOrd + Ord + NothingBetween + Clone,
 {
@@ -264,7 +296,7 @@ where
     }
 }
 
-impl<T> PartialEq for IntervalSet<T>
+impl<T, P: Policy<T>> PartialEq for IntervalSet<T, P>
 where
     T: PartialOrd + NothingBetween,
 {
@@ -298,7 +330,7 @@ mod tests {
         //      +                 [4 5)
         //      = {[1                5)}
 
-        let mut m = IntervalSet::empty();
+        let mut m = IntervalSet::empty_joining();
         insert_via_extend(
             &mut m,
             [interval!(1, 3), interval!(2, 4), interval!(4, 5)],
@@ -354,24 +386,6 @@ mod tests {
     }
 
     #[test]
-    fn test_separating() {
-        //  2. Separating
-        //     Intervals are joined on overlap, but not on touch
-        //        {[1      3)}         }
-        //      +       [2      4)
-        //      +                 [4 5)
-        //      = {[1           4)[4 5)}
-        //
-        //  3. Splitting
-        //     Intervals are split on overlap.  All interval borders are
-        //     preserved.
-        //        {[1      3)          }
-        //      +       [2      4)
-        //      +                 [4 5)
-        //      = {[1 2)[2 3)[3 4)[4 5)}
-    }
-
-    #[test]
     fn test_empty() {
         let mut m = IntervalSet::<u32>::default();
         let empty = IntervalSet::<u32>::default();
@@ -392,7 +406,7 @@ mod tests {
 
     #[test]
     fn test_contains() {
-        let m = IntervalSet::new_single(4);
+        let m = IntervalSet::new_single_joining(4);
         assert!(m.contains(4));
         assert!(!m.contains(5));
         assert!(!m.contains(3));
@@ -402,7 +416,7 @@ mod tests {
         assert!(!m.upper_unbounded());
         assert_eq!(m.convex_hull(), interval!(4, 4, "[]"));
 
-        let m = IntervalSet::new([interval!(1, 3), interval!(5, 7)]);
+        let m = IntervalSet::new_joining([interval!(1, 3), interval!(5, 7)]);
         assert!(m.contains(1));
         assert!(m.contains(2));
         assert!(!m.contains(3));
@@ -426,13 +440,13 @@ mod tests {
 
     #[test]
     fn test_unbounded() {
-        let m = IntervalSet::new([interval!(1, "inf")]);
+        let m = IntervalSet::new_joining([interval!(1, "inf")]);
         assert!(!m.lower_unbounded());
         assert!(m.upper_unbounded());
         assert_eq!(m.lower(), Some(&1));
         assert_eq!(m.upper(), None);
 
-        let m = IntervalSet::new([interval!("-inf", 1, "]")]);
+        let m = IntervalSet::new_joining([interval!("-inf", 1, "]")]);
         assert!(m.lower_unbounded());
         assert!(!m.upper_unbounded());
         assert_eq!(m.lower(), None);
@@ -441,7 +455,7 @@ mod tests {
 
     #[test]
     fn test_equals() {
-        let m1 = IntervalSet::new([
+        let m1 = IntervalSet::new_joining([
             interval!(3, 10, "[]"),
             interval!(15, 20, "()"),
         ]);
