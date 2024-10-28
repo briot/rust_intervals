@@ -13,7 +13,7 @@ struct Data {
 }
 
 fuzz_target!(|data: [Data; 50]| {
-    let mut m = MultiInterval::<u32>::default();
+    let mut m = IntervalSet::<u32>::default();
     m.extend(data.iter().map(|b| b.type1.build(b.lower1, b.upper1)));
     m.check_invariants();
 });

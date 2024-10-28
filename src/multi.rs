@@ -5,7 +5,7 @@ use crate::pairs::Pair;
 
 /// A sorted list of non-overlapping intervals.
 ///
-/// So for instance, if the MultiInterval initially contains
+/// So for instance, if the IntervalSet initially contains
 /// ```none
 ///    [-------)(-----]      [--------]
 /// ```
@@ -18,15 +18,15 @@ use crate::pairs::Pair;
 ///    [--------------]      [--------]
 /// ```
 #[derive(Default, Debug)]
-pub struct MultiInterval<T>(Vec<Interval<T>>);
+pub struct IntervalSet<T>(Vec<Interval<T>>);
 
-impl<T> MultiInterval<T> {
+impl<T> IntervalSet<T> {
     /// Returns an empty multi interval
     /// ```none
     ///    {}
     /// ```
     pub fn empty() -> Self {
-        MultiInterval(Vec::new())
+        IntervalSet(Vec::new())
     }
 
     /// Create a multi-interval that contains a single value
@@ -37,7 +37,7 @@ impl<T> MultiInterval<T> {
     where
         T: Clone,
     {
-        MultiInterval(vec![Interval::new_single(value)])
+        IntervalSet(vec![Interval::new_single(value)])
     }
 
     /// Create a multi-interval from a collection of intervals.
@@ -47,7 +47,7 @@ impl<T> MultiInterval<T> {
         T: Ord + NothingBetween + Clone,
         I: IntoIterator<Item = Interval<T>>,
     {
-        let mut m = MultiInterval::empty();
+        let mut m = IntervalSet::empty();
         m.extend(iter);
         m
     }
@@ -61,8 +61,8 @@ impl<T> MultiInterval<T> {
         T : PartialOrd + NothingBetween,
     {
         match pair {
-            Pair::One(intv) => MultiInterval(vec![intv]),
-            Pair::Two(intv1, intv2) => MultiInterval(vec![intv1, intv2]),
+            Pair::One(intv) => IntervalSet(vec![intv]),
+            Pair::Two(intv1, intv2) => IntervalSet(vec![intv1, intv2]),
         }
     }
 
@@ -118,7 +118,7 @@ impl<T> MultiInterval<T> {
 
     /// Add an extra set of valid values to self.
     /// If you have multiple intervals to insert, it is more efficient to
-    /// call `MultiInterval::extend()` as this requires less allocations.
+    /// call `IntervalSet::extend()` as this requires less allocations.
     pub fn add(&mut self, intv: Interval<T>)
     where
         T: PartialOrd + Ord + NothingBetween + Clone,
@@ -252,7 +252,7 @@ impl<T> MultiInterval<T> {
     }
 }
 
-impl<T> Extend<Interval<T>> for MultiInterval<T>
+impl<T> Extend<Interval<T>> for IntervalSet<T>
 where
     T: PartialOrd + Ord + NothingBetween + Clone,
 {
@@ -264,7 +264,7 @@ where
     }
 }
 
-impl<T> PartialEq for MultiInterval<T>
+impl<T> PartialEq for IntervalSet<T>
 where
     T: PartialOrd + NothingBetween,
 {
@@ -298,7 +298,7 @@ mod tests {
         //      +                 [4 5)
         //      = {[1                5)}
 
-        let mut m = MultiInterval::empty();
+        let mut m = IntervalSet::empty();
         insert_via_extend(
             &mut m,
             [interval!(1, 3), interval!(2, 4), interval!(4, 5)],
@@ -307,14 +307,14 @@ mod tests {
         assert_eq!(m.len(), 1);
 
         //  Same as above, but intervals are not sorted initially
-        let mut m = MultiInterval::default();
+        let mut m = IntervalSet::default();
         m.extend([interval!(4, 5), interval!(2, 4), interval!(1, 3)]);
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 5)],);
         assert_eq!(m.len(), 1);
 
         // Additional tests
 
-        let mut m = MultiInterval::default();
+        let mut m = IntervalSet::default();
         m.add(interval!(1, 4));
         assert_eq!(m.len(), 1);
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 4)],);
@@ -346,7 +346,7 @@ mod tests {
         m.check_invariants();
 
         // Inserting intervals only after the end of all existing ones
-        let mut m = MultiInterval::default();
+        let mut m = IntervalSet::default();
         m.extend([interval!(1, 3), interval!(4, 5)]);
         m.extend([interval!(6, 7), interval!(8, 9)]);
         assert_eq!(m.len(), 4);
@@ -373,8 +373,8 @@ mod tests {
 
     #[test]
     fn test_empty() {
-        let mut m = MultiInterval::<u32>::default();
-        let empty = MultiInterval::<u32>::default();
+        let mut m = IntervalSet::<u32>::default();
+        let empty = IntervalSet::<u32>::default();
 
         assert!(m.is_empty());
         assert_eq!(m.len(), 0);
@@ -392,7 +392,7 @@ mod tests {
 
     #[test]
     fn test_contains() {
-        let m = MultiInterval::new_single(4);
+        let m = IntervalSet::new_single(4);
         assert!(m.contains(4));
         assert!(!m.contains(5));
         assert!(!m.contains(3));
@@ -402,7 +402,7 @@ mod tests {
         assert!(!m.upper_unbounded());
         assert_eq!(m.convex_hull(), interval!(4, 4, "[]"));
 
-        let m = MultiInterval::new([interval!(1, 3), interval!(5, 7)]);
+        let m = IntervalSet::new([interval!(1, 3), interval!(5, 7)]);
         assert!(m.contains(1));
         assert!(m.contains(2));
         assert!(!m.contains(3));
@@ -426,13 +426,13 @@ mod tests {
 
     #[test]
     fn test_unbounded() {
-        let m = MultiInterval::new([interval!(1, "inf")]);
+        let m = IntervalSet::new([interval!(1, "inf")]);
         assert!(!m.lower_unbounded());
         assert!(m.upper_unbounded());
         assert_eq!(m.lower(), Some(&1));
         assert_eq!(m.upper(), None);
 
-        let m = MultiInterval::new([interval!("-inf", 1, "]")]);
+        let m = IntervalSet::new([interval!("-inf", 1, "]")]);
         assert!(m.lower_unbounded());
         assert!(!m.upper_unbounded());
         assert_eq!(m.lower(), None);
@@ -441,11 +441,11 @@ mod tests {
 
     #[test]
     fn test_equals() {
-        let m1 = MultiInterval::new([
+        let m1 = IntervalSet::new([
             interval!(3, 10, "[]"),
             interval!(15, 20, "()"),
         ]);
-        let m2 = MultiInterval::new([
+        let m2 = IntervalSet::new([
             interval!(2, 5, "()"),
             interval!(5, 11, "[)"),
             interval!(16, 19, "[]"),
@@ -454,7 +454,7 @@ mod tests {
 
         let intv1 = interval!(3, 20, "[)");
         let pairs = intv1 - interval!(10, 15, "(]");
-        let m3 = MultiInterval::from_pair(pairs);
+        let m3 = IntervalSet::from_pair(pairs);
         assert_eq!(m1, m3);
     }
 }
