@@ -321,6 +321,8 @@ impl<T> Interval<T> {
     /// For an empty interval, it returns whatever what used to create the
     /// interval (None if you used [`Interval::empty()`]), but the value is
     /// irrelevant.
+    /// This value might not actually be valid for self, if we have an
+    /// open bound for instance.
     pub fn lower(&self) -> Option<&T> {
         self.lower.value()
     }
@@ -341,6 +343,8 @@ impl<T> Interval<T> {
     /// For an empty interval, it returns whatever what used to create the
     /// interval (None if you used [`Interval::empty()`]), but the value is
     /// irrelevant.
+    /// This value might not actually be valid for self, if we have an
+    /// open bound for instance.
     pub fn upper(&self) -> Option<&T> {
         self.upper.value()
     }
@@ -425,12 +429,13 @@ impl<T> Interval<T> {
 
     /// Whether self contains all values of the second interval (and possibly
     /// more).
-    pub fn contains_interval(&self, other: &Self) -> bool
+    pub fn contains_interval<U>(&self, other: U) -> bool
     where
         T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
     {
-        other.is_empty()
-            || (self.lower <= other.lower && other.upper <= self.upper)
+        let s = other.borrow();
+        s.is_empty() || (self.lower <= s.lower && s.upper <= self.upper)
     }
 
     /// Whether the two intervals contain the same set of values
@@ -441,16 +446,18 @@ impl<T> Interval<T> {
     ///    assert!(intv1.equivalent(&intv2));
     ///    assert!(intv1 == intv2);   //  same
     /// ```
-    pub fn equivalent(&self, other: &Self) -> bool
+    pub fn equivalent<U>(&self, other: U) -> bool
     where
         T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
     {
+        let u = other.borrow();
         if self.is_empty() {
-            other.is_empty()
-        } else if other.is_empty() {
+            u.is_empty()
+        } else if u.is_empty() {
             false
         } else {
-            self.lower == other.lower && self.upper == other.upper
+            self.lower == u.lower && self.upper == u.upper
         }
     }
 
@@ -542,51 +549,59 @@ impl<T> Interval<T> {
 
     /// Whether every value in self is less than or equal (<=) to every value
     /// in right (returns true if either interval is empty).
-    pub fn left_of_interval(&self, right: &Self) -> bool
+    pub fn left_of_interval<U>(&self, right: U) -> bool
     where
         T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
     {
-        self.strictly_left_of_interval(right)
-            || self.upper.value() == right.lower.value()
+        let r = right.borrow();
+        self.strictly_left_of_interval(r)
+            || self.upper.value() == r.lower.value()
     }
 
     /// Whether every value in self is greater or equal (>=) to every value
     /// in right (returns true if either inverval is empty)
-    pub fn right_of_interval(&self, right: &Self) -> bool
+    pub fn right_of_interval<U>(&self, right: U) -> bool
     where
         T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
     {
-        self.strictly_right_of_interval(right)
-            || self.lower.value() == right.upper.value()
+        let r = right.borrow();
+        self.strictly_right_of_interval(r)
+            || self.lower.value() == r.upper.value()
     }
 
     /// All values of self are strictly lower than every value in right,
     /// and there is some thing between the two intervals.
-    pub fn strictly_left_not_contiguous(&self, right: &Self) -> bool
+    pub fn strictly_left_not_contiguous<U>(&self, right: U) -> bool
     where
         T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
     {
-        !self.is_empty()
-        && !right.is_empty()
-        && self.upper < right.lower
+        let r = right.borrow();
+        !self.is_empty() && !r.is_empty() && self.upper < r.lower
     }
 
     /// Whether every value in self is strictly less than (<) every value in
     /// right (returns True if either interval is empty).
-    pub fn strictly_left_of_interval(&self, right: &Self) -> bool
+    pub fn strictly_left_of_interval<U>(&self, right: U) -> bool
     where
         T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
     {
-        self.is_empty() || right.is_empty() || self.upper <= right.lower
+        let r = right.borrow();
+        self.is_empty() || r.is_empty() || self.upper <= r.lower
     }
 
     /// Whether every value in self is strictly greater than (>) every value in
     /// right (returns True if either interval is empty).
-    pub fn strictly_right_of_interval(&self, right: &Self) -> bool
+    pub fn strictly_right_of_interval<U>(&self, right: U) -> bool
     where
         T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
     {
-        self.is_empty() || right.is_empty() || right.upper <= self.lower
+        let r = right.borrow();
+        self.is_empty() || r.is_empty() || r.upper <= self.lower
     }
 
     /// True if self is of the form `[A, A]`.
@@ -608,18 +623,20 @@ impl<T> Interval<T> {
 
     /// Returns the convex hull of the two intervals, i.e. the smallest
     /// interval that contains the values of both intervals.
-    pub fn convex_hull(&self, right: &Self) -> Self
+    pub fn convex_hull<U>(&self, right: U) -> Self
     where
         T: PartialOrd + NothingBetween + Clone,
+        U: ::core::borrow::Borrow<Self>,
     {
+        let r = right.borrow();
         if self.is_empty() {
-            right.clone()
-        } else if right.is_empty() {
+            r.clone()
+        } else if r.is_empty() {
             self.clone()
         } else {
             Self {
-                lower: self.lower.min(&right.lower),
-                upper: self.upper.max(&right.upper),
+                lower: self.lower.min(&r.lower),
+                upper: self.upper.max(&r.upper),
             }
         }
     }
@@ -637,20 +654,22 @@ impl<T> Interval<T> {
     ///    let _ = &intv1 - intv2;
     ///    let _ = &intv1 - &intv2;
     /// ```
-    pub fn difference(&self, right: &Self) -> Pair<T>
+    pub fn difference<U>(&self, right: U) -> Pair<T>
     where
         T: PartialOrd + NothingBetween + Clone,
+        U: ::core::borrow::Borrow<Self>,
     {
-        if self.is_empty() || right.is_empty() {
+        let r = right.borrow();
+        if self.is_empty() || r.is_empty() {
             Pair::One(self.clone())
         } else {
             Pair::new_from_two(
                 Interval {
                     lower: self.lower.clone(),
-                    upper: right.lower.min(&self.upper),
+                    upper: r.lower.min(&self.upper),
                 },
                 Interval {
-                    lower: right.upper.max(&self.lower),
+                    lower: r.upper.max(&self.lower),
                     upper: self.upper.clone(),
                 },
             )
@@ -671,27 +690,29 @@ impl<T> Interval<T> {
     ///    let _ = &intv1 ^ &intv2;  // all variants of refs
     ///    let _ = &intv1 ^ intv2;  // all variants of refs
     /// ```
-    pub fn symmetric_difference(&self, right: &Self) -> Pair<T>
+    pub fn symmetric_difference<U>(&self, right: U) -> Pair<T>
     where
         T: PartialOrd + NothingBetween + Clone,
+        U: ::core::borrow::Borrow<Self>,
     {
-        if self.is_empty() || right.is_empty() {
-            Pair::new_from_two(self.clone(), right.clone())
+        let r = right.borrow();
+        if self.is_empty() || r.is_empty() {
+            Pair::new_from_two(self.clone(), r.clone())
         } else {
             Pair::new_from_two(
                 Interval {
-                    lower: self.lower.min(&right.lower),
+                    lower: self.lower.min(&r.lower),
                     upper: self
                         .lower
-                        .max(&right.lower)
-                        .min(&self.upper.min(&right.upper)),
+                        .max(&r.lower)
+                        .min(&self.upper.min(&r.upper)),
                 },
                 Interval {
                     lower: self
                         .upper
-                        .min(&right.upper)
-                        .max(&self.lower.max(&right.lower)),
-                    upper: self.upper.max(&right.upper),
+                        .min(&r.upper)
+                        .max(&self.lower.max(&r.lower)),
+                    upper: self.upper.max(&r.upper),
                 },
             )
         }
@@ -701,14 +722,16 @@ impl<T> Interval<T> {
     /// common.
     ///
     /// This function is often named `overlaps()`.
-    pub fn intersects(&self, right: &Self) -> bool
+    pub fn intersects<U>(&self, right: U) -> bool
     where
         T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
     {
+        let r = right.borrow();
         !self.is_empty()
-            && !right.is_empty()
-            && self.lower < right.upper
-            && right.lower < self.upper
+            && !r.is_empty()
+            && self.lower < r.upper
+            && r.lower < self.upper
     }
 
     /// Returns the intersection of the two intervals.  This is the same as the
@@ -725,13 +748,15 @@ impl<T> Interval<T> {
     ///    let _ = &intv1 & &intv2;  // all variants of refs
     ///    let _ = &intv1 & intv2;  // all variants of refs
     /// ```
-    pub fn intersection(&self, right: &Self) -> Self
+    pub fn intersection<U>(&self, right: U) -> Self
     where
         T: PartialOrd + NothingBetween + Clone,
+        U: ::core::borrow::Borrow<Self>,
     {
+        let r = right.borrow();
         Interval {
-            lower: self.lower.max(&right.lower),
-            upper: self.upper.min(&right.upper),
+            lower: self.lower.max(&r.lower),
+            upper: self.upper.min(&r.upper),
         }
     }
 
@@ -740,30 +765,34 @@ impl<T> Interval<T> {
     /// This is empty if either of the two intervals is empty.
     /// If none of the intervals is empty, this consists of all values that
     /// are strictly between the given intervals
-    pub fn between(&self, right: &Self) -> Self
+    pub fn between<U>(&self, right: U) -> Self
     where
         T: PartialOrd + NothingBetween + Clone,
+        U: ::core::borrow::Borrow<Self>,
     {
-        if self.is_empty() || right.is_empty() {
+        let r = right.borrow();
+        if self.is_empty() || r.is_empty() {
             Interval::empty()
         } else {
             Interval {
-                lower: self.upper.min(&right.upper),
-                upper: self.lower.max(&right.lower),
+                lower: self.upper.min(&r.upper),
+                upper: self.lower.max(&r.lower),
             }
         }
     }
 
     /// If neither interval is empty, returns true if no value lies between
     /// them.  True if either of the intervals is empty.
-    pub fn contiguous(&self, right: &Self) -> bool
+    pub fn contiguous<U>(&self, right: U) -> bool
     where
         T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
     {
-        if self.is_empty() || right.is_empty() {
+        let r = right.borrow();
+        if self.is_empty() || r.is_empty() {
             true
         } else {
-            self.lower <= right.upper && right.lower <= self.upper
+            self.lower <= r.upper && r.lower <= self.upper
         }
     }
 
@@ -780,12 +809,14 @@ impl<T> Interval<T> {
     ///    let _ = &intv1 | intv2;  // all variants of refs
     ///    assert_eq!(res1, res2);
     /// ```
-    pub fn union(&self, right: &Self) -> Option<Self>
+    pub fn union<U>(&self, right: U) -> Option<Self>
     where
         T: PartialOrd + NothingBetween + Clone,
+        U: ::core::borrow::Borrow<Self>,
     {
-        if self.contiguous(right) {
-            Some(self.convex_hull(right))
+        let r = right.borrow();
+        if self.contiguous(r) {
+            Some(self.convex_hull(r))
         } else {
             None
         }
