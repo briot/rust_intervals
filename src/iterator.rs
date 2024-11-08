@@ -105,7 +105,7 @@ impl<T> Iterator for IntervalIterator<T>
 where
     T: Step + Clone + PartialOrd + NothingBetween,
 {
-    type Item = T;   // ??? Should this be &T to match what vectors do
+    type Item = T; // ??? Should this be &T to match what vectors do
 
     /// Removes and returns an element from the start of the interval
     fn next(&mut self) -> Option<Self::Item> {

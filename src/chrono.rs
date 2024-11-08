@@ -77,10 +77,7 @@ mod test {
         );
 
         let intv1 = Interval::<NaiveDate>::doubly_unbounded();
-        assert_eq!(
-            intv1.iter().take(1).collect::<Vec<_>>(),
-            [NaiveDate::MIN],
-        );
+        assert_eq!(intv1.iter().take(1).collect::<Vec<_>>(), [NaiveDate::MIN],);
         assert_eq!(
             intv1.iter().rev().take(1).collect::<Vec<_>>(),
             [NaiveDate::MAX],

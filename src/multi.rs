@@ -1,11 +1,10 @@
 use crate::intervals::Interval;
-use crate::pairs::Pair;
 use crate::multi_joining::Joining;
 use crate::nothing_between::NothingBetween;
+use crate::pairs::Pair;
 use ::core::marker::PhantomData;
 
 pub trait Policy<T> {
-
     /// Internal implementation for extend().  It assumes that elements contains
     /// ordered intervals (possibly overlapping).
     /// elements always contains at least one interval.
@@ -17,7 +16,7 @@ pub trait Policy<T> {
 //  #[derive(Debug)]
 //  pub struct Separating;
 //  impl Policy for Separating {}
-//  
+//
 //  #[derive(Debug)]
 //  pub struct Splitting;
 //  impl Policy for Splitting {}
@@ -81,7 +80,6 @@ impl<T> IntervalSet<T, Joining> {
     }
 }
 
-
 impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// Returns an empty multi interval
     /// ```none
@@ -126,7 +124,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// sorted, as is the case when they are returned by difference().
     pub fn from_pair(pair: Pair<T>) -> Self
     where
-        T : PartialOrd + NothingBetween,
+        T: PartialOrd + NothingBetween,
     {
         IntervalSet {
             intvs: match pair {
@@ -245,7 +243,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// additional values that were not valid for self.
     pub fn convex_hull(&self) -> Interval<T>
     where
-        T: PartialOrd + NothingBetween + Clone
+        T: PartialOrd + NothingBetween + Clone,
     {
         if self.is_empty() {
             Interval::empty()
@@ -281,7 +279,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
 
 impl<T> Default for IntervalSet<T, Joining> {
     fn default() -> Self {
-       IntervalSet::empty()
+        IntervalSet::empty()
     }
 }
 
@@ -429,7 +427,7 @@ mod tests {
 
         #[allow(clippy::needless_borrows_for_generic_args)]
         {
-           assert!(m.contains_interval(&interval!(6, 7)));   //  accepts ref
+            assert!(m.contains_interval(&interval!(6, 7))); //  accepts ref
         }
         assert!(!m.contains_interval(interval!(3, 7)));
         assert_eq!(m.lower(), Some(&1));

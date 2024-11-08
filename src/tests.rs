@@ -64,77 +64,77 @@ mod test {
         assert!(intv.contains(9));
         assert!(!intv.contains(10));
         assert!(!intv.contains(11));
-        assert!(intv.contains_interval(&empty));
-        assert!(!empty.contains_interval(&intv));
+        assert!(intv.contains_interval(empty));
+        assert!(!empty.contains_interval(intv));
 
         let intv2 = Interval::new_closed_closed(1, 5); // [1,5]
         assert!(intv2.contains(1));
         assert!(intv2.contains(5));
         assert!(!intv2.contains(6));
-        assert!(intv2.contains_interval(&empty));
-        assert!(!empty.contains_interval(&intv2));
-        assert!(intv.contains_interval(&intv2));
-        assert!(!intv2.contains_interval(&intv));
+        assert!(intv2.contains_interval(empty));
+        assert!(!empty.contains_interval(intv2));
+        assert!(intv.contains_interval(intv2));
+        assert!(!intv2.contains_interval(intv));
 
         let intv3 = Interval::new_unbounded_closed(10); // (,10]
         assert!(intv3.contains(0));
         assert!(intv3.contains(9));
         assert!(intv3.contains(10));
         assert!(!intv3.contains(11));
-        assert!(intv3.contains_interval(&empty));
-        assert!(!empty.contains_interval(&intv3));
-        assert!(intv3.contains_interval(&intv));
-        assert!(!intv.contains_interval(&intv3));
-        assert!(intv3.contains_interval(&intv2));
-        assert!(!intv2.contains_interval(&intv3));
+        assert!(intv3.contains_interval(empty));
+        assert!(!empty.contains_interval(intv3));
+        assert!(intv3.contains_interval(intv));
+        assert!(!intv.contains_interval(intv3));
+        assert!(intv3.contains_interval(intv2));
+        assert!(!intv2.contains_interval(intv3));
 
         let intv4 = Interval::new_unbounded_open(10); // (,10)
         assert!(intv4.contains(0));
         assert!(intv4.contains(9));
         assert!(!intv4.contains(10));
         assert!(!intv4.contains(11));
-        assert!(intv4.contains_interval(&empty));
-        assert!(!empty.contains_interval(&intv4));
-        assert!(intv4.contains_interval(&intv));
-        assert!(!intv.contains_interval(&intv4));
-        assert!(intv4.contains_interval(&intv2));
-        assert!(!intv2.contains_interval(&intv4));
-        assert!(intv3.contains_interval(&intv4));
-        assert!(!intv4.contains_interval(&intv3));
+        assert!(intv4.contains_interval(empty));
+        assert!(!empty.contains_interval(intv4));
+        assert!(intv4.contains_interval(intv));
+        assert!(!intv.contains_interval(intv4));
+        assert!(intv4.contains_interval(intv2));
+        assert!(!intv2.contains_interval(intv4));
+        assert!(intv3.contains_interval(intv4));
+        assert!(!intv4.contains_interval(intv3));
 
         let intv5 = Interval::new_closed_unbounded(1); // [1,)
         assert!(!intv5.contains(0));
         assert!(intv5.contains(1));
         assert!(intv5.contains(10));
         assert!(intv5.contains(11));
-        assert!(intv5.contains_interval(&empty));
-        assert!(!empty.contains_interval(&intv5));
-        assert!(intv5.contains_interval(&intv));
-        assert!(!intv.contains_interval(&intv5));
-        assert!(intv5.contains_interval(&intv2));
-        assert!(!intv2.contains_interval(&intv5));
-        assert!(!intv3.contains_interval(&intv5));
-        assert!(!intv5.contains_interval(&intv3));
-        assert!(!intv4.contains_interval(&intv5));
-        assert!(!intv5.contains_interval(&intv4));
+        assert!(intv5.contains_interval(empty));
+        assert!(!empty.contains_interval(intv5));
+        assert!(intv5.contains_interval(intv));
+        assert!(!intv.contains_interval(intv5));
+        assert!(intv5.contains_interval(intv2));
+        assert!(!intv2.contains_interval(intv5));
+        assert!(!intv3.contains_interval(intv5));
+        assert!(!intv5.contains_interval(intv3));
+        assert!(!intv4.contains_interval(intv5));
+        assert!(!intv5.contains_interval(intv4));
 
         let intv6 = Interval::doubly_unbounded();
         assert!(intv6.contains(0));
         assert!(intv6.contains(1));
         assert!(intv6.contains(10));
         assert!(intv6.contains(11));
-        assert!(intv6.contains_interval(&empty));
-        assert!(!empty.contains_interval(&intv6));
-        assert!(intv6.contains_interval(&intv));
-        assert!(!intv.contains_interval(&intv6));
-        assert!(intv6.contains_interval(&intv2));
-        assert!(!intv2.contains_interval(&intv6));
-        assert!(!intv3.contains_interval(&intv6));
-        assert!(intv6.contains_interval(&intv3));
-        assert!(!intv4.contains_interval(&intv6));
-        assert!(intv6.contains_interval(&intv4));
-        assert!(!intv5.contains_interval(&intv6));
-        assert!(intv6.contains_interval(&intv5));
+        assert!(intv6.contains_interval(empty));
+        assert!(!empty.contains_interval(intv6));
+        assert!(intv6.contains_interval(intv));
+        assert!(!intv.contains_interval(intv6));
+        assert!(intv6.contains_interval(intv2));
+        assert!(!intv2.contains_interval(intv6));
+        assert!(!intv3.contains_interval(intv6));
+        assert!(intv6.contains_interval(intv3));
+        assert!(!intv4.contains_interval(intv6));
+        assert!(intv6.contains_interval(intv4));
+        assert!(!intv5.contains_interval(intv6));
+        assert!(intv6.contains_interval(intv5));
 
         // An interval with not comparable bounds is always empty
         let intv7 = Interval::new_closed_open(1.0, f32::NAN);
@@ -480,7 +480,8 @@ mod test {
         );
         assert_eq!(
             format!("{:?}", Interval::<f32>::empty()),
-            "(+infinity,-infinity)");
+            "(+infinity,-infinity)"
+        );
         assert_eq!(
             format!("{:?}", Interval::<f32>::doubly_unbounded()),
             "(-infinity,+infinity)"
@@ -578,30 +579,30 @@ mod test {
         assert!(intv2.left_of(5));
         assert!(!intv2.strictly_left_of(5));
 
-        assert!(!intv1.strictly_left_of_interval(&intv2));
-        assert!(!intv2.strictly_left_of_interval(&intv1));
+        assert!(!intv1.strictly_left_of_interval(intv2));
+        assert!(!intv2.strictly_left_of_interval(intv1));
 
         let empty = Interval::<i8>::empty();
         assert!(empty.strictly_left_of(1));
         assert!(empty.left_of(1));
         assert!(empty.strictly_right_of(1));
         assert!(empty.right_of(1));
-        assert!(empty.strictly_left_of_interval(&intv1));
-        assert!(intv1.strictly_left_of_interval(&empty));
+        assert!(empty.strictly_left_of_interval(intv1));
+        assert!(intv1.strictly_left_of_interval(empty));
 
         let intv6 = Interval::new_open_closed(3, 5); // (3,5]
         let intv3 = Interval::new_closed_closed(1, 3); // [1,3]
-        assert!(!intv3.strictly_left_of_interval(&intv1));
-        assert!(!intv1.strictly_left_of_interval(&intv3));
-        assert!(intv3.strictly_left_of_interval(&intv6));
-        assert!(!intv6.strictly_left_of_interval(&intv3));
+        assert!(!intv3.strictly_left_of_interval(intv1));
+        assert!(!intv1.strictly_left_of_interval(intv3));
+        assert!(intv3.strictly_left_of_interval(intv6));
+        assert!(!intv6.strictly_left_of_interval(intv3));
 
         let intv4 = Interval::new_closed_closed(0, 1);
-        assert!(intv4.strictly_left_of_interval(&intv1));
-        assert!(!intv1.strictly_left_of_interval(&intv4));
+        assert!(intv4.strictly_left_of_interval(intv1));
+        assert!(!intv1.strictly_left_of_interval(intv4));
 
         let intv5 = Interval::new_closed_unbounded(1); // [1,)
-        assert!(!intv5.strictly_left_of_interval(&intv1));
+        assert!(!intv5.strictly_left_of_interval(intv1));
         assert!(!intv5.right_of(10));
         assert!(intv5.strictly_right_of(0));
         assert!(intv5.right_of(0));
@@ -612,17 +613,17 @@ mod test {
 
         let intv1 = Interval::new_open_closed(3, 5); // (3,5]
         let intv2 = Interval::new_closed_closed(5, 9); // [5,9]
-        assert!(!intv1.strictly_left_of_interval(&intv2));
-        assert!(intv1.left_of_interval(&intv2));
-        assert!(intv2.right_of_interval(&intv1));
-        assert!(!intv2.strictly_right_of_interval(&intv1));
+        assert!(!intv1.strictly_left_of_interval(intv2));
+        assert!(intv1.left_of_interval(intv2));
+        assert!(intv2.right_of_interval(intv1));
+        assert!(!intv2.strictly_right_of_interval(intv1));
 
         let intv1 = Interval::new_open_closed(3, 5); // (3,5]
         let intv2 = Interval::new_open_closed(5, 9); // (5,9]
-        assert!(intv1.strictly_left_of_interval(&intv2));
-        assert!(intv1.left_of_interval(&intv2));
-        assert!(intv2.right_of_interval(&intv1));
-        assert!(intv2.strictly_right_of_interval(&intv1));
+        assert!(intv1.strictly_left_of_interval(intv2));
+        assert!(intv1.left_of_interval(intv2));
+        assert!(intv2.right_of_interval(intv1));
+        assert!(intv2.strictly_right_of_interval(intv1));
     }
 
     #[test]
@@ -633,7 +634,7 @@ mod test {
         assert!(!intv1.contains(&'a'));
 
         let intv2 = Interval::<char>::new_closed_closed('A', 'Z');
-        assert!(intv2.as_ref().contains_interval(&intv1));
+        assert!(intv2.as_ref().contains_interval(intv1));
     }
 
     #[test]
@@ -641,56 +642,56 @@ mod test {
         let intv1 = Interval::new_closed_closed(10, 30);
         let intv2 = Interval::new_closed_closed(40, 50);
         assert_eq!(
-            intv1.convex_hull(&intv2),
+            intv1.convex_hull(intv2),
             Interval::new_closed_closed(10, 50)
         );
         assert_eq!(
-            intv2.convex_hull(&intv1),
+            intv2.convex_hull(intv1),
             Interval::new_closed_closed(10, 50)
         );
 
         let intv1 = Interval::new_closed_closed(10, 30);
         let intv2 = Interval::new_closed_closed(20, 30); // nested
-        assert_eq!(intv1.convex_hull(&intv2), intv1);
-        assert_eq!(intv2.convex_hull(&intv1), intv1);
-        assert_eq!(intv2.union(&intv1), Some(intv1));
+        assert_eq!(intv1.convex_hull(intv2), intv1);
+        assert_eq!(intv2.convex_hull(intv1), intv1);
+        assert_eq!(intv2.union(intv1), Some(intv1));
 
         let intv1 = Interval::new_open_open(10, 30);
         let intv2 = Interval::new_open_open(40, 50); // nested
-        assert_eq!(intv1.convex_hull(&intv2), Interval::new_open_open(10, 50));
-        assert_eq!(intv2.convex_hull(&intv1), Interval::new_open_open(10, 50));
-        assert_eq!(intv2.union(&intv1), None); //  not contiguous
+        assert_eq!(intv1.convex_hull(intv2), Interval::new_open_open(10, 50));
+        assert_eq!(intv2.convex_hull(intv1), Interval::new_open_open(10, 50));
+        assert_eq!(intv2.union(intv1), None); //  not contiguous
 
         let intv1 = Interval::empty();
         let intv2 = Interval::new_open_open(40, 50); // nested
-        assert_eq!(intv1.convex_hull(&intv2), intv2);
-        assert_eq!(intv2.convex_hull(&intv1), intv2);
-        assert_eq!(intv2.union(&intv1), Some(intv2));
+        assert_eq!(intv1.convex_hull(intv2), intv2);
+        assert_eq!(intv2.convex_hull(intv1), intv2);
+        assert_eq!(intv2.union(intv1), Some(intv2));
 
         let intv1 = Interval::new_open_unbounded(10);
         let intv2 = Interval::new_open_open(40, 50); // nested
-        assert_eq!(intv1.convex_hull(&intv2), intv1);
-        assert_eq!(intv2.convex_hull(&intv1), intv1);
-        assert_eq!(intv2.union(&intv1), Some(intv1));
+        assert_eq!(intv1.convex_hull(intv2), intv1);
+        assert_eq!(intv2.convex_hull(intv1), intv1);
+        assert_eq!(intv2.union(intv1), Some(intv1));
 
         let intv1 = Interval::new_unbounded_open(10);
         let intv2 = Interval::new_open_open(40, 50); // nested
-        assert_eq!(intv1.convex_hull(&intv2), Interval::new_unbounded_open(50));
-        assert_eq!(intv2.convex_hull(&intv1), Interval::new_unbounded_open(50));
-        assert_eq!(intv2.union(&intv1), None);
+        assert_eq!(intv1.convex_hull(intv2), Interval::new_unbounded_open(50));
+        assert_eq!(intv2.convex_hull(intv1), Interval::new_unbounded_open(50));
+        assert_eq!(intv2.union(intv1), None);
     }
 
     #[test]
     fn test_difference() {
         let intv1 = Interval::new_closed_closed(10, 30);
         let empty = Interval::<i32>::empty();
-        assert_eq!(intv1.difference(&empty), Pair::One(intv1));
-        assert_eq!(empty.difference(&intv1), Pair::One(empty));
+        assert_eq!(intv1.difference(empty), Pair::One(intv1));
+        assert_eq!(empty.difference(intv1), Pair::One(empty));
 
         let intv2 = Interval::new_closed_closed(1, 50); //  larger
-        assert_eq!(intv1.difference(&intv2), Pair::One(empty));
+        assert_eq!(intv1.difference(intv2), Pair::One(empty));
         assert_eq!(
-            intv2.difference(&intv1),
+            intv2.difference(intv1),
             Pair::Two(
                 Interval::new_closed_open(1, 10),
                 Interval::new_open_closed(30, 50),
@@ -699,29 +700,29 @@ mod test {
 
         #[cfg(feature = "std")]
         assert_eq!(
-            format!("{:?}", intv2.difference(&intv1)),
+            format!("{:?}", intv2.difference(intv1)),
             "((LeftOf(1),LeftOf(10)) + (RightOf(30),RightOf(50)))"
         );
 
         let intv3 = Interval::new_closed_closed(1, 5); // disjoint
-        assert_eq!(intv1.difference(&intv3), Pair::One(intv1));
-        assert_eq!(intv3.difference(&intv1), Pair::One(intv3));
+        assert_eq!(intv1.difference(intv3), Pair::One(intv1));
+        assert_eq!(intv3.difference(intv1), Pair::One(intv3));
 
         #[cfg(feature = "std")]
         assert_eq!(
-            format!("{:?}", intv1.difference(&intv3)),
+            format!("{:?}", intv1.difference(intv3)),
             "(LeftOf(10),RightOf(30))"
         );
 
         let intv4 = Interval::new_closed_closed(1, 15); // overlaps left
         assert_eq!(
-            intv1.difference(&intv4),
+            intv1.difference(intv4),
             Pair::One(Interval::new_open_closed(15, 30))
         );
 
         let intv5 = Interval::new_closed_closed(25, 40); // overlaps right
         assert_eq!(
-            intv1.difference(&intv5),
+            intv1.difference(intv5),
             Pair::One(Interval::new_closed_open(10, 25))
         );
     }
@@ -767,17 +768,17 @@ mod test {
         let intv2 = Interval::new_closed_closed(40, 50);
         let intv3 = Interval::new_open_unbounded(35);
         let empty = Interval::empty();
-        assert_eq!(intv1.between(&intv2), Interval::new_open_open(30, 40),);
-        assert_eq!(intv1.between(&intv3), Interval::new_open_closed(30, 35),);
-        assert_eq!(intv2.between(&intv3), empty.clone(),);
-        assert_eq!(intv1.between(&empty), empty.clone(),);
-        assert_eq!(empty.between(&intv1), empty.clone(),);
-        assert!(intv1.contiguous(&intv1));
-        assert!(!intv1.contiguous(&intv2));
-        assert!(!intv1.contiguous(&intv3));
-        assert!(intv2.contiguous(&intv3));
-        assert!(empty.contiguous(&intv1));
-        assert!(intv1.contiguous(&empty));
+        assert_eq!(intv1.between(intv2), Interval::new_open_open(30, 40),);
+        assert_eq!(intv1.between(intv3), Interval::new_open_closed(30, 35),);
+        assert_eq!(intv2.between(intv3), empty.clone(),);
+        assert_eq!(intv1.between(empty), empty.clone(),);
+        assert_eq!(empty.between(intv1), empty.clone(),);
+        assert!(intv1.contiguous(intv1));
+        assert!(!intv1.contiguous(intv2));
+        assert!(!intv1.contiguous(intv3));
+        assert!(intv2.contiguous(intv3));
+        assert!(empty.contiguous(intv1));
+        assert!(intv1.contiguous(empty));
     }
 
     #[test]
@@ -786,11 +787,11 @@ mod test {
         let intv2 = Interval::new_closed_open(40_u8, 50);
         let intv3 = Interval::new_open_unbounded(35_u8);
         let empty = Interval::empty();
-        assert!(!intv1.intersects(&intv2));
-        assert_eq!(intv1.intersection(&intv2), empty.clone());
-        assert!(intv2.intersects(&intv3));
+        assert!(!intv1.intersects(intv2));
+        assert_eq!(intv1.intersection(intv2), empty.clone());
+        assert!(intv2.intersects(intv3));
         assert_eq!(
-            intv2.intersection(&intv3),
+            intv2.intersection(intv3),
             Interval::new_closed_open(40, 50)
         );
     }
@@ -799,19 +800,19 @@ mod test {
     fn test_symmetric_difference() {
         let intv1 = Interval::new_closed_closed(10, 30);
         let empty = Interval::<i32>::empty();
-        assert_eq!(intv1.symmetric_difference(&empty), Pair::One(intv1));
-        assert_eq!(empty.symmetric_difference(&intv1), Pair::One(intv1));
+        assert_eq!(intv1.symmetric_difference(empty), Pair::One(intv1));
+        assert_eq!(empty.symmetric_difference(intv1), Pair::One(intv1));
 
         let intv2 = Interval::new_closed_closed(1, 50); //  larger
         assert_eq!(
-            intv1.symmetric_difference(&intv2),
+            intv1.symmetric_difference(intv2),
             Pair::Two(
                 Interval::new_closed_open(1, 10),
                 Interval::new_open_closed(30, 50),
             ),
         );
         assert_eq!(
-            intv2.symmetric_difference(&intv1),
+            intv2.symmetric_difference(intv1),
             Pair::Two(
                 Interval::new_closed_open(1, 10),
                 Interval::new_open_closed(30, 50),
@@ -819,18 +820,12 @@ mod test {
         );
 
         let intv3 = Interval::new_closed_closed(1, 5); // disjoint
-        assert_eq!(
-            intv1.symmetric_difference(&intv3),
-            Pair::Two(intv3, intv1,),
-        );
-        assert_eq!(
-            intv3.symmetric_difference(&intv1),
-            Pair::Two(intv3, intv1,),
-        );
+        assert_eq!(intv1.symmetric_difference(intv3), Pair::Two(intv3, intv1,),);
+        assert_eq!(intv3.symmetric_difference(intv1), Pair::Two(intv3, intv1,),);
 
         let intv4 = Interval::new_closed_closed(1, 15); // overlaps left
         assert_eq!(
-            intv1.symmetric_difference(&intv4),
+            intv1.symmetric_difference(intv4),
             Pair::Two(
                 Interval::new_closed_open(1, 10),
                 Interval::new_open_closed(15, 30),
@@ -839,7 +834,7 @@ mod test {
 
         let intv5 = Interval::new_closed_closed(25, 40); // overlaps right
         assert_eq!(
-            intv1.symmetric_difference(&intv5),
+            intv1.symmetric_difference(intv5),
             Pair::Two(
                 Interval::new_closed_open(10, 25),
                 Interval::new_open_closed(30, 40),
@@ -850,40 +845,40 @@ mod test {
     #[test]
     fn test_macro() {
         let intv1 = interval!(1, 2);
-        assert!(intv1.equivalent(&Interval::new_closed_open(1, 2)));
+        assert!(intv1.equivalent(Interval::new_closed_open(1, 2)));
 
         let intv1 = interval!(1, 2, "[)");
-        assert!(intv1.equivalent(&Interval::new_closed_open(1, 2)));
+        assert!(intv1.equivalent(Interval::new_closed_open(1, 2)));
 
         let intv1 = interval!(1, 2, "[]");
-        assert!(intv1.equivalent(&Interval::new_closed_closed(1, 2)));
+        assert!(intv1.equivalent(Interval::new_closed_closed(1, 2)));
 
         let intv1 = interval!(1, 2, "(]");
-        assert!(intv1.equivalent(&Interval::new_open_closed(1, 2)));
+        assert!(intv1.equivalent(Interval::new_open_closed(1, 2)));
 
         let intv1 = interval!(1, 2, "()");
-        assert!(intv1.equivalent(&Interval::new_open_open(1, 2)));
+        assert!(intv1.equivalent(Interval::new_open_open(1, 2)));
 
         let intv1 = interval!("empty");
-        assert!(intv1.equivalent(&Interval::<f32>::empty()));
+        assert!(intv1.equivalent(Interval::<f32>::empty()));
 
         let intv1 = interval!(1, "[inf");
-        assert!(intv1.equivalent(&Interval::new_closed_unbounded(1)));
+        assert!(intv1.equivalent(Interval::new_closed_unbounded(1)));
 
         let intv1 = interval!(1, "inf");
-        assert!(intv1.equivalent(&Interval::new_closed_unbounded(1)));
+        assert!(intv1.equivalent(Interval::new_closed_unbounded(1)));
 
         let intv1 = interval!(1, "(inf");
-        assert!(intv1.equivalent(&Interval::new_open_unbounded(1)));
+        assert!(intv1.equivalent(Interval::new_open_unbounded(1)));
 
         let intv1 = interval!("-inf", 1, "]");
-        assert!(intv1.equivalent(&Interval::new_unbounded_closed(1)));
+        assert!(intv1.equivalent(Interval::new_unbounded_closed(1)));
 
         let intv1 = interval!("-inf", 1);
-        assert!(intv1.equivalent(&Interval::new_unbounded_open(1)));
+        assert!(intv1.equivalent(Interval::new_unbounded_open(1)));
 
         let intv1 = interval!("-inf", 1, ")");
-        assert!(intv1.equivalent(&Interval::new_unbounded_open(1)));
+        assert!(intv1.equivalent(Interval::new_unbounded_open(1)));
     }
 
     #[cfg(feature = "std")]
@@ -965,7 +960,8 @@ mod test {
         assert_eq!(intv1.iter().rev().take(3).len(), 3);
         assert_eq!(
             intv1.iter().size_hint(),
-            (u32::MAX as usize - 2, Some(u32::MAX as usize - 2)));
+            (u32::MAX as usize - 2, Some(u32::MAX as usize - 2))
+        );
         assert_eq!(intv1.iter().take(10).size_hint(), (10, Some(10)));
 
         let intv1 = interval!(2, "(inf");
