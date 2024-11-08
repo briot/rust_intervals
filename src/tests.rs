@@ -910,12 +910,14 @@ mod test {
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2, 1]);
         assert_eq!(intv1.iter().len(), 4);
         assert_eq!(intv1.iter().rev().len(), 4);
+        assert_eq!(intv1.iter().size_hint(), (4, Some(4)));
 
         let intv1 = interval!(1, 4, "(]");
         assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![2, 3, 4]);
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2]);
         assert_eq!(intv1.iter().len(), 3);
         assert_eq!(intv1.iter().rev().len(), 3);
+        assert_eq!(intv1.iter().size_hint(), (3, Some(3)));
         let mut iter = intv1.iter();
         let _ = iter.next();
         let _ = iter.next_back();
@@ -926,6 +928,7 @@ mod test {
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![3, 2]);
         assert_eq!(intv1.iter().len(), 2);
         assert_eq!(intv1.iter().rev().len(), 2);
+        assert_eq!(intv1.iter().size_hint(), (2, Some(2)));
         let mut iter = intv1.iter();
         let _ = iter.next();
         let _ = iter.next_back();
@@ -936,6 +939,7 @@ mod test {
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![4, 3, 2, 1, 0]);
         assert_eq!(intv1.iter().len(), 5);
         assert_eq!(intv1.iter().rev().len(), 5);
+        assert_eq!(intv1.iter().size_hint(), (5, Some(5)));
         let mut iter = intv1.iter();
         let _ = iter.next();
         let _ = iter.next_back();
@@ -946,6 +950,7 @@ mod test {
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![3, 2, 1, 0]);
         assert_eq!(intv1.iter().len(), 4);
         assert_eq!(intv1.iter().rev().len(), 4);
+        assert_eq!(intv1.iter().size_hint(), (4, Some(4)));
 
         let intv1 = interval!(2, "[inf");
         assert_eq!(
@@ -958,6 +963,10 @@ mod test {
         );
         assert_eq!(intv1.iter().take(10).len(), 10);
         assert_eq!(intv1.iter().rev().take(3).len(), 3);
+        assert_eq!(
+            intv1.iter().size_hint(),
+            (u32::MAX as usize - 2, Some(u32::MAX as usize - 2)));
+        assert_eq!(intv1.iter().take(10).size_hint(), (10, Some(10)));
 
         let intv1 = interval!(2, "(inf");
         assert_eq!(
@@ -976,6 +985,7 @@ mod test {
         assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), Vec::<u32>::new(),);
         assert_eq!(intv1.iter().len(), 0);
         assert_eq!(intv1.iter().rev().len(), 0);
+        assert_eq!(intv1.iter().size_hint(), (0, Some(0)));
 
         let intv1 = Interval::<u32>::doubly_unbounded();
         assert_eq!(

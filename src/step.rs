@@ -17,6 +17,8 @@ where
     /// Computes the number of elements from self to other.  This function
     /// returns None if the diff cannot be computed or is larger than what
     /// usize allows.
+    /// The result of this function is only used for optimization by some
+    /// rust iterators functions (via `Iterator::size_hint()`).
     /// ```
     /// use rust_intervals::Step;
     /// assert_eq!(1_u8.elements_between(&3), Some(2));

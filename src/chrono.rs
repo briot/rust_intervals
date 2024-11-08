@@ -28,7 +28,7 @@ impl Step for chrono::NaiveDate {
         self.checked_sub_days(chrono::Days::new(step as u64))
     }
     fn elements_between(&self, other: &Self) -> Option<usize> {
-        Some(other.signed_duration_since(*self).num_days() as usize + 1)
+        Some(other.signed_duration_since(*self).num_days() as usize)
     }
 }
 
@@ -68,6 +68,7 @@ mod test {
             intv1.iter().collect::<Vec<_>>(),
             [feb_27, feb_28, feb_29, mar_01, mar_02]
         );
+        assert_eq!(intv1.iter().size_hint(), (5, Some(5)));
 
         let intv1 = interval!(feb_27, mar_03);
         assert_eq!(

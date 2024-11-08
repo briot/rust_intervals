@@ -4,7 +4,27 @@ use crate::multi_joining::Joining;
 use crate::nothing_between::NothingBetween;
 use ::core::marker::PhantomData;
 
-/// There are multiple ways to combine intervals.
+pub trait Policy<T> {
+
+    /// Internal implementation for extend().  It assumes that elements contains
+    /// ordered intervals (possibly overlapping).
+    /// elements always contains at least one interval.
+    fn merge(vec: &mut Vec<Interval<T>>, elements: Vec<Interval<T>>)
+    where
+        T: Ord + NothingBetween + Clone;
+}
+
+//  #[derive(Debug)]
+//  pub struct Separating;
+//  impl Policy for Separating {}
+//  
+//  #[derive(Debug)]
+//  pub struct Splitting;
+//  impl Policy for Splitting {}
+
+/// A sorted list of non-overlapping intervals.
+/// There are multiple ways to combine intervals, depending on the chosen
+/// policy.
 ///
 ///  1. Joining
 ///     Intervals are joined on overlap or touch (in the case of maps: if
@@ -34,25 +54,6 @@ use ::core::marker::PhantomData;
 ///      +                 [4-5)
 ///      = {[1-2)[2-3)[3-4)[4-5)}
 ///     ```
-pub trait Policy<T> {
-
-    /// Internal implementation for extend().  It assumes that elements contains
-    /// ordered intervals (possibly overlapping).
-    /// elements always contains at least one interval.
-    fn merge(vec: &mut Vec<Interval<T>>, elements: Vec<Interval<T>>)
-    where
-        T: Ord + NothingBetween + Clone;
-}
-
-//  #[derive(Debug)]
-//  pub struct Separating;
-//  impl Policy for Separating {}
-//  
-//  #[derive(Debug)]
-//  pub struct Splitting;
-//  impl Policy for Splitting {}
-
-/// A sorted list of non-overlapping intervals.
 #[derive(Debug)]
 pub struct IntervalSet<T, P: Policy<T> = Joining> {
     intvs: Vec<Interval<T>>,
