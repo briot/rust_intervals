@@ -1,2 +1,5 @@
 *.profraw
 Makefile
+mutants.out.old/
+mutants.out/
+mutants.txt

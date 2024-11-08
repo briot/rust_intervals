@@ -51,3 +51,8 @@ args = ["fuzz", "run", "fuzz_target_multi", "--", "-max_total_time=10", "-max_le
 [tasks.clippy]
 command = "cargo"
 args = ["clippy", "--all-features"]
+
+# Find areas in the code that can be modified without impacting any of the tests
+[tasks.mutants]
+command = "cargo"
+args = ["mutants", "--all-features", "-j4"]
