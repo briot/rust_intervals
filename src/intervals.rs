@@ -742,11 +742,13 @@ impl<T> Interval<T> {
     ///    let intv2 = interval!(10, 30, "[]");
     ///    let res1 = intv1.intersection(&intv2);
     ///    let res2 = intv1 & intv2;
-    ///    assert_eq!(res1, res2);
-    ///
-    ///    let _ = intv1 & &intv2;  // all variants of refs
-    ///    let _ = &intv1 & &intv2;  // all variants of refs
-    ///    let _ = &intv1 & intv2;  // all variants of refs
+    ///    let r3 = intv1 & &intv2;  // all variants of refs
+    ///    let r4 = &intv1 & &intv2;  // all variants of refs
+    ///    let r5 = &intv1 & intv2;  // all variants of refs
+    /// #  assert_eq!(res1, res2);
+    /// #  assert_eq!(res1, r3);
+    /// #  assert_eq!(res1, r4);
+    /// #  assert_eq!(res1, r5);
     /// ```
     pub fn intersection<U>(&self, right: U) -> Self
     where
@@ -804,10 +806,13 @@ impl<T> Interval<T> {
     ///    let intv2 = interval!(20, 30);
     ///    let res1 = intv1.union(&intv2);
     ///    let res2 = intv1 | intv2;
-    ///    let _ = intv1 | &intv2;  // all variants of refs
-    ///    let _ = &intv1 | &intv2;  // all variants of refs
-    ///    let _ = &intv1 | intv2;  // all variants of refs
-    ///    assert_eq!(res1, res2);
+    ///    let res3 = intv1 | &intv2;  // all variants of refs
+    ///    let res4 = &intv1 | &intv2;  // all variants of refs
+    ///    let res5 = &intv1 | intv2;  // all variants of refs
+    /// #  assert_eq!(res1, res2);
+    /// #  assert_eq!(res1, res3);
+    /// #  assert_eq!(res1, res4);
+    /// #  assert_eq!(res1, res5);
     /// ```
     pub fn union<U>(&self, right: U) -> Option<Self>
     where

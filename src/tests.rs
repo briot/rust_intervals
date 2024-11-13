@@ -254,71 +254,108 @@ mod test {
         assert!(Interval::new_closed_open(1_u8, 1).is_empty());
         assert!(Interval::new_open_open(0_u8, 1).is_empty());
         assert!(Interval::new_open_open(2_u8, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_u8, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_u8, 2).is_empty());
 
         assert!(Interval::new_closed_open(1_u16, 1).is_empty());
         assert!(Interval::new_open_open(0_u16, 1).is_empty());
         assert!(Interval::new_open_open(2_u16, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_u16, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_u16, 2).is_empty());
 
         assert!(Interval::new_closed_open(1_u32, 1).is_empty());
         assert!(Interval::new_open_open(0_u32, 1).is_empty());
         assert!(Interval::new_open_open(2_u32, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_u32, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_u32, 2).is_empty());
 
         assert!(Interval::new_closed_open(1_u64, 1).is_empty());
         assert!(Interval::new_open_open(0_u64, 1).is_empty());
         assert!(Interval::new_open_open(2_u64, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_u64, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_u64, 2).is_empty());
 
         assert!(Interval::new_closed_open(1_u128, 1).is_empty());
         assert!(Interval::new_open_open(0_u128, 1).is_empty());
         assert!(Interval::new_open_open(2_u128, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_u128, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_u128, 2).is_empty());
 
         assert!(Interval::new_closed_open(1_usize, 1).is_empty());
         assert!(Interval::new_open_open(0_usize, 1).is_empty());
         assert!(Interval::new_open_open(2_usize, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_usize, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_usize, 2).is_empty());
 
         assert!(Interval::new_closed_open(1_i8, 1).is_empty());
         assert!(Interval::new_open_open(0_i8, 1).is_empty());
         assert!(Interval::new_open_open(2_i8, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_i8, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_i8, 2).is_empty());
 
         assert!(Interval::new_closed_open(1_i16, 1).is_empty());
         assert!(Interval::new_open_open(0_i16, 1).is_empty());
         assert!(Interval::new_open_open(2_i16, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_i16, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_i16, 2).is_empty());
 
         assert!(Interval::new_closed_open(1_i32, 1).is_empty());
         assert!(Interval::new_open_open(0_i32, 1).is_empty());
         assert!(Interval::new_open_open(2_i32, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_i32, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_i32, 2).is_empty());
 
         assert!(Interval::new_closed_open(1_i64, 1).is_empty());
         assert!(Interval::new_open_open(0_i64, 1).is_empty());
         assert!(Interval::new_open_open(2_i64, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_i64, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_i64, 2).is_empty());
 
         assert!(Interval::new_closed_open(1_isize, 1).is_empty());
         assert!(Interval::new_open_open(0_isize, 1).is_empty());
         assert!(Interval::new_open_open(2_isize, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_isize, 1).is_empty());
+        assert!(!Interval::new_closed_closed(1_isize, 2).is_empty());
 
         assert!(Interval::new_closed_open(1.0_f32, 1.0).is_empty());
         assert!(!Interval::new_open_open(0.0_f32, 1.0).is_empty());
         assert!(Interval::new_open_open(2.0_f32, 1.0).is_empty());
+        assert!(!Interval::new_closed_closed(1.0_f32, 1.0).is_empty());
+        assert!(!Interval::new_closed_closed(1.0_f32, 1.0 + f32::EPSILON)
+            .is_empty());
 
         assert!(Interval::new_closed_open(1.0_f64, 1.0).is_empty());
         assert!(!Interval::new_open_open(0.0_f64, 1.0).is_empty());
         assert!(Interval::new_open_open(2.0_f64, 1.0).is_empty());
+        assert!(!Interval::new_closed_closed(1.0_f64, 1.0).is_empty());
+        assert!(!Interval::new_closed_closed(1.0_f64, 1.0 + f64::EPSILON)
+            .is_empty());
 
         assert!(Interval::new_closed_open('b', 'b').is_empty());
         assert!(Interval::new_open_open('a', 'b').is_empty());
         assert!(Interval::new_open_open('c', 'b').is_empty());
+        assert!(!Interval::new_closed_closed('b', 'b').is_empty());
+        assert!(!Interval::new_closed_closed('b', 'd').is_empty());
 
         assert!(Interval::new_closed_open(&1_u64, &1).is_empty());
         assert!(Interval::new_open_open(&0_u64, &1).is_empty());
         assert!(Interval::new_open_open(&2_u64, &1).is_empty());
+        assert!(!Interval::new_closed_closed(&1_u64, &1).is_empty());
+        assert!(!Interval::new_closed_closed(&1_u64, &2).is_empty());
 
         #[cfg(feature = "std")]
         {
+            let one_nano = std::time::Duration::from_nanos(1);
+            let two_nano = std::time::Duration::from_nanos(2);
             let one_sec = std::time::Duration::from_secs(1);
             let ten_sec = std::time::Duration::from_secs(10);
             let ten_sec_one_ns = ten_sec + std::time::Duration::from_nanos(1);
             assert!(Interval::new_closed_open(one_sec, one_sec).is_empty());
             assert!(Interval::new_open_open(ten_sec, ten_sec_one_ns).is_empty());
             assert!(Interval::new_open_open(ten_sec_one_ns, ten_sec).is_empty());
+            assert!(!Interval::new_closed_closed(one_nano, one_nano).is_empty());
+            assert!(!Interval::new_closed_closed(one_nano, two_nano).is_empty());
+            assert!(Interval::new_closed_closed(two_nano, one_nano).is_empty());
         }
     }
 
@@ -548,9 +585,10 @@ mod test {
         let mut map = std::collections::HashMap::new();
         map.insert(interval!(1, 2, "[]"), 2);
         map.insert(interval!(1, 10, "()"), 3);
+        map.insert(interval!(2, 10, "()"), 6);
         map.insert(interval!(1, "(inf"), 4);
         map.insert(interval!("-inf", 20, "]"), 5);
-        assert_eq!(map.len(), 4);
+        assert_eq!(map.len(), 5);
     }
 
     #[test]
@@ -589,6 +627,8 @@ mod test {
         assert!(empty.right_of(1));
         assert!(empty.strictly_left_of_interval(intv1));
         assert!(intv1.strictly_left_of_interval(empty));
+        assert!(intv1.strictly_right_of_interval(empty));
+        assert!(empty.strictly_right_of_interval(intv1));
 
         let intv6 = Interval::new_open_closed(3, 5); // (3,5]
         let intv3 = Interval::new_closed_closed(1, 3); // [1,3]
@@ -614,16 +654,24 @@ mod test {
         let intv1 = Interval::new_open_closed(3, 5); // (3,5]
         let intv2 = Interval::new_closed_closed(5, 9); // [5,9]
         assert!(!intv1.strictly_left_of_interval(intv2));
+        assert!(!intv1.strictly_left_not_contiguous(intv2));
         assert!(intv1.left_of_interval(intv2));
         assert!(intv2.right_of_interval(intv1));
+        assert!(!intv1.right_of_interval(intv2));
         assert!(!intv2.strictly_right_of_interval(intv1));
 
         let intv1 = Interval::new_open_closed(3, 5); // (3,5]
         let intv2 = Interval::new_open_closed(5, 9); // (5,9]
         assert!(intv1.strictly_left_of_interval(intv2));
+        assert!(!intv1.strictly_left_not_contiguous(intv2));
         assert!(intv1.left_of_interval(intv2));
         assert!(intv2.right_of_interval(intv1));
         assert!(intv2.strictly_right_of_interval(intv1));
+
+        let intv1 = Interval::new_open_closed(3, 4); // (3,5]
+        let intv2 = Interval::new_open_closed(5, 9); // (5,9]
+        assert!(intv1.strictly_left_of_interval(intv2));
+        assert!(intv1.strictly_left_not_contiguous(intv2));
     }
 
     #[test]

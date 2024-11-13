@@ -5,51 +5,29 @@ pub trait NothingBetween {
     //  This is only called with self < other.
 }
 
-impl NothingBetween for u8 {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
+macro_rules! nothing_between_for_int {
+    ($t:tt) => {
+        impl NothingBetween for $t {
+            fn nothing_between(&self, other: &Self) -> bool {
+                other - self <= 1
+            }
+        }
+    };
 }
-impl NothingBetween for u16 {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
-}
-impl NothingBetween for u32 {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
-}
-impl NothingBetween for u64 {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
-}
-impl NothingBetween for u128 {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
-}
-impl NothingBetween for i8 {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
-}
-impl NothingBetween for i16 {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
-}
-impl NothingBetween for i32 {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
-}
-impl NothingBetween for i64 {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
-}
+
+nothing_between_for_int!(u8);
+nothing_between_for_int!(u16);
+nothing_between_for_int!(u32);
+nothing_between_for_int!(u64);
+nothing_between_for_int!(u128);
+nothing_between_for_int!(i8);
+nothing_between_for_int!(i16);
+nothing_between_for_int!(i32);
+nothing_between_for_int!(i64);
+nothing_between_for_int!(i128);
+nothing_between_for_int!(usize);
+nothing_between_for_int!(isize);
+
 impl NothingBetween for f32 {
     fn nothing_between(&self, other: &Self) -> bool {
         // In general, comparing with EPSILON is wrong.  There are however two
@@ -72,20 +50,12 @@ impl NothingBetween for char {
         (*other as u32) - (*self as u32) <= 1
     }
 }
-impl NothingBetween for usize {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
-}
-impl NothingBetween for isize {
-    fn nothing_between(&self, other: &Self) -> bool {
-        other - self <= 1
-    }
-}
 
 #[cfg(feature = "std")]
 impl NothingBetween for std::time::Duration {
     fn nothing_between(&self, other: &Self) -> bool {
+        // true
+        // other.as_nanos() / self.as_nanos() <= 1
         other.as_nanos() - self.as_nanos() <= 1
     }
 }
