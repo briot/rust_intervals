@@ -21,6 +21,8 @@ impl Step for chrono::NaiveDate {
     fn max_value() -> Self {
         chrono::NaiveDate::MAX
     }
+
+    #[cfg_attr(test, mutants::skip)]
     fn forward(&self, step: usize) -> Option<Self> {
         self.checked_add_days(chrono::Days::new(step as u64))
     }
@@ -34,25 +36,28 @@ impl Step for chrono::NaiveDate {
 
 #[cfg(test)]
 mod test {
+    use crate::tests::test::check_empty;
     use crate::*;
     use ::chrono::{Local, NaiveDate, TimeDelta};
 
     #[test]
     fn test_chrono() {
-        let apr_1 = NaiveDate::from_ymd_opt(2024, 4, 1).unwrap();
-        let mar_31 = apr_1.pred_opt().unwrap();
-        let apr_2 = apr_1.succ_opt().unwrap();
-        assert!(Interval::new_closed_open(&apr_1, &apr_1).is_empty());
-        assert!(Interval::new_open_open(&mar_31, &apr_1).is_empty());
-        assert!(Interval::new_open_open(&apr_2, &apr_1).is_empty());
+        check_empty(
+            "NaiveDate",
+            NaiveDate::from_ymd_opt(2024, 4, 1).unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 2).unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 3).unwrap(),
+            NaiveDate::from_ymd_opt(2024, 4, 10).unwrap(),
+        );
 
         let now = Local::now();
-        let one_min_ago = now - TimeDelta::minutes(1);
-        let one_sec_ago = now - TimeDelta::seconds(1);
-        let one_ns_ago = now - TimeDelta::nanoseconds(1);
-        assert!(!Interval::new_closed_open(one_min_ago, now).is_empty());
-        assert!(!Interval::new_open_open(one_sec_ago, now).is_empty());
-        assert!(Interval::new_open_open(one_ns_ago, now).is_empty());
+        check_empty(
+            "DateTime",
+            now,
+            now + TimeDelta::nanoseconds(1),
+            now + TimeDelta::seconds(1),
+            now + TimeDelta::minutes(1),
+        );
     }
 
     #[test]

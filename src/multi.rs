@@ -61,7 +61,7 @@ pub struct IntervalSet<T, P: Policy<T> = Joining> {
 
 impl<T> IntervalSet<T, Joining> {
     pub fn empty_joining() -> Self {
-        Self::empty()
+        Default::default()
     }
 
     pub fn new_joining<I>(iter: I) -> Self
@@ -262,6 +262,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     ///
     /// This is meant for tests, and should be useless in normal code, as the
     /// various functions preserve those invariants.
+    #[cfg(test)]
     pub fn check_invariants(&self)
     where
         T: PartialOrd + NothingBetween,
@@ -300,7 +301,7 @@ where
     T: PartialOrd + NothingBetween,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.len() == other.len() && self.iter().eq(other.iter())
+        self.iter().eq(other.iter())
     }
 }
 
@@ -465,6 +466,28 @@ mod tests {
             interval!(16, 19, "[]"),
         ]);
         assert_eq!(m1, m2);
+        assert_eq!(m2, m1);
+
+        let m4 = IntervalSet::new([
+            interval!(2, 5, "()"),
+            interval!(5, 11, "[)"),
+        ]);
+        assert_ne!(m1, m4);   // same length, different intervals
+        assert_ne!(m4, m1);   // same length, different intervals
+
+        let m5 = IntervalSet::new([
+            interval!(2, 5, "()"),
+        ]);
+        assert_ne!(m1, m5);   // different lengths
+        assert_ne!(m5, m1);   // different lengths
+
+        let m6 = IntervalSet::new_joining([
+            interval!(3, 10, "[]"),
+            interval!(15, 20, "()"),
+            interval!(25, 30, "()"),
+        ]);
+        assert_ne!(m1, m6);   // same initial intervals, but have more
+        assert_ne!(m6, m1);   // same initial intervals, but have more
 
         let intv1 = interval!(3, 20, "[)");
         let pairs = intv1 - interval!(10, 15, "(]");

@@ -145,7 +145,7 @@ where
                     lo.elements_between(up).map(|c| c + 1)
                 }
                 (Bound::RightOf(lo), Bound::RightUnbounded) => {
-                    lo.elements_between(&T::max_value()).map(|c| c - 1)
+                    lo.elements_between(&T::max_value())
                 }
                 (Bound::RightOf(lo), Bound::LeftOf(up)) => {
                     lo.elements_between(up).map(|c| c - 1)

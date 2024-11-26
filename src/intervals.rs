@@ -1091,7 +1091,7 @@ where
             Some(Ordering::Less)
         } else {
             match self.lower.partial_cmp(&other.lower) {
-                None => None,
+                None => None, // should not get here, interval is empty
                 Some(Ordering::Less) => Some(Ordering::Less),
                 Some(Ordering::Greater) => Some(Ordering::Greater),
                 Some(Ordering::Equal) => self.upper.partial_cmp(&other.upper),

@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod test {
+pub(crate) mod test {
     use crate::{bounds::Bound, *};
     use ::core::cmp::Ordering;
     use ::core::convert::{TryFrom, TryInto};
@@ -89,6 +89,49 @@ mod test {
 
             assert_ne!(ls.finish(), rs.finish());
         }
+    }
+
+    pub fn check_empty<T: PartialOrd + NothingBetween + Copy>(
+        name: &str,
+        val: T,
+        val_next: T,
+        val_far: T,
+        val_farther: T,
+    ) {
+        assert!(Interval::new_closed_open(val, val).is_empty(), "{}", name);
+        assert!(
+            !Interval::new_closed_closed(val, val).is_empty(),
+            "{}",
+            name
+        );
+
+        assert!(
+            !Interval::new_closed_closed(val, val_next).is_empty(),
+            "{}",
+            name
+        );
+        assert!(
+            Interval::new_open_open(val, val_next).is_empty(),
+            "{}",
+            name
+        );
+        assert!(
+            Interval::new_open_open(val_next, val).is_empty(),
+            "{}",
+            name
+        );
+
+        assert!(
+            !Interval::new_open_open(val, val_far).is_empty(),
+            "{}",
+            name
+        );
+
+        assert!(
+            !Interval::new_open_open(val, val_farther).is_empty(),
+            "{}",
+            name
+        );
     }
 
     #[test]
@@ -182,6 +225,15 @@ mod test {
         // An interval with not comparable bounds is always empty
         let intv7 = Interval::new_closed_open(1.0, f32::NAN);
         assert!(!intv7.contains(1.0));
+
+        let intv8 = Interval::new_open_closed(1, 10); // (1,10)
+        assert!(!intv8.contains(1));
+        assert!(intv8.contains(2));
+        assert!(intv8.contains(9));
+        assert!(intv8.contains(10));
+        assert!(!intv8.contains(11));
+        assert!(intv8.contains_interval(empty));
+        assert!(!empty.contains_interval(intv8));
     }
 
     #[test]
@@ -237,9 +289,21 @@ mod test {
 
     #[test]
     fn test_empty() {
-        assert!(!Interval::new_closed_open(1, 10).is_empty());
-        assert!(Interval::new_closed_open(1, 1).is_empty());
-        assert!(Interval::new_closed_open(1, 0).is_empty());
+        check_empty("u8", &0_u8, &1, &2, &10);
+        check_empty("u8", 0_u8, 1, 2, 10);
+        check_empty("u16", 0_u16, 1, 2, 10);
+        check_empty("u32", 0_u32, 1, 2, 10);
+        check_empty("u64", 0_u64, 1, 2, 10);
+        check_empty("u128", 0_u128, 1, 2, 10);
+        check_empty("usize", 0_usize, 1, 2, 10);
+        check_empty("i8", 0_i8, 1, 2, 10);
+        check_empty("i16", 0_i16, 1, 2, 10);
+        check_empty("i32", 0_i32, 1, 2, 10);
+        check_empty("i64", 0_i64, 1, 2, 10);
+        check_empty("isize", 0_isize, 1, 2, 10);
+        check_empty("f32", 0_f32, f32::EPSILON, 2.0 * f32::EPSILON, 1.0);
+        check_empty("f64", 0_f64, f64::EPSILON, 2.0 * f64::EPSILON, 1.0);
+        check_empty("char", 'a', 'b', 'c', 'f');
 
         let empty = Interval::<f32>::empty();
         assert!(empty.is_empty());
@@ -247,26 +311,6 @@ mod test {
 
         let empty2 = Interval::new_closed_open(10.0_f32, 10.0);
         assert_equivalent(&empty, &empty2);
-
-        assert!(Interval::new_closed_open(1.0, 1.0).is_empty());
-        assert!(!Interval::new_closed_closed(1.0, 1.0).is_empty());
-        assert!(Interval::new_open_open(1.0, 1.0).is_empty());
-        assert!(Interval::new_open_closed(1.0, 1.0).is_empty());
-
-        // In machine representation, nothing between 1.0 and one_eps
-        let one_eps = 1.0 + f32::EPSILON;
-        assert!(!Interval::new_closed_closed(1.0, one_eps).is_empty());
-        assert!(!Interval::new_closed_open(1.0, one_eps).is_empty());
-        assert!(Interval::new_open_open(1.0, one_eps).is_empty());
-        assert!(!Interval::new_open_open(1.0, 2.0 + one_eps).is_empty());
-        assert!(!Interval::new_open_closed(1.0, one_eps).is_empty());
-
-        // Empty since left bound is greater than right bound
-        let one_min_eps = 1.0 - f32::EPSILON;
-        assert!(Interval::new_closed_closed(1.0, one_min_eps).is_empty());
-        assert!(Interval::new_closed_open(1.0, one_min_eps).is_empty());
-        assert!(Interval::new_open_closed(1.0, one_min_eps).is_empty());
-        assert!(Interval::new_open_open(1.0, one_min_eps).is_empty());
 
         // In mathematical representation, an infinite number of reals between
         // 1.0 and one_eps
@@ -293,113 +337,14 @@ mod test {
         assert!(!Interval::new_open_unbounded(5.0).is_empty());
         assert!(!Interval::<u32>::doubly_unbounded().is_empty());
 
-        // Test NothingBetween for standard types
-        assert!(Interval::new_closed_open(1_u8, 1).is_empty());
-        assert!(Interval::new_open_open(0_u8, 1).is_empty());
-        assert!(Interval::new_open_open(2_u8, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_u8, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_u8, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1_u16, 1).is_empty());
-        assert!(Interval::new_open_open(0_u16, 1).is_empty());
-        assert!(Interval::new_open_open(2_u16, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_u16, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_u16, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1_u32, 1).is_empty());
-        assert!(Interval::new_open_open(0_u32, 1).is_empty());
-        assert!(Interval::new_open_open(2_u32, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_u32, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_u32, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1_u64, 1).is_empty());
-        assert!(Interval::new_open_open(0_u64, 1).is_empty());
-        assert!(Interval::new_open_open(2_u64, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_u64, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_u64, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1_u128, 1).is_empty());
-        assert!(Interval::new_open_open(0_u128, 1).is_empty());
-        assert!(Interval::new_open_open(2_u128, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_u128, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_u128, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1_usize, 1).is_empty());
-        assert!(Interval::new_open_open(0_usize, 1).is_empty());
-        assert!(Interval::new_open_open(2_usize, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_usize, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_usize, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1_i8, 1).is_empty());
-        assert!(Interval::new_open_open(0_i8, 1).is_empty());
-        assert!(Interval::new_open_open(2_i8, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_i8, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_i8, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1_i16, 1).is_empty());
-        assert!(Interval::new_open_open(0_i16, 1).is_empty());
-        assert!(Interval::new_open_open(2_i16, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_i16, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_i16, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1_i32, 1).is_empty());
-        assert!(Interval::new_open_open(0_i32, 1).is_empty());
-        assert!(Interval::new_open_open(2_i32, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_i32, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_i32, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1_i64, 1).is_empty());
-        assert!(Interval::new_open_open(0_i64, 1).is_empty());
-        assert!(Interval::new_open_open(2_i64, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_i64, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_i64, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1_isize, 1).is_empty());
-        assert!(Interval::new_open_open(0_isize, 1).is_empty());
-        assert!(Interval::new_open_open(2_isize, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_isize, 1).is_empty());
-        assert!(!Interval::new_closed_closed(1_isize, 2).is_empty());
-
-        assert!(Interval::new_closed_open(1.0_f32, 1.0).is_empty());
-        assert!(!Interval::new_open_open(0.0_f32, 1.0).is_empty());
-        assert!(Interval::new_open_open(2.0_f32, 1.0).is_empty());
-        assert!(!Interval::new_closed_closed(1.0_f32, 1.0).is_empty());
-        assert!(!Interval::new_closed_closed(1.0_f32, 1.0 + f32::EPSILON)
-            .is_empty());
-
-        assert!(Interval::new_closed_open(1.0_f64, 1.0).is_empty());
-        assert!(!Interval::new_open_open(0.0_f64, 1.0).is_empty());
-        assert!(Interval::new_open_open(2.0_f64, 1.0).is_empty());
-        assert!(!Interval::new_closed_closed(1.0_f64, 1.0).is_empty());
-        assert!(!Interval::new_closed_closed(1.0_f64, 1.0 + f64::EPSILON)
-            .is_empty());
-
-        assert!(Interval::new_closed_open('b', 'b').is_empty());
-        assert!(Interval::new_open_open('a', 'b').is_empty());
-        assert!(Interval::new_open_open('c', 'b').is_empty());
-        assert!(!Interval::new_closed_closed('b', 'b').is_empty());
-        assert!(!Interval::new_closed_closed('b', 'd').is_empty());
-
-        assert!(Interval::new_closed_open(&1_u64, &1).is_empty());
-        assert!(Interval::new_open_open(&0_u64, &1).is_empty());
-        assert!(Interval::new_open_open(&2_u64, &1).is_empty());
-        assert!(!Interval::new_closed_closed(&1_u64, &1).is_empty());
-        assert!(!Interval::new_closed_closed(&1_u64, &2).is_empty());
-
         #[cfg(feature = "std")]
-        {
-            let one_nano = std::time::Duration::from_nanos(1);
-            let two_nano = std::time::Duration::from_nanos(2);
-            let one_sec = std::time::Duration::from_secs(1);
-            let ten_sec = std::time::Duration::from_secs(10);
-            let ten_sec_one_ns = ten_sec + std::time::Duration::from_nanos(1);
-            assert!(Interval::new_closed_open(one_sec, one_sec).is_empty());
-            assert!(Interval::new_open_open(ten_sec, ten_sec_one_ns).is_empty());
-            assert!(Interval::new_open_open(ten_sec_one_ns, ten_sec).is_empty());
-            assert!(!Interval::new_closed_closed(one_nano, one_nano).is_empty());
-            assert!(!Interval::new_closed_closed(one_nano, two_nano).is_empty());
-            assert!(Interval::new_closed_closed(two_nano, one_nano).is_empty());
-        }
+        check_empty(
+            "Duration",
+            std::time::Duration::from_nanos(1),
+            std::time::Duration::from_nanos(2),
+            std::time::Duration::from_secs(1),
+            std::time::Duration::from_secs(10),
+        );
     }
 
     #[test]
@@ -689,6 +634,12 @@ mod test {
         assert!(intv1.strictly_right_of_interval(empty));
         assert!(empty.strictly_right_of_interval(intv1));
 
+        let empty2 = Interval::new_closed_closed(5, 4);
+        assert!(empty2.strictly_left_of_interval(intv1));
+        assert!(intv1.strictly_left_of_interval(empty2));
+        assert!(intv1.strictly_right_of_interval(empty2));
+        assert!(empty2.strictly_right_of_interval(intv1));
+
         let intv6 = Interval::new_open_closed(3, 5); // (3,5]
         let intv3 = Interval::new_closed_closed(1, 3); // [1,3]
         assert!(!intv3.strictly_left_of_interval(intv1));
@@ -715,7 +666,9 @@ mod test {
         assert!(!intv1.strictly_left_of_interval(intv2));
         assert!(!intv1.strictly_left_not_contiguous(intv2));
         assert!(intv1.left_of_interval(intv2));
+        assert!(!intv2.left_of_interval(intv1));
         assert!(intv2.right_of_interval(intv1));
+        assert!(!intv1.right_of_interval(intv2));
         assert!(!intv1.right_of_interval(intv2));
         assert!(!intv2.strictly_right_of_interval(intv1));
 
@@ -1070,6 +1023,13 @@ mod test {
             (u32::MAX as usize - 2, Some(u32::MAX as usize - 2))
         );
         assert_eq!(intv1.iter().take(10).size_hint(), (10, Some(10)));
+
+        let intv1 = interval!(250_u8, "(inf");
+        assert_eq!(intv1.iter().size_hint(), (5, Some(5)));
+        assert_eq!(
+            intv1.iter().collect::<Vec<_>>(),
+            vec![251, 252, 253, 254, 255],
+        );
 
         let intv1 = interval!(2, "(inf");
         assert_eq!(
