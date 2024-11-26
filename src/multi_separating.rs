@@ -16,13 +16,14 @@ impl Separating {
         for e in iter {
             to_insert = match to_insert {
                 None => Some(e),
-                Some(ins) => match ins.union(&e) {
-                    None => {
+                Some(ins) => {
+                    if ins.strictly_left_of_interval(&e) {
                         vec.push(ins); // left-most is inst
                         Some(e)
+                    } else {
+                        Some(ins.convex_hull(e))
                     }
-                    Some(u) => Some(u),
-                },
+                }
             };
         }
         vec.push(to_insert.unwrap());

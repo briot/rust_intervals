@@ -8,7 +8,7 @@ default_to_workspace = false
 alias = "workflow"
 
 [tasks.workflow]
-dependencies = [ "test-all", "format", "clippy", "doc", "fuzz" ]
+dependencies = [ "test-all", "format", "clippy", "doc", "fuzz", "mutants" ]
 
 [tasks.test-all]
 dependencies = ["test-all-features", "test-nostd" ]
@@ -55,4 +55,4 @@ args = ["clippy", "--all-features"]
 # Find areas in the code that can be modified without impacting any of the tests
 [tasks.mutants]
 command = "cargo"
-args = ["mutants", "--all-features", "--iterate"]
+args = ["mutants", "--all-features"]

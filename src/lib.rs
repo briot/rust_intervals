@@ -100,7 +100,8 @@ mod multi_separating;
 pub use crate::multi::IntervalSet;
 #[cfg(feature = "std")]
 pub use crate::multi_joining::Joining;
-// pub use crate::multi_separating::Separating;
+#[cfg(feature = "std")]
+pub use crate::multi_separating::Separating;
 
 /// This macro lets you create intervals with a syntax closer to what Postgresql
 /// provides.

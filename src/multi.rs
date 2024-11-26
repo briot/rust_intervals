@@ -1,5 +1,6 @@
 use crate::intervals::Interval;
 use crate::multi_joining::Joining;
+use crate::multi_separating::Separating;
 use crate::nothing_between::NothingBetween;
 use crate::pairs::Pair;
 use ::core::marker::PhantomData;
@@ -12,14 +13,6 @@ pub trait Policy<T> {
     where
         T: Ord + NothingBetween + Clone;
 }
-
-//  #[derive(Debug)]
-//  pub struct Separating;
-//  impl Policy for Separating {}
-//
-//  #[derive(Debug)]
-//  pub struct Splitting;
-//  impl Policy for Splitting {}
 
 /// A sorted list of non-overlapping intervals.
 /// There are multiple ways to combine intervals, depending on the chosen
@@ -73,6 +66,27 @@ impl<T> IntervalSet<T, Joining> {
     }
 
     pub fn new_single_joining(value: T) -> Self
+    where
+        T: Clone,
+    {
+        Self::new_single(value)
+    }
+}
+
+impl<T> IntervalSet<T, Separating> {
+    pub fn empty_separating() -> Self {
+        Default::default()
+    }
+
+    pub fn new_separating<I>(iter: I) -> Self
+    where
+        T: Ord + NothingBetween + Clone,
+        I: IntoIterator<Item = Interval<T>>,
+    {
+        Self::new(iter)
+    }
+
+    pub fn new_single_separating(value: T) -> Self
     where
         T: Clone,
     {
@@ -262,7 +276,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     ///
     /// This is meant for tests, and should be useless in normal code, as the
     /// various functions preserve those invariants.
-    #[cfg(test)]
+    #[cfg_attr(test, mutants::skip)]
     pub fn check_invariants(&self)
     where
         T: PartialOrd + NothingBetween,
@@ -278,7 +292,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     }
 }
 
-impl<T> Default for IntervalSet<T, Joining> {
+impl<T, P: Policy<T>> Default for IntervalSet<T, P> {
     fn default() -> Self {
         IntervalSet::empty()
     }
@@ -320,37 +334,38 @@ mod tests {
 
     #[test]
     fn test_joining() {
-        // From Boost ICL library:
-        // There are multiple ways to combine intervals.
-        //
-        //  1. Joining
-        //     Intervals are joined on overlap or touch (in the case of maps: if
-        //     associated values are equal).
-        //        {[1      3)          }
-        //      +       [2      4)
-        //      +                 [4 5)
-        //      = {[1                5)}
-
         let mut m = IntervalSet::empty_joining();
+        m.check_invariants();
         insert_via_extend(
             &mut m,
-            [interval!(1, 3), interval!(2, 4), interval!(4, 5)],
+            [
+                interval!(1, 3, "[)"),
+                interval!(2, 4, "[)"),
+                interval!(4, 5, "[)"),
+            ],
         );
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 5)],);
         assert_eq!(m.len(), 1);
+        m.check_invariants();
+
+        m.add(interval!(0, 6));
+        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(0, 6)]);
+        assert_eq!(m.len(), 1);
 
         //  Same as above, but intervals are not sorted initially
-        let mut m = IntervalSet::default();
+        let mut m = IntervalSet::empty_joining();
         m.extend([interval!(4, 5), interval!(2, 4), interval!(1, 3)]);
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 5)],);
         assert_eq!(m.len(), 1);
+        m.check_invariants();
 
         // Additional tests
 
-        let mut m = IntervalSet::default();
+        let mut m = IntervalSet::empty_joining();
         m.add(interval!(1, 4));
         assert_eq!(m.len(), 1);
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 4)],);
+        m.check_invariants();
 
         m.add(interval!(1, 4)); //  Adding same interval has no effect
         assert_eq!(m.len(), 1);
@@ -379,7 +394,79 @@ mod tests {
         m.check_invariants();
 
         // Inserting intervals only after the end of all existing ones
-        let mut m = IntervalSet::default();
+        let mut m = IntervalSet::empty_joining();
+        m.extend([interval!(1, 3), interval!(4, 5)]);
+        m.extend([interval!(6, 7), interval!(8, 9)]);
+        assert_eq!(m.len(), 4);
+        m.check_invariants();
+    }
+
+    #[test]
+    fn test_separating() {
+        let mut m = IntervalSet::empty_separating();
+        insert_via_extend(
+            &mut m,
+            [
+                interval!(1, 3, "[)"),
+                interval!(2, 4, "[)"),
+                interval!(4, 5, "[)"),
+            ],
+        );
+        assert_eq!(
+            m.iter().collect::<Vec<_>>(),
+            vec![&interval!(1, 4, "[)"), &interval!(4, 5, "[)")],
+        );
+        assert_eq!(m.len(), 2);
+
+        m.add(interval!(0, 6));
+        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(0, 6)]);
+        assert_eq!(m.len(), 1);
+
+        //  Same as above, but intervals are not sorted initially
+        let mut m = IntervalSet::empty_separating();
+        m.extend([interval!(4, 5), interval!(2, 4), interval!(1, 3)]);
+        assert_eq!(
+            m.iter().collect::<Vec<_>>(),
+            vec![&interval!(1, 4, "[)"), &interval!(4, 5, "[)")],
+        );
+        assert_eq!(m.len(), 2);
+
+        // Additional tests
+
+        let mut m = IntervalSet::empty_separating();
+        m.add(interval!(1, 4));
+        assert_eq!(m.len(), 1);
+        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 4)],);
+        m.check_invariants();
+
+        m.add(interval!(1, 4)); //  Adding same interval has no effect
+        assert_eq!(m.len(), 1);
+        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 4)],);
+
+        m.add(interval!(1, 6)); // extends the first interval
+        assert_eq!(m.len(), 1);
+        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 6)],);
+
+        m.add(interval!(6, 10)); // disjoint
+        assert_eq!(m.len(), 2);
+        assert_eq!(
+            m.iter().collect::<Vec<_>>(),
+            vec![&interval!(1, 6), &interval!(6, 10)],
+        );
+
+        m.add(interval!(9, 10)); // subset of second interval
+        assert_eq!(
+            m.iter().collect::<Vec<_>>(),
+            vec![&interval!(1, 6), &interval!(6, 10)],
+        );
+
+        m.add(interval!(4, 8, "[]")); // joins the two
+        assert_eq!(m.len(), 1);
+        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 10)],);
+        m.check_invariants();
+
+        // Inserting intervals only after the end of all existing ones
+        let mut m = IntervalSet::empty_separating();
         m.extend([interval!(1, 3), interval!(4, 5)]);
         m.extend([interval!(6, 7), interval!(8, 9)]);
         assert_eq!(m.len(), 4);
@@ -417,7 +504,27 @@ mod tests {
         assert!(!m.upper_unbounded());
         assert_eq!(m.convex_hull(), interval!(4, 4, "[]"));
 
+        let m = IntervalSet::new_single_separating(4);
+        assert!(m.contains(4));
+        assert!(!m.contains(5));
+        assert!(!m.contains(3));
+        assert_eq!(m.lower(), Some(&4));
+        assert_eq!(m.upper(), Some(&4));
+        assert!(!m.lower_unbounded());
+        assert!(!m.upper_unbounded());
+        assert_eq!(m.convex_hull(), interval!(4, 4, "[]"));
+
         let m = IntervalSet::new_joining([interval!(1, 3), interval!(5, 7)]);
+        assert!(m.contains(1));
+        assert!(m.contains(2));
+        assert!(!m.contains(3));
+        assert!(!m.contains(4));
+        assert!(m.contains(5));
+        assert!(m.contains(6));
+        assert!(!m.contains(7));
+        assert!(m.contains_interval(interval!(1, 2)));
+
+        let m = IntervalSet::new_separating([interval!(1, 3), interval!(5, 7)]);
         assert!(m.contains(1));
         assert!(m.contains(2));
         assert!(!m.contains(3));
@@ -468,30 +575,34 @@ mod tests {
         assert_eq!(m1, m2);
         assert_eq!(m2, m1);
 
-        let m4 = IntervalSet::new([
-            interval!(2, 5, "()"),
-            interval!(5, 11, "[)"),
-        ]);
-        assert_ne!(m1, m4);   // same length, different intervals
-        assert_ne!(m4, m1);   // same length, different intervals
+        let m4 =
+            IntervalSet::new([interval!(2, 5, "()"), interval!(5, 11, "[)")]);
+        assert_ne!(m1, m4); // same length, different intervals
+        assert_ne!(m4, m1); // same length, different intervals
 
-        let m5 = IntervalSet::new([
-            interval!(2, 5, "()"),
-        ]);
-        assert_ne!(m1, m5);   // different lengths
-        assert_ne!(m5, m1);   // different lengths
+        let m5 = IntervalSet::new([interval!(2, 5, "()")]);
+        assert_ne!(m1, m5); // different lengths
+        assert_ne!(m5, m1); // different lengths
 
         let m6 = IntervalSet::new_joining([
             interval!(3, 10, "[]"),
             interval!(15, 20, "()"),
             interval!(25, 30, "()"),
         ]);
-        assert_ne!(m1, m6);   // same initial intervals, but have more
-        assert_ne!(m6, m1);   // same initial intervals, but have more
+        assert_ne!(m1, m6); // same initial intervals, but have more
+        assert_ne!(m6, m1); // same initial intervals, but have more
 
         let intv1 = interval!(3, 20, "[)");
         let pairs = intv1 - interval!(10, 15, "(]");
         let m3 = IntervalSet::from_pair(pairs);
         assert_eq!(m1, m3);
+
+        let intv1 = interval!(3, 20, "[)");
+        let pairs = intv1 - interval!(10, 20, "()"); //  one interval
+        let m3 = IntervalSet::from_pair(pairs);
+        assert_eq!(
+            m3,
+            IntervalSet::<u8, Separating>::new([interval!(3, 10, "[]")])
+        );
     }
 }
