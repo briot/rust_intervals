@@ -1,10 +1,13 @@
 # Version History
 
+## 0.6.0
+
 ## 0.5.0
 ## Fixed
  - two equal intervals did not always have same hash (e.g. "[1,2]" and "(0,3)")
 ## Added
  - support for iteration in `chrono::NaiveDate` intervals
+ - `IntervalSet`
 ## Changed
  - renamed `MultiInterval` to `Pair`.  The former name will be used for sets of
    any number of intervals, but might not be compatible with no_std.  So we
