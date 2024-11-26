@@ -1,3 +1,33 @@
+/// Trait to compute whether intervals are empty.
+///
+/// For instance, for f32, we consider the numbers as representable on
+/// the machine.  So an interval like:
+/// `[1.0, 1.0 + f32::EPSILON)`
+/// is empty, since we cannot represent any number from this interval.
+///
+/// ```
+///    use rust_intervals::Interval;
+///    assert!(Interval::new_open_open(1.0, 1.0 + f32::EPSILON)
+///        .is_empty());
+/// ```
+///
+/// But if you implement your own wrapper type as
+/// ```
+///    use rust_intervals::Interval;
+///    use rust_intervals::NothingBetween;
+///    #[derive(PartialEq, PartialOrd)]
+///    struct Real(f32);
+///    impl NothingBetween for Real {
+///        fn nothing_between(&self, _other: &Self) -> bool {
+///            false
+///        }
+///    }
+///    assert!(!Interval::new_open_open(Real(1.0), Real(1.0 + f32::EPSILON))
+///        .is_empty());
+/// ```
+/// then the same interval `[Real(1.0), Real(1.0 + f32::EPSILON)]` is
+/// no longer empty, even though we cannot represent any number from this
+/// interval.
 pub trait NothingBetween {
     fn nothing_between(&self, other: &Self) -> bool;
     //  Should return True if no value exists between self and other in this

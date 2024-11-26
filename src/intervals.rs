@@ -370,35 +370,6 @@ impl<T> Interval<T> {
 
     /// True if the interval contains no element.
     /// This highly depends on how the NothingBetween trait was implemented.
-    ///
-    /// For instance, for f32, we consider the numbers as representable on
-    /// the machine.  So an interval like:
-    /// `[1.0, 1.0 + f32::EPSILON)`
-    /// is empty, since we cannot represent any number from this interval.
-    ///
-    /// ```
-    ///    use rust_intervals::Interval;
-    ///    assert!(Interval::new_open_open(1.0, 1.0 + f32::EPSILON)
-    ///        .is_empty());
-    /// ```
-    ///
-    /// But if you implement your own wrapper type as
-    /// ```
-    ///    use rust_intervals::Interval;
-    ///    use rust_intervals::NothingBetween;
-    ///    #[derive(PartialEq, PartialOrd)]
-    ///    struct Real(f32);
-    ///    impl NothingBetween for Real {
-    ///        fn nothing_between(&self, _other: &Self) -> bool {
-    ///            false
-    ///        }
-    ///    }
-    ///    assert!(!Interval::new_open_open(Real(1.0), Real(1.0 + f32::EPSILON))
-    ///        .is_empty());
-    /// ```
-    /// then the same interval `[Real(1.0), Real(1.0 + f32::EPSILON)]` is
-    /// no longer empty, even though we cannot represent any number from this
-    /// interval.
     pub fn is_empty(&self) -> bool
     where
         T: PartialOrd + NothingBetween,
