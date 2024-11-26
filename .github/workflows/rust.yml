@@ -20,3 +20,5 @@ jobs:
       run: cargo build --verbose --all-features
     - name: Run tests
       run: cargo test --verbose --all-features
+    - name: Run no-std tests
+      run: cargo test --verbose --no-default-features
