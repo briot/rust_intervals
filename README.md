@@ -1,11 +1,16 @@
-Rust intervals
-==============
+# Rust intervals &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![Docs Badge]][docs]
+
+[Build Status]: https://github.com/briot/rust_intervals/actions/workflows/tests.yml/badge.svg
+[actions]: https://actions-badge.atrox.dev/briot/rust_intervals/goto
+[Latest Version]: https://img.shields.io/crates/v/rust_intervals.svg
+[crates.io]: https://crates.io/crates/rust_intervals
+[Docs Badge]: https://docs.rs/rust_intervals/badge.svg
+[docs]: https://docs.rs/rust_intervals
 
 This package provides various functions to deal with intervals (aka ranges)
 of values.
 
-Features
---------
+## Features
 
 It provides the following features:
 
@@ -49,8 +54,7 @@ It provides the following features:
     and `IntoIterator`
   - Support for `Borrow` in parameters to make interface more convenient
 
-Example
--------
+## Example
 
 ```rust
    use rust_intervals::{interval, Interval};
@@ -82,8 +86,7 @@ approaches:
 
 ```
 
-Similar packages
------------------
+## Similar packages
 
 - `std::ops::Range` are the Rust built-in ranges.  They only provide
   a `contains()` function, do not provide `Copy` and do not provide all the
@@ -94,8 +97,7 @@ Similar packages
   `convex_hull()` and so forth.  In exchange, they do not require extra flags
   in the struct, which makes them slightly smaller.
 
-Roadmap
--------
+## Roadmap
 
 The following features are planned.
 
@@ -105,8 +107,7 @@ The following features are planned.
 - [ ] Map from intervals to values (and resolve overlaps to unique values)
 - [ ] More testing (using cargo-mutants to detect missing tests)
 
-Authors
--------
+## Authors
 
 - Emmanuel Briot  (Rust version)
 - Duncan Sands (Ada version it is based on)
