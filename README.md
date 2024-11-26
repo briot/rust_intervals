@@ -94,6 +94,17 @@ Similar packages
   `convex_hull()` and so forth.  In exchange, they do not require extra flags
   in the struct, which makes them slightly smaller.
 
+Roadmap
+-------
+
+The following features are planned.
+
+- [ ] Sets of disjoint intervals
+   - [ ] Multiple combining styles (joining, separating, splitting) similar to
+         Boost
+- [ ] Map from intervals to values (and resolve overlaps to unique values)
+- [ ] More testing (using cargo-mutants to detect missing tests)
+
 Authors
 -------
 
