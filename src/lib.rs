@@ -68,10 +68,6 @@
 mod bounds;
 mod intervals;
 mod iterator;
-mod leftmostiter;
-mod multi;
-mod multi_joining;
-mod multi_separating;
 mod nothing_between;
 mod pairs;
 mod step;
@@ -88,12 +84,23 @@ mod decimal;
 
 pub use crate::intervals::{Interval, ParseError};
 pub use crate::iterator::IntervalIterator;
-pub use crate::multi::IntervalSet;
-pub use crate::multi_joining::Joining;
-pub use crate::multi_separating::Separating;
 pub use crate::nothing_between::NothingBetween;
 pub use crate::pairs::Pair;
 pub use crate::step::Step;
+
+#[cfg(feature = "std")]
+mod leftmostiter;
+#[cfg(feature = "std")]
+mod multi;
+#[cfg(feature = "std")]
+mod multi_joining;
+#[cfg(feature = "std")]
+mod multi_separating;
+#[cfg(feature = "std")]
+pub use crate::multi::IntervalSet;
+#[cfg(feature = "std")]
+pub use crate::multi_joining::Joining;
+// pub use crate::multi_separating::Separating;
 
 /// This macro lets you create intervals with a syntax closer to what Postgresql
 /// provides.

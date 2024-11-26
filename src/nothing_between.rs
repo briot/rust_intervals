@@ -84,8 +84,6 @@ impl NothingBetween for char {
 #[cfg(feature = "std")]
 impl NothingBetween for std::time::Duration {
     fn nothing_between(&self, other: &Self) -> bool {
-        // true
-        // other.as_nanos() / self.as_nanos() <= 1
         other.as_nanos() - self.as_nanos() <= 1
     }
 }

@@ -4,6 +4,8 @@ mod test {
     use ::core::cmp::Ordering;
     use ::core::convert::{TryFrom, TryInto};
     use ::core::fmt::Debug;
+
+    #[cfg(feature = "std")]
     use ::core::hash::{Hash, Hasher};
 
     // In the world of real, there is always something in-between, even if
