@@ -1,6 +1,8 @@
 # Version History
 
 ## 0.5.0
+## Fixed
+ - two equal intervals did not always have same hash (e.g. "[1,2]" and "(0,3)")
 ## Added
  - support for iteration in `chrono::NaiveDate` intervals
 ## Changed

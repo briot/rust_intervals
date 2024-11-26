@@ -4,6 +4,7 @@ mod test {
     use ::core::cmp::Ordering;
     use ::core::convert::{TryFrom, TryInto};
     use ::core::fmt::Debug;
+    use ::core::hash::{Hash, Hasher};
 
     // In the world of real, there is always something in-between, even if
     // we cannot represent it.  However, in this case we may have an interval
@@ -46,6 +47,46 @@ mod test {
         assert_ne!(right, left);
         assert!(!left.equivalent(right));
         assert!(!right.equivalent(left));
+    }
+
+    fn assert_eq_and_hash<
+        T: ::core::hash::Hash + PartialOrd + Debug + Step + NothingBetween,
+    >(
+        left: &Interval<T>,
+        right: &Interval<T>,
+    ) {
+        assert_equivalent(left, right);
+
+        #[cfg(feature = "std")]
+        {
+            let mut ls = ::std::hash::DefaultHasher::new();
+            (*left).hash(&mut ls);
+
+            let mut rs = ::std::hash::DefaultHasher::new();
+            right.hash(&mut rs);
+
+            assert_eq!(ls.finish(), rs.finish());
+        }
+    }
+
+    fn assert_ne_and_hash<
+        T: ::core::hash::Hash + PartialOrd + Debug + Step + NothingBetween,
+    >(
+        left: &Interval<T>,
+        right: &Interval<T>,
+    ) {
+        assert_not_equivalent(left, right);
+
+        #[cfg(feature = "std")]
+        {
+            let mut ls = ::std::hash::DefaultHasher::new();
+            (*left).hash(&mut ls);
+
+            let mut rs = ::std::hash::DefaultHasher::new();
+            right.hash(&mut rs);
+
+            assert_ne!(ls.finish(), rs.finish());
+        }
     }
 
     #[test]
@@ -203,7 +244,7 @@ mod test {
         assert!(!empty.contains(1.1));
 
         let empty2 = Interval::new_closed_open(10.0_f32, 10.0);
-        assert_eq!(empty, empty2);
+        assert_equivalent(&empty, &empty2);
 
         assert!(Interval::new_closed_open(1.0, 1.0).is_empty());
         assert!(!Interval::new_closed_closed(1.0, 1.0).is_empty());
@@ -388,17 +429,17 @@ mod test {
         let intv5 = Interval::new_open_open(0, 4);
         let intv6 = Interval::new_open_open(-1, 3);
         let intv7 = Interval::new_closed_closed(1, 5);
-        assert_equivalent(&intv1, &intv1);
-        assert_equivalent(&intv1, &intv2);
-        assert_equivalent(&intv1, &intv4);
-        assert_equivalent(&intv1, &intv5);
-        assert_equivalent(&intv5, &intv2);
-        assert_not_equivalent(&intv1, &intv7);
-        assert_not_equivalent(&intv5, &intv6);
+        assert_eq_and_hash(&intv1, &intv1);
+        assert_eq_and_hash(&intv1, &intv2);
+        assert_eq_and_hash(&intv1, &intv4);
+        assert_eq_and_hash(&intv1, &intv5);
+        assert_eq_and_hash(&intv5, &intv2);
+        assert_ne_and_hash(&intv1, &intv7);
+        assert_ne_and_hash(&intv5, &intv6);
 
         let intv3 = Interval::new_closed_closed(1, 4);
-        assert_not_equivalent(&intv1, &intv3);
-        assert_not_equivalent(&intv2, &intv3);
+        assert_ne_and_hash(&intv1, &intv3);
+        assert_ne_and_hash(&intv2, &intv3);
 
         // Note: this will fail when using larger values than 1.0, because
         // f32 cannot distinguish between 4.0 and 4.0 - EPSILON for instance.
@@ -420,17 +461,17 @@ mod test {
 
         let u1 = Interval::new_unbounded_open(10);
         let u2 = Interval::new_unbounded_closed(9);
-        assert_equivalent(&u1, &u2);
-        assert_not_equivalent(&u1, &intv1);
+        assert_eq_and_hash(&u1, &u2);
+        assert_ne_and_hash(&u1, &intv1);
 
         let u1 = Interval::new_open_unbounded(9);
         let u2 = Interval::new_closed_unbounded(10);
-        assert_equivalent(&u1, &u2);
-        assert_not_equivalent(&u1, &intv1);
+        assert_eq_and_hash(&u1, &u2);
+        assert_ne_and_hash(&u1, &intv1);
 
         let empty = Interval::default();
-        assert_equivalent(&empty, &empty);
-        assert_not_equivalent(&empty, &intv1);
+        assert_eq_and_hash(&empty, &empty);
+        assert_ne_and_hash(&empty, &intv1);
     }
 
     /// Using FromStr trait
@@ -581,14 +622,30 @@ mod test {
 
     #[cfg(feature = "std")]
     #[test]
-    fn test_hash() {
+    fn test_map() {
         let mut map = std::collections::HashMap::new();
         map.insert(interval!(1, 2, "[]"), 2);
-        map.insert(interval!(1, 10, "()"), 3);
-        map.insert(interval!(2, 10, "()"), 6);
+        map.insert(interval!(1, 10, "()"), 3); // same lower, different upper
+        map.insert(interval!(2, 10, "[)"), 3); // overrides
         map.insert(interval!(1, "(inf"), 4);
         map.insert(interval!("-inf", 20, "]"), 5);
-        assert_eq!(map.len(), 5);
+        assert_eq!(map.len(), 4);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_hash() {
+        assert_ne_and_hash(&interval!(1, 2, "[]"), &interval!(1, 2, "(]"));
+        assert_ne_and_hash(&interval!(1, 2, "[]"), &interval!(1, 2, "[)"));
+
+        // Intervals are equal, so the hash must also be equal
+        assert_eq_and_hash(&interval!(1, 2, "[]"), &interval!(0, 2, "(]"));
+        assert_eq_and_hash(&interval!(1, 2, "[]"), &interval!(0, 3, "()"));
+        assert_eq_and_hash(&interval!(1, "[inf"), &interval!(0, "(inf"));
+        assert_eq_and_hash(
+            &interval!("-inf", 2, "]"),
+            &interval!("-inf", 3, ")"),
+        );
     }
 
     #[test]

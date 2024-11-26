@@ -1078,6 +1078,24 @@ where
 {
     /// True if the two intervals contain the same values (though they might
     /// have different bounds).
+    /// This depends on the implementation of NothingBetween, and could have
+    /// unexpected results for floats where the machine precision is limited.
+    /// For instance
+    /// ```
+    /// #  use rust_intervals::{interval};
+    ///    assert_eq!(
+    ///        &interval!(1.0 + f32::EPSILON, 2.0, "[]"),
+    ///        &interval!(1.0, 2.0, "(]")
+    ///    );
+    ///    assert_ne!(  // precision is good enough
+    ///        &interval!(1.0 + 2.0 * f32::EPSILON, 2.0, "[]"),
+    ///        &interval!(1.0, 2.0, "(]")
+    ///    );
+    ///    assert_eq!(   // precision of f32 is too low
+    ///        &interval!(1E12 + 2.0 * f32::EPSILON, 2.0, "[]"),
+    ///        &interval!(1E12, 2.0, "(]")
+    ///    );
+    /// ```
     fn eq(&self, other: &Self) -> bool {
         self.equivalent(other)
     }
@@ -1122,7 +1140,7 @@ where
 
 impl<T> ::core::hash::Hash for Interval<T>
 where
-    T: ::core::hash::Hash,
+    T: ::core::hash::Hash + Step + NothingBetween,
 {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.lower.hash(state);

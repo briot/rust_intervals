@@ -1,4 +1,5 @@
 use crate::nothing_between::NothingBetween;
+use crate::step::Step;
 use ::core::cmp::{Ordering, PartialOrd};
 
 /// One bound of an interval
@@ -99,15 +100,36 @@ where
 
 impl<T> ::core::hash::Hash for Bound<T>
 where
-    T: ::core::hash::Hash,
+    T: ::core::hash::Hash + Step + NothingBetween,
 {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
-        core::mem::discriminant(self).hash(state);
+        // Hash cannot be implemented for f32.
+        // One of the strong requirements imposed by Rust is that if two
+        // intervals are equal, they must also have the same hash.  So we must
+        // normalize the bounds.
+        // For instance, "[1," should hash the same as "(0," for integers.
+        // But there is no equivalent for floats: adding EPSILON might return
+        // the same value if we have a large enough float, so we cannot
+        // normalize.
         match self {
-            Bound::LeftUnbounded => {}
-            Bound::LeftOf(point) => point.hash(state),
-            Bound::RightOf(point) => point.hash(state),
-            Bound::RightUnbounded => {}
+            Bound::LeftUnbounded | Bound::RightUnbounded => {
+                core::mem::discriminant(self).hash(state);
+            }
+            Bound::LeftOf(point) => {
+                core::mem::discriminant(self).hash(state);
+                point.hash(state);
+            }
+            Bound::RightOf(point) => {
+                let next = point.forward(1);
+                if let Some(next) = next {
+                    if point.nothing_between(&next) {
+                        Bound::LeftOf(next).hash(state);
+                        return;
+                    }
+                }
+                core::mem::discriminant(self).hash(state);
+                point.hash(state);
+            }
         }
     }
 }
