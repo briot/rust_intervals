@@ -8,6 +8,7 @@
   - `IntervalSet::clear`
   - `IntervalSet::equivalent`
   - `IntervalSet::remove` and `IntervalSet::remove_interval`
+  - `IntervalSet::intersects_interval` and `IntervalSet::intersects`
 
 ## 0.5.0
 ## Fixed

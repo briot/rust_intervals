@@ -691,8 +691,7 @@ impl<T> Interval<T> {
 
     /// Whether the two intervals overlap, i.e. have at least one point in
     /// common.
-    ///
-    /// This function is often named `overlaps()`.
+    #[doc(alias = "overlaps")]
     pub fn intersects<U>(&self, right: U) -> bool
     where
         T: PartialOrd + NothingBetween,

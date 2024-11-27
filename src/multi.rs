@@ -215,20 +215,6 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     }
 
     /// Remove the value from Self, splitting intervals as needed.
-    /// ```
-    /// #  use rust_intervals::{interval, IntervalSet};
-    ///    let set1 = IntervalSet::new_joining([interval!(1, 20)]);
-    ///    let intv1 = interval!(5, 10);
-    ///    assert_eq!(
-    ///        set1.remove_interval(&intv1),
-    ///        IntervalSet::new_joining([interval!(1, 5), interval!(10, 20)]),
-    ///    );
-    ///
-    ///    let _ = &set1 - &intv1;
-    ///    let _ = &set1 - intv1.clone();
-    ///    let _ = set1.clone() - &intv1;  //  Cam combine all variants of refs
-    ///    let _ = set1 - intv1;
-    /// ```
     pub fn remove(&self, value: T) -> Self
     where
         T: PartialOrd + NothingBetween + Clone,
@@ -237,6 +223,21 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     }
 
     /// Remove from self all values found in intv.
+    /// ```
+    /// #  use rust_intervals::{interval, IntervalSet};
+    ///    let set1 = IntervalSet::new_joining([interval!(1, 20)]);
+    ///    let intv1 = interval!(5, 10);
+    ///    let diff = set1.remove_interval(&intv1);
+    ///    assert_eq!(
+    ///        diff,
+    ///        IntervalSet::new_joining([interval!(1, 5), interval!(10, 20)]),
+    ///    );
+    ///
+    ///    assert_eq!(&set1 - &intv1, diff);
+    ///    assert_eq!(&set1 - intv1.clone(), diff);
+    ///    assert_eq!(set1.clone() - &intv1, diff);
+    ///    assert_eq!(set1 - intv1, diff);
+    /// ```
     pub fn remove_interval<U>(&self, intv: U) -> Self
     where
         T: PartialOrd + NothingBetween + Clone,
@@ -391,6 +392,28 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
             assert!(!i2.is_empty());
             assert!(i1.strictly_left_of_interval(i2));
         }
+    }
+
+    /// Whether any value exists in both self and right.
+    #[doc(alias = "overlaps")]
+    pub fn intersects_interval<U>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Interval<T>>,
+    {
+        let u = right.borrow();
+        self.iter().any(|v| v.intersects(u))
+    }
+
+    /// Whether any value exists in both self and right.
+    #[doc(alias = "overlaps")]
+    pub fn intersects<U, P2: Policy<T>>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<IntervalSet<T, P2>>,
+    {
+        let u = right.borrow();
+        self.iter().any(|v| u.intersects_interval(v))
     }
 }
 
@@ -658,6 +681,27 @@ mod tests {
                 vec![&interval!(5, 8, "[)"), &interval!(17, 20)],
             );
             assert_eq!(m.remove_interval(Interval::empty()), m,);
+        }
+
+        // Intersects
+        {
+            m.clear();
+            m.extend([interval!(5, 10), interval!(15, 20)]);
+            assert!(m.intersects_interval(interval!(9, 10)));
+            assert!(m.intersects_interval(interval!(9, 16)));
+            assert!(!m.intersects_interval(interval!(10, 12)));
+
+            let mut m2 = m.clone();
+            assert!(m.intersects(&m2));
+
+            m2.clear();
+            assert!(!m.intersects(&m2));
+
+            m2.extend([interval!(1, 3), interval!(20, 30)]);
+            assert!(!m.intersects(&m2));
+
+            m2.extend([interval!(19, 21)]);
+            assert!(m.intersects(m2));
         }
     }
 
