@@ -235,6 +235,16 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         self.intvs.iter()
     }
 
+    /// Whether the two sets contain the same set of values
+    pub fn equivalent<U>(&self, other: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
+    {
+        let u = other.borrow();
+        self.iter().eq(u.iter())
+    }
+
     /// Whether value is valid for any of the intervals in self
     pub fn contains<V>(&self, value: V) -> bool
     where
@@ -356,7 +366,7 @@ where
     T: PartialOrd + NothingBetween,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.iter().eq(other.iter())
+        self.equivalent(other)
     }
 }
 
@@ -567,6 +577,8 @@ mod tests {
         ]);
         assert_eq!(m1, m2);
         assert_eq!(m2, m1);
+        assert!(m1.equivalent(&m2));
+        assert!(m1.equivalent(m2));
 
         let m4 =
             IntervalSet::new([interval!(2, 5, "()"), interval!(5, 11, "[)")]);

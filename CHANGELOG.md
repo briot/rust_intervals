@@ -5,6 +5,7 @@
   - fixed incorrect implementation of contains_interval for Separating policy
 ## Added
   - `IntervalSet::clear`
+  - `IntervalSet::equivalent`
 
 ## 0.5.0
 ## Fixed
