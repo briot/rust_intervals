@@ -252,7 +252,14 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         V: ::core::borrow::Borrow<T>,
     {
         let t = value.borrow();
-        self.iter().any(|v| v.contains(t))
+        for intv in self.iter() {
+            if !intv.lower.left_of(t) {
+                return false;
+            } else if intv.upper.right_of(t) {
+                return true;
+            }
+        }
+        false
     }
 
     /// Whether all values in other are valid for self.
