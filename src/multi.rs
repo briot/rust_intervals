@@ -214,6 +214,50 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         self.extend([intv]);
     }
 
+    /// Remove the value from Self, splitting intervals as needed.
+    /// ```
+    /// #  use rust_intervals::{interval, IntervalSet};
+    ///    let set1 = IntervalSet::new_joining([interval!(1, 20)]);
+    ///    let intv1 = interval!(5, 10);
+    ///    assert_eq!(
+    ///        set1.remove_interval(&intv1),
+    ///        IntervalSet::new_joining([interval!(1, 5), interval!(10, 20)]),
+    ///    );
+    ///
+    ///    let _ = &set1 - &intv1;
+    ///    let _ = &set1 - intv1.clone();
+    ///    let _ = set1.clone() - &intv1;  //  Cam combine all variants of refs
+    ///    let _ = set1 - intv1;
+    /// ```
+    pub fn remove(&self, value: T) -> Self
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
+        self.remove_interval(Interval::new_single(value))
+    }
+
+    /// Remove from self all values found in intv.
+    pub fn remove_interval<U>(&self, intv: U) -> Self
+    where
+        T: PartialOrd + NothingBetween + Clone,
+        U: ::core::borrow::Borrow<Interval<T>>,
+    {
+        let u = intv.borrow();
+        let mut result = IntervalSet::empty();
+        for v in self.intvs.iter() {
+            match v.difference(u) {
+                Pair::One(p1) => {
+                    result.intvs.push(p1);
+                }
+                Pair::Two(p1, p2) => {
+                    result.intvs.push(p1);
+                    result.intvs.push(p2);
+                }
+            }
+        }
+        result
+    }
+
     /// Add multiple sets of valid values to self, via an iterator
     pub fn extend<I>(&mut self, iter: I)
     where
@@ -356,6 +400,18 @@ impl<T, P: Policy<T>> Default for IntervalSet<T, P> {
     }
 }
 
+impl<T, P: Policy<T>> ::core::clone::Clone for IntervalSet<T, P>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            intvs: self.intvs.clone(),
+            _policy: self._policy,
+        }
+    }
+}
+
 impl<T, P: Policy<T>> Extend<Interval<T>> for IntervalSet<T, P>
 where
     T: PartialOrd + Ord + NothingBetween + Clone,
@@ -374,6 +430,36 @@ where
 {
     fn eq(&self, other: &Self) -> bool {
         self.equivalent(other)
+    }
+}
+
+///   &IntervalSet - &Interval
+///   and &IntervalSet - Interval
+impl<T, U, P: Policy<T>> ::core::ops::Sub<U> for &IntervalSet<T, P>
+where
+    T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
+{
+    type Output = IntervalSet<T, P>;
+
+    /// Same as [`Interval::remove_interval()`]
+    fn sub(self, rhs: U) -> Self::Output {
+        self.remove_interval(rhs)
+    }
+}
+
+///   IntervalSet - &Interval
+///   and IntervalSet - Interval
+impl<T, U, P: Policy<T>> ::core::ops::Sub<U> for IntervalSet<T, P>
+where
+    T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
+{
+    type Output = IntervalSet<T, P>;
+
+    /// Same as [`Interval::remove_interval()`]
+    fn sub(self, rhs: U) -> Self::Output {
+        self.remove_interval(rhs)
     }
 }
 
@@ -547,6 +633,31 @@ mod tests {
             assert!(!m.upper_unbounded());
             assert_eq!(m.lower(), None);
             assert_eq!(m.upper(), Some(&1));
+        }
+
+        // Remove
+        {
+            m.clear();
+            m.extend([interval!(5, 10), interval!(15, 20)]);
+
+            assert_eq!(
+                m.remove(6).iter().collect::<Vec<_>>(),
+                vec![
+                    &interval!(5, 6, "[)"),
+                    &interval!(6, 10, "()"),
+                    &interval!(15, 20)
+                ],
+            );
+            assert_eq!(m.remove(0), m);
+            assert_eq!(m.remove(10), m);
+            assert_eq!(m.remove(1000), m);
+            assert_eq!(
+                m.remove_interval(interval!(8, 17))
+                    .iter()
+                    .collect::<Vec<_>>(),
+                vec![&interval!(5, 8, "[)"), &interval!(17, 20)],
+            );
+            assert_eq!(m.remove_interval(Interval::empty()), m,);
         }
     }
 

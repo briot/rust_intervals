@@ -4,8 +4,10 @@
 ## Fixed
   - fixed incorrect implementation of contains_interval for Separating policy
 ## Added
+  - support for `Clone` in `IntervalSet`
   - `IntervalSet::clear`
   - `IntervalSet::equivalent`
+  - `IntervalSet::remove` and `IntervalSet::remove_interval`
 
 ## 0.5.0
 ## Fixed
