@@ -199,6 +199,11 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         self.intvs.is_empty()
     }
 
+    /// Removes all intervals from the set
+    pub fn clear(&mut self) {
+        self.intvs.clear();
+    }
+
     /// Add an extra set of valid values to self.
     /// If you have multiple intervals to insert, it is more efficient to
     /// call `IntervalSet::extend()` as this requires less allocations.
@@ -240,16 +245,52 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         self.iter().any(|v| v.contains(t))
     }
 
-    /// Whether all values in other are valid for self
+    /// Whether all values in other are valid for self.
+    /// All sets always contain the empty interval.
     pub fn contains_interval<U>(&self, other: U) -> bool
     where
-        T: PartialOrd + NothingBetween,
+        T: PartialOrd + NothingBetween + Clone,
         U: ::core::borrow::Borrow<Interval<T>>,
     {
-        // In the case of joining, other must be fully contained in one of the
-        // nested intervals.
         let u = other.borrow();
-        self.iter().any(|v| v.contains_interval(u))
+        if u.is_empty() {
+            return true;
+        }
+
+        // In the case of joining, other must be fully contained in one of the
+        // nested intervals.  We do not need T to be Clone either.
+        // Unfortunately Rust doesn't let us specialize the function.
+        //    self.iter().any(|v| v.contains_interval(u))
+
+        if self.intvs.is_empty() {
+            return false;
+        }
+
+        let first = self.intvs.first().unwrap();
+        if u.lower < first.lower {
+            return false;
+        }
+        let mut reminder = Interval {
+            lower: first.upper.max(&u.lower),
+            upper: u.upper.clone(),
+        };
+        if reminder.is_empty() {
+            return true;
+        }
+
+        for intv in self.iter().skip(1) {
+            if reminder.lower < intv.lower {
+                return false;
+            }
+            reminder = Interval {
+                lower: intv.upper.max(&reminder.lower),
+                upper: reminder.upper,
+            };
+            if reminder.is_empty() {
+                return true;
+            }
+        }
+        false
     }
 
     /// Returns the convex hull, i.e. the smallest intervals that contains
@@ -322,9 +363,10 @@ where
 #[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
+    use crate::multi::Policy;
     use crate::*;
 
-    fn insert_via_extend<T, E, I>(into: &mut E, from: I)
+    fn insert_via_trait<T, E, I>(into: &mut E, from: I)
     where
         E: Extend<Interval<T>>,
         I: IntoIterator<Item = Interval<T>>,
@@ -332,36 +374,86 @@ mod tests {
         into.extend(from);
     }
 
-    #[test]
-    fn test_joining() {
-        let mut m = IntervalSet::empty_joining();
-        m.check_invariants();
-        insert_via_extend(
+    fn check_bounded<P>(
+        mut m: IntervalSet<u32, P>,
+        single: IntervalSet<u32, P>,
+        expected: &[Interval<u32>],
+    ) where
+        P: Policy<u32> + ::core::fmt::Debug,
+    {
+        let empty = IntervalSet::<u32, P>::default();
+
+        insert_via_trait(
             &mut m,
             [
                 interval!(1, 3, "[)"),
                 interval!(2, 4, "[)"),
-                interval!(4, 5, "[)"),
+                interval!(4, 6, "[)"),
+                interval!(8, 10, "[)"),
             ],
         );
-        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 5)],);
-        assert_eq!(m.len(), 1);
+        assert_eq!(
+            m.iter().collect::<Vec<_>>(),
+            expected.iter().collect::<Vec<_>>(),
+        );
+        assert_eq!(m.len(), expected.len());
+
         m.check_invariants();
 
-        m.add(interval!(0, 6));
-        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(0, 6)]);
+        assert_eq!(m.lower(), Some(&1));
+        assert_eq!(m.upper(), Some(&10));
+        assert!(!m.lower_unbounded());
+        assert!(!m.upper_unbounded());
+
+        assert!(!m.contains(0));
+        assert!(m.contains(1));
+        assert!(m.contains(2));
+        assert!(m.contains(3));
+        assert!(m.contains(4));
+        assert!(m.contains(5));
+        assert!(!m.contains(6));
+        assert!(!m.contains(7));
+        assert!(m.contains(8));
+        assert!(m.contains(9));
+        assert!(!m.contains(10));
+
+        assert!(!m.contains_interval(interval!(0, 1)));
+        assert!(m.contains_interval(Interval::empty()));
+        assert!(!IntervalSet::<u32, P>::empty()
+            .contains_interval(interval!(100, 101)));
+        assert!(empty.contains_interval(Interval::empty()));
+        assert!(m.contains_interval(interval!(1, 2)));
+        assert!(m.contains_interval(interval!(1, 5)));
+        assert!(!m.contains_interval(interval!(1, 7)));
+        assert!(!m.contains_interval(interval!(21, 27)));
+        #[allow(clippy::needless_borrows_for_generic_args)]
+        {
+            assert!(!m.contains_interval(&interval!(6, 7))); //  accepts ref
+        }
+
+        assert_eq!(m.convex_hull(), interval!(1, 10, "[)"));
+
+        // Add an interval that covers the whole set.
+        m.add(interval!(0, 18));
+        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(0, 18)]);
         assert_eq!(m.len(), 1);
 
-        //  Same as above, but intervals are not sorted initially
-        let mut m = IntervalSet::empty_joining();
-        m.extend([interval!(4, 5), interval!(2, 4), interval!(1, 3)]);
-        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 5)],);
-        assert_eq!(m.len(), 1);
-        m.check_invariants();
+        // Same as above, but intervals are not sorted initially
+        m.clear();
+        m.extend([
+            interval!(4, 6, "[)"),
+            interval!(8, 10, "[)"),
+            interval!(2, 4, "[)"),
+            interval!(1, 3, "[)"),
+        ]);
+        assert_eq!(
+            m.iter().collect::<Vec<_>>(),
+            expected.iter().collect::<Vec<_>>(),
+        );
+        assert_eq!(m.len(), expected.len());
 
         // Additional tests
-
-        let mut m = IntervalSet::empty_joining();
+        m.clear();
         m.add(interval!(1, 4));
         assert_eq!(m.len(), 1);
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 4)],);
@@ -394,171 +486,72 @@ mod tests {
         m.check_invariants();
 
         // Inserting intervals only after the end of all existing ones
-        let mut m = IntervalSet::empty_joining();
+        m.clear();
         m.extend([interval!(1, 3), interval!(4, 5)]);
         m.extend([interval!(6, 7), interval!(8, 9)]);
         assert_eq!(m.len(), 4);
         m.check_invariants();
+
+        // Single intervals
+        {
+            assert_eq!(single.len(), 1);
+            assert!(single.contains(4));
+            assert!(!single.contains(3));
+            assert!(!single.contains(5));
+        }
+
+        // Empty intervals
+        {
+            let mut m = IntervalSet::<u32, P>::default();
+            assert!(m.is_empty());
+            assert_eq!(m.len(), 0);
+            assert_eq!(m, empty);
+            assert!(!m.lower_unbounded());
+            assert!(!m.upper_unbounded());
+            assert_eq!(m.lower(), None);
+            assert_eq!(m.upper(), None);
+            assert_eq!(m.convex_hull(), Interval::empty());
+
+            m.add(Interval::empty());
+            m.add(Interval::empty());
+            assert!(m.is_empty());
+        }
+
+        // Unbounded intervals
+        {
+            let m = IntervalSet::<u32, P>::new([interval!(1, "inf")]);
+            assert!(!m.lower_unbounded());
+            assert!(m.upper_unbounded());
+            assert_eq!(m.lower(), Some(&1));
+            assert_eq!(m.upper(), None);
+
+            let m = IntervalSet::<u32, P>::new([interval!("-inf", 1, "]")]);
+            assert!(m.lower_unbounded());
+            assert!(!m.upper_unbounded());
+            assert_eq!(m.lower(), None);
+            assert_eq!(m.upper(), Some(&1));
+        }
+    }
+
+    #[test]
+    fn test_joining() {
+        check_bounded(
+            IntervalSet::empty_joining(),
+            IntervalSet::new_single_joining(4),
+            &[interval!(1, 6), interval!(8, 10)],
+        );
+
+        assert_eq!(IntervalSet::new_joining([interval!(5, 6)]).len(), 1);
     }
 
     #[test]
     fn test_separating() {
-        let mut m = IntervalSet::empty_separating();
-        insert_via_extend(
-            &mut m,
-            [
-                interval!(1, 3, "[)"),
-                interval!(2, 4, "[)"),
-                interval!(4, 5, "[)"),
-            ],
+        check_bounded(
+            IntervalSet::empty_separating(),
+            IntervalSet::new_single_separating(4),
+            &[interval!(1, 4), interval!(4, 6), interval!(8, 10)],
         );
-        assert_eq!(
-            m.iter().collect::<Vec<_>>(),
-            vec![&interval!(1, 4, "[)"), &interval!(4, 5, "[)")],
-        );
-        assert_eq!(m.len(), 2);
-
-        m.add(interval!(0, 6));
-        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(0, 6)]);
-        assert_eq!(m.len(), 1);
-
-        //  Same as above, but intervals are not sorted initially
-        let mut m = IntervalSet::empty_separating();
-        m.extend([interval!(4, 5), interval!(2, 4), interval!(1, 3)]);
-        assert_eq!(
-            m.iter().collect::<Vec<_>>(),
-            vec![&interval!(1, 4, "[)"), &interval!(4, 5, "[)")],
-        );
-        assert_eq!(m.len(), 2);
-
-        // Additional tests
-
-        let mut m = IntervalSet::empty_separating();
-        m.add(interval!(1, 4));
-        assert_eq!(m.len(), 1);
-        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 4)],);
-        m.check_invariants();
-
-        m.add(interval!(1, 4)); //  Adding same interval has no effect
-        assert_eq!(m.len(), 1);
-        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 4)],);
-
-        m.add(interval!(1, 6)); // extends the first interval
-        assert_eq!(m.len(), 1);
-        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 6)],);
-
-        m.add(interval!(6, 10)); // disjoint
-        assert_eq!(m.len(), 2);
-        assert_eq!(
-            m.iter().collect::<Vec<_>>(),
-            vec![&interval!(1, 6), &interval!(6, 10)],
-        );
-
-        m.add(interval!(9, 10)); // subset of second interval
-        assert_eq!(
-            m.iter().collect::<Vec<_>>(),
-            vec![&interval!(1, 6), &interval!(6, 10)],
-        );
-
-        m.add(interval!(4, 8, "[]")); // joins the two
-        assert_eq!(m.len(), 1);
-        assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 10)],);
-        m.check_invariants();
-
-        // Inserting intervals only after the end of all existing ones
-        let mut m = IntervalSet::empty_separating();
-        m.extend([interval!(1, 3), interval!(4, 5)]);
-        m.extend([interval!(6, 7), interval!(8, 9)]);
-        assert_eq!(m.len(), 4);
-        m.check_invariants();
-    }
-
-    #[test]
-    fn test_empty() {
-        let mut m = IntervalSet::<u32>::default();
-        let empty = IntervalSet::<u32>::default();
-
-        assert!(m.is_empty());
-        assert_eq!(m.len(), 0);
-        assert_eq!(m, empty);
-        assert!(!m.lower_unbounded());
-        assert!(!m.upper_unbounded());
-        assert_eq!(m.lower(), None);
-        assert_eq!(m.upper(), None);
-        assert_eq!(m.convex_hull(), Interval::empty());
-
-        m.add(Interval::empty());
-        m.add(Interval::empty());
-        assert!(m.is_empty());
-    }
-
-    #[test]
-    fn test_contains() {
-        let m = IntervalSet::new_single_joining(4);
-        assert!(m.contains(4));
-        assert!(!m.contains(5));
-        assert!(!m.contains(3));
-        assert_eq!(m.lower(), Some(&4));
-        assert_eq!(m.upper(), Some(&4));
-        assert!(!m.lower_unbounded());
-        assert!(!m.upper_unbounded());
-        assert_eq!(m.convex_hull(), interval!(4, 4, "[]"));
-
-        let m = IntervalSet::new_single_separating(4);
-        assert!(m.contains(4));
-        assert!(!m.contains(5));
-        assert!(!m.contains(3));
-        assert_eq!(m.lower(), Some(&4));
-        assert_eq!(m.upper(), Some(&4));
-        assert!(!m.lower_unbounded());
-        assert!(!m.upper_unbounded());
-        assert_eq!(m.convex_hull(), interval!(4, 4, "[]"));
-
-        let m = IntervalSet::new_joining([interval!(1, 3), interval!(5, 7)]);
-        assert!(m.contains(1));
-        assert!(m.contains(2));
-        assert!(!m.contains(3));
-        assert!(!m.contains(4));
-        assert!(m.contains(5));
-        assert!(m.contains(6));
-        assert!(!m.contains(7));
-        assert!(m.contains_interval(interval!(1, 2)));
-
-        let m = IntervalSet::new_separating([interval!(1, 3), interval!(5, 7)]);
-        assert!(m.contains(1));
-        assert!(m.contains(2));
-        assert!(!m.contains(3));
-        assert!(!m.contains(4));
-        assert!(m.contains(5));
-        assert!(m.contains(6));
-        assert!(!m.contains(7));
-        assert!(m.contains_interval(interval!(1, 2)));
-
-        #[allow(clippy::needless_borrows_for_generic_args)]
-        {
-            assert!(m.contains_interval(&interval!(6, 7))); //  accepts ref
-        }
-        assert!(!m.contains_interval(interval!(3, 7)));
-        assert_eq!(m.lower(), Some(&1));
-        assert_eq!(m.upper(), Some(&7));
-        assert!(!m.lower_unbounded());
-        assert!(!m.upper_unbounded());
-        assert_eq!(m.convex_hull(), interval!(1, 7));
-    }
-
-    #[test]
-    fn test_unbounded() {
-        let m = IntervalSet::new_joining([interval!(1, "inf")]);
-        assert!(!m.lower_unbounded());
-        assert!(m.upper_unbounded());
-        assert_eq!(m.lower(), Some(&1));
-        assert_eq!(m.upper(), None);
-
-        let m = IntervalSet::new_joining([interval!("-inf", 1, "]")]);
-        assert!(m.lower_unbounded());
-        assert!(!m.upper_unbounded());
-        assert_eq!(m.lower(), None);
-        assert_eq!(m.upper(), Some(&1));
+        assert_eq!(IntervalSet::new_separating([interval!(5, 6)]).len(), 1);
     }
 
     #[test]

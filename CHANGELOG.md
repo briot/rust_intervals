@@ -1,6 +1,10 @@
 # Version History
 
 ## 0.6.0
+## Fixed
+  - fixed incorrect implementation of contains_interval for Separating policy
+## Added
+  - `IntervalSet::clear`
 
 ## 0.5.0
 ## Fixed

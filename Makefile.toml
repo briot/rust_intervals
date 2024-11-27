@@ -55,4 +55,4 @@ args = ["clippy", "--all-features"]
 # Find areas in the code that can be modified without impacting any of the tests
 [tasks.mutants]
 command = "cargo"
-args = ["mutants", "--all-features"]
+args = ["mutants", "--all-features", "--jobs=4"]
