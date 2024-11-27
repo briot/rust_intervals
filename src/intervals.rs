@@ -834,198 +834,116 @@ impl<T> Default for Interval<T> {
 }
 
 ///  &Interval ^ &Interval
-impl<T> ::core::ops::BitXor<&Interval<T>> for &Interval<T>
+///  and &Interval ^ Interval
+impl<T, U> ::core::ops::BitXor<U> for &Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
 {
     type Output = Pair<T>;
 
-    fn bitxor(self, rhs: &Interval<T>) -> Self::Output {
+    fn bitxor(self, rhs: U) -> Self::Output {
         self.symmetric_difference(rhs)
     }
 }
 
-///  &Interval ^ Interval
-impl<T> ::core::ops::BitXor<Interval<T>> for &Interval<T>
-where
-    T: PartialOrd + NothingBetween + Clone,
-{
-    type Output = Pair<T>;
-
-    fn bitxor(self, rhs: Interval<T>) -> Self::Output {
-        self.symmetric_difference(&rhs)
-    }
-}
-
-///  Interval ^ Interval
-impl<T> ::core::ops::BitXor<Interval<T>> for Interval<T>
-where
-    T: PartialOrd + NothingBetween + Clone,
-{
-    type Output = Pair<T>;
-
-    fn bitxor(self, rhs: Interval<T>) -> Self::Output {
-        self.symmetric_difference(&rhs)
-    }
-}
-
 ///  Interval ^ &Interval
-impl<T> ::core::ops::BitXor<&Interval<T>> for Interval<T>
+///  and Interval ^ Interval
+impl<T, U> ::core::ops::BitXor<U> for Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
 {
     type Output = Pair<T>;
 
-    fn bitxor(self, rhs: &Interval<T>) -> Self::Output {
+    fn bitxor(self, rhs: U) -> Self::Output {
         self.symmetric_difference(rhs)
     }
 }
 
 ///  &Interval | &Interval
-impl<T> ::core::ops::BitOr<&Interval<T>> for &Interval<T>
+///  and &Interval | Interval
+impl<T, U> ::core::ops::BitOr<U> for &Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
 {
     type Output = Option<Interval<T>>;
 
-    fn bitor(self, rhs: &Interval<T>) -> Self::Output {
+    fn bitor(self, rhs: U) -> Self::Output {
         self.union(rhs)
     }
 }
 
-///  &Interval | Interval
-impl<T> ::core::ops::BitOr<Interval<T>> for &Interval<T>
-where
-    T: PartialOrd + NothingBetween + Clone,
-{
-    type Output = Option<Interval<T>>;
-
-    fn bitor(self, rhs: Interval<T>) -> Self::Output {
-        self.union(&rhs)
-    }
-}
-
 ///  Interval | Interval
-impl<T> ::core::ops::BitOr<Interval<T>> for Interval<T>
+///  and Interval | &Interval
+impl<T, U> ::core::ops::BitOr<U> for Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
 {
     type Output = Option<Interval<T>>;
 
-    fn bitor(self, rhs: Interval<T>) -> Self::Output {
-        self.union(&rhs)
-    }
-}
-
-///  Interval | &Interval
-impl<T> ::core::ops::BitOr<&Interval<T>> for Interval<T>
-where
-    T: PartialOrd + NothingBetween + Clone,
-{
-    type Output = Option<Interval<T>>;
-
-    fn bitor(self, rhs: &Interval<T>) -> Self::Output {
+    fn bitor(self, rhs: U) -> Self::Output {
         self.union(rhs)
     }
 }
 
 ///  &Interval & &Interval
-impl<T> ::core::ops::BitAnd<&Interval<T>> for &Interval<T>
+///  and &Interval & Interval
+impl<T, U> ::core::ops::BitAnd<U> for &Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
 {
     type Output = Interval<T>;
 
-    fn bitand(self, rhs: &Interval<T>) -> Self::Output {
+    fn bitand(self, rhs: U) -> Self::Output {
         self.intersection(rhs)
     }
 }
 
-///  &Interval & Interval
-impl<T> ::core::ops::BitAnd<Interval<T>> for &Interval<T>
-where
-    T: PartialOrd + NothingBetween + Clone,
-{
-    type Output = Interval<T>;
-
-    fn bitand(self, rhs: Interval<T>) -> Self::Output {
-        self.intersection(&rhs)
-    }
-}
-
 ///  Interval & Interval
-impl<T> ::core::ops::BitAnd<Interval<T>> for Interval<T>
+///  and Interval & &Interval
+impl<T, U> ::core::ops::BitAnd<U> for Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
 {
     type Output = Interval<T>;
 
-    fn bitand(self, rhs: Interval<T>) -> Self::Output {
-        self.intersection(&rhs)
-    }
-}
-
-///  Interval & &Interval
-impl<T> ::core::ops::BitAnd<&Interval<T>> for Interval<T>
-where
-    T: PartialOrd + NothingBetween + Clone,
-{
-    type Output = Interval<T>;
-
-    fn bitand(self, rhs: &Interval<T>) -> Self::Output {
+    fn bitand(self, rhs: U) -> Self::Output {
         self.intersection(rhs)
     }
 }
 
 ///   &Interval - &Interval
-impl<T> ::core::ops::Sub<&Interval<T>> for &Interval<T>
+///   and &Interval - Interval
+impl<T, U> ::core::ops::Sub<U> for &Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
 {
     type Output = Pair<T>;
 
     /// Same as [`Interval::difference()`]
-    fn sub(self, rhs: &Interval<T>) -> Self::Output {
+    fn sub(self, rhs: U) -> Self::Output {
         self.difference(rhs)
     }
 }
 
 ///   Interval - &Interval
-impl<T> ::core::ops::Sub<&Interval<T>> for Interval<T>
+///   and Interval - Interval
+impl<T, U> ::core::ops::Sub<U> for Interval<T>
 where
     T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
 {
     type Output = Pair<T>;
 
     /// Same as [`Interval::difference()`]
-    fn sub(self, rhs: &Interval<T>) -> Self::Output {
+    fn sub(self, rhs: U) -> Self::Output {
         self.difference(rhs)
-    }
-}
-
-///   &Interval - Interval
-impl<T> ::core::ops::Sub<Interval<T>> for &Interval<T>
-where
-    T: PartialOrd + NothingBetween + Clone,
-{
-    type Output = Pair<T>;
-
-    /// Same as [`Interval::difference()`]
-    fn sub(self, rhs: Interval<T>) -> Self::Output {
-        self.difference(&rhs)
-    }
-}
-
-///   Interval - Interval
-impl<T> ::core::ops::Sub<Interval<T>> for Interval<T>
-where
-    T: PartialOrd + NothingBetween + Clone,
-{
-    type Output = Pair<T>;
-
-    /// Same as [`Interval::difference()`]
-    fn sub(self, rhs: Interval<T>) -> Self::Output {
-        self.difference(&rhs)
     }
 }
 
