@@ -30,6 +30,96 @@ pub(crate) mod test {
         }
     }
 
+    /// Compares the positions of an interval and a value
+    macro_rules! assert_lr {
+        ($intv:expr, $v:expr,
+         $strictly_left_of:expr,
+         $left_of:expr,
+         $right_of:expr,
+         $strictly_right_of:expr
+        ) => {
+            assert_eq!(
+                $intv.strictly_left_of(&$v),
+                $strictly_left_of,
+                "{} strictly_left_of {} ({:?})",
+                $intv,
+                $v,
+                $intv,
+            );
+            assert_eq!(
+                $intv.left_of(&$v),
+                $left_of,
+                "{} left_of {} ({:?})",
+                $intv,
+                $v,
+                $intv,
+            );
+            assert_eq!(
+                $intv.right_of(&$v),
+                $right_of,
+                "{} right_of {} ({:?})",
+                $intv,
+                $v,
+                $intv,
+            );
+            assert_eq!(
+                $intv.strictly_right_of(&$v),
+                $strictly_right_of,
+                "{} strictly_right_of {} ({:?})",
+                $intv,
+                $v,
+                $intv,
+            );
+        };
+    }
+
+    /// Compares the positions of two intervals
+    macro_rules! assert_lr_intv {
+        ($intv:expr, $v:expr,
+         $strictly_left_of:expr,
+         $left_of:expr,
+         $right_of:expr,
+         $strictly_right_of:expr
+        ) => {
+            assert_eq!(
+                $intv.strictly_left_of_interval(&$v),
+                $strictly_left_of,
+                "{} strictly_left_of {} ({:?} and {:?})",
+                $intv,
+                $v,
+                $intv,
+                $v,
+            );
+            assert_eq!(
+                $intv.left_of_interval(&$v),
+                $left_of,
+                "{} left_of {} ({:?} and {:?})",
+                $intv,
+                $v,
+                $intv,
+                $v,
+            );
+            assert_eq!(
+                $intv.right_of_interval(&$v),
+                $right_of,
+                "{} right_of {} ({:?} and {:?})",
+                $intv,
+                $v,
+                $intv,
+                $v,
+            );
+            assert_eq!(
+                $intv.strictly_right_of_interval(&$v),
+                $strictly_right_of,
+                "{} strictly_right_of {} ({:?} and {:?})",
+                $intv,
+                $v,
+                $intv,
+                $v,
+            );
+        };
+    }
+
     fn assert_copy<T: ::core::marker::Copy>() {}
 
     fn assert_equivalent<T: PartialOrd + NothingBetween + Debug>(
@@ -597,93 +687,124 @@ pub(crate) mod test {
 
     #[test]
     fn test_left_of() {
-        let intv1 = Interval::new_closed_open(3_i8, 5); // [3,5)
-        assert!(intv1.strictly_left_of(6));
-        assert!(intv1.strictly_left_of(5));
-        assert!(!intv1.strictly_left_of(0));
-        assert!(!intv1.strictly_left_of(3));
+        fn check<T>(
+            lower_m: T,
+            lower: T,
+            lower_p: T,
+            upper_m: T,
+            upper: T,
+            upper_p: T,
+        ) where
+            T: PartialOrd
+                + NothingBetween
+                + Clone
+                + Debug
+                + ::core::fmt::Display,
+        {
+            for lower_inc in [true, false] {
+                for upper_inc in [true, false] {
+                    let intv = match (lower_inc, upper_inc) {
+                        (true, true) => Interval::new_closed_closed(
+                            lower.clone(),
+                            upper.clone(),
+                        ),
+                        (true, false) => Interval::new_closed_open(
+                            lower.clone(),
+                            upper.clone(),
+                        ),
+                        (false, true) => Interval::new_open_closed(
+                            lower.clone(),
+                            upper.clone(),
+                        ),
+                        (false, false) => Interval::new_open_open(
+                            lower.clone(),
+                            upper.clone(),
+                        ),
+                    };
+                    assert_lr!(intv, lower_m, false, false, true, true);
+                    assert_lr!(intv, lower, false, false, true, !lower_inc);
+                    assert_lr!(intv, lower_p, false, false, !lower_inc, false);
+                    assert_lr!(intv, upper_m, false, !upper_inc, false, false);
+                    assert_lr!(intv, upper, !upper_inc, true, false, false);
+                    assert_lr!(intv, upper_p, true, true, false, false);
 
-        assert!(intv1.left_of(6));
-        assert!(intv1.left_of(5));
-        assert!(!intv1.left_of(0));
-        assert!(!intv1.left_of(3));
+                    let v = Interval::new_closed_unbounded(upper_m.clone());
+                    assert_lr_intv!(intv, v, false, !upper_inc, false, false);
 
-        assert!(intv1.strictly_right_of(0));
-        assert!(intv1.strictly_right_of(2));
-        assert!(!intv1.strictly_right_of(3));
+                    let v = Interval::new_closed_unbounded(upper.clone());
+                    assert_lr_intv!(intv, v, !upper_inc, true, false, false);
 
-        assert!(intv1.right_of(0));
-        assert!(intv1.right_of(2));
-        assert!(intv1.right_of(3));
+                    let v = Interval::new_closed_unbounded(upper_p.clone());
+                    assert_lr_intv!(intv, v, true, true, false, false);
 
-        let intv2 = Interval::new_closed_closed(3, 5);
-        assert!(intv2.left_of(6));
-        assert!(intv2.left_of(5));
-        assert!(!intv2.strictly_left_of(5));
+                    let v = Interval::new_open_unbounded(upper_m.clone());
+                    assert_lr_intv!(
+                        intv, v, !upper_inc, !upper_inc, false, false
+                    );
 
-        assert!(!intv1.strictly_left_of_interval(intv2));
-        assert!(!intv2.strictly_left_of_interval(intv1));
+                    let v = Interval::new_open_unbounded(upper.clone());
+                    assert_lr_intv!(intv, v, true, true, false, false);
+
+                    let v = Interval::new_open_unbounded(upper_p.clone());
+                    assert_lr_intv!(intv, v, true, true, false, false);
+
+                    let v = Interval::new_unbounded_closed(lower_m.clone());
+                    assert_lr_intv!(intv, v, false, false, true, true);
+
+                    let v = Interval::new_unbounded_closed(lower.clone());
+                    assert_lr_intv!(intv, v, false, false, true, !lower_inc);
+
+                    let v = Interval::new_unbounded_closed(lower_p.clone());
+                    assert_lr_intv!(intv, v, false, false, false, false);
+
+                    let v = Interval::new_unbounded_open(lower_m.clone());
+                    assert_lr_intv!(intv, v, false, false, true, true);
+
+                    let v = Interval::new_unbounded_open(lower.clone());
+                    assert_lr_intv!(intv, v, false, false, true, true);
+
+                    let v = Interval::new_unbounded_open(lower_p.clone());
+                    assert_lr_intv!(intv, v, false, false, true, !lower_inc);
+
+                    let empty = Interval::empty();
+                    assert!(empty.strictly_left_of_interval(&intv));
+                    assert!(intv.strictly_left_of_interval(&empty));
+                    assert!(empty.left_of_interval(&intv));
+                    assert!(intv.left_of_interval(&empty));
+                    assert!(empty.right_of_interval(&intv));
+                    assert!(intv.right_of_interval(&empty));
+                    assert!(intv.strictly_right_of_interval(&empty));
+                    assert!(empty.strictly_right_of_interval(&intv));
+                }
+            }
+        }
+
+        check(3, 4, 5, 7, 8, 9);
+        check('c', 'd', 'e', 'm', 'n', 'o');
+        check(
+            // Note this test will fail with larger floats, since EPSILON
+            // is too small.
+            0.0 - f32::EPSILON,
+            0.0,
+            0.0 + f32::EPSILON,
+            1.0 - f32::EPSILON,
+            1.0,
+            1.0 + f32::EPSILON,
+        );
 
         let empty = Interval::<i8>::empty();
         assert!(empty.strictly_left_of(1));
         assert!(empty.left_of(1));
         assert!(empty.strictly_right_of(1));
         assert!(empty.right_of(1));
-        assert!(empty.strictly_left_of_interval(intv1));
-        assert!(intv1.strictly_left_of_interval(empty));
-        assert!(intv1.strictly_right_of_interval(empty));
-        assert!(empty.strictly_right_of_interval(intv1));
-
-        let empty2 = Interval::new_closed_closed(5, 4);
-        assert!(empty2.strictly_left_of_interval(intv1));
-        assert!(intv1.strictly_left_of_interval(empty2));
-        assert!(intv1.strictly_right_of_interval(empty2));
-        assert!(empty2.strictly_right_of_interval(intv1));
-
-        let intv6 = Interval::new_open_closed(3, 5); // (3,5]
-        let intv3 = Interval::new_closed_closed(1, 3); // [1,3]
-        assert!(!intv3.strictly_left_of_interval(intv1));
-        assert!(!intv1.strictly_left_of_interval(intv3));
-        assert!(intv3.strictly_left_of_interval(intv6));
-        assert!(!intv6.strictly_left_of_interval(intv3));
-
-        let intv4 = Interval::new_closed_closed(0, 1);
-        assert!(intv4.strictly_left_of_interval(intv1));
-        assert!(!intv1.strictly_left_of_interval(intv4));
-
-        let intv5 = Interval::new_closed_unbounded(1); // [1,)
-        assert!(!intv5.strictly_left_of_interval(intv1));
-        assert!(!intv5.right_of(10));
-        assert!(intv5.strictly_right_of(0));
-        assert!(intv5.right_of(0));
 
         let intv7 = Interval::new_unbounded_closed(10_i16);
         assert!(!intv7.right_of(0));
         assert!(!intv7.strictly_right_of(0));
 
-        let intv1 = Interval::new_open_closed(3, 5); // (3,5]
-        let intv2 = Interval::new_closed_closed(5, 9); // [5,9]
-        assert!(!intv1.strictly_left_of_interval(intv2));
-        assert!(!intv1.strictly_left_not_contiguous(intv2));
-        assert!(intv1.left_of_interval(intv2));
-        assert!(!intv2.left_of_interval(intv1));
-        assert!(intv2.right_of_interval(intv1));
-        assert!(!intv1.right_of_interval(intv2));
-        assert!(!intv1.right_of_interval(intv2));
-        assert!(!intv2.strictly_right_of_interval(intv1));
-
-        let intv1 = Interval::new_open_closed(3, 5); // (3,5]
-        let intv2 = Interval::new_open_closed(5, 9); // (5,9]
-        assert!(intv1.strictly_left_of_interval(intv2));
-        assert!(!intv1.strictly_left_not_contiguous(intv2));
-        assert!(intv1.left_of_interval(intv2));
-        assert!(intv2.right_of_interval(intv1));
-        assert!(intv2.strictly_right_of_interval(intv1));
-
-        let intv1 = Interval::new_open_closed(3, 4); // (3,5]
-        let intv2 = Interval::new_open_closed(5, 9); // (5,9]
-        assert!(intv1.strictly_left_of_interval(intv2));
-        assert!(intv1.strictly_left_not_contiguous(intv2));
+        let intv8 = Interval::new_closed_unbounded(10_i16);
+        assert!(!intv8.left_of(0));
+        assert!(!intv8.strictly_left_of(0));
     }
 
     #[test]

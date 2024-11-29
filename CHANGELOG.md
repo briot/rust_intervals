@@ -3,6 +3,7 @@
 ## 0.6.0
 ## Fixed
   - fixed incorrect implementation of contains_interval for Separating policy
+  - "[1,5) left_of [4,10)" was returning false
 ## Added
   - support for `Clone` in `IntervalSet`
   - `IntervalSet::clear`

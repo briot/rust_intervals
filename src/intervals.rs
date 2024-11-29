@@ -499,7 +499,7 @@ impl<T> Interval<T> {
     }
 
     /// Whether X is less than (<=) every value in self.
-    /// (returns True is if self is empty).
+    /// (returns True if self is empty).
     /// ```none
     ///      [------]
     ///      X           => right of the interval (but not strictly right of)
@@ -526,31 +526,25 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
-        self.strictly_left_of_interval(r)
-            || self.upper.value() == r.lower.value()
-    }
+        if self.is_empty() || r.is_empty() {
+            return true;
+        }
 
-    /// Whether every value in self is greater or equal (>=) to every value
-    /// in right (returns true if either inverval is empty)
-    pub fn right_of_interval<U>(&self, right: U) -> bool
-    where
-        T: PartialOrd + NothingBetween,
-        U: ::core::borrow::Borrow<Self>,
-    {
-        let r = right.borrow();
-        self.strictly_right_of_interval(r)
-            || self.lower.value() == r.upper.value()
-    }
+        // Case of "..,5)" and "[4,..".  The bounds are different and yet
+        // we should return true.
+        // We end up comparing LeftOf(5) and LeftOf(4), which compares 5 and 4
+        // and returns Greater.  But because there is nothing_between(4,5),
+        // those should actually be equal.
+        match (&self.upper, &r.lower) {
+            // "..,4]" and "[4,..."
+            (Bound::RightOf(u), Bound::LeftOf(r)) => u <= r,
 
-    /// All values of self are strictly lower than every value in right,
-    /// and there is some thing between the two intervals.
-    pub fn strictly_left_not_contiguous<U>(&self, right: U) -> bool
-    where
-        T: PartialOrd + NothingBetween,
-        U: ::core::borrow::Borrow<Self>,
-    {
-        let r = right.borrow();
-        !self.is_empty() && !r.is_empty() && self.upper < r.lower
+            // "..,5)" and "[4,.."
+            (Bound::LeftOf(u), Bound::LeftOf(r)) => {
+                u <= r || r.nothing_between(u)
+            }
+            _ => self.strictly_left_of_interval(r),
+        }
     }
 
     /// Whether every value in self is strictly less than (<) every value in
@@ -564,6 +558,27 @@ impl<T> Interval<T> {
         self.is_empty() || r.is_empty() || self.upper <= r.lower
     }
 
+    /// All values of self are strictly lower than every value in right,
+    /// and there is some thing between the two intervals.
+    pub fn strictly_left_not_contiguous<U>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
+    {
+        let r = right.borrow();
+        !self.is_empty() && !r.is_empty() && self.upper < r.lower
+    }
+
+    /// Whether every value in self is greater or equal (>=) to every value
+    /// in right (returns true if either inverval is empty)
+    pub fn right_of_interval<U>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Self>,
+    {
+        right.borrow().left_of_interval(self)
+    }
+
     /// Whether every value in self is strictly greater than (>) every value in
     /// right (returns True if either interval is empty).
     pub fn strictly_right_of_interval<U>(&self, right: U) -> bool
@@ -571,8 +586,7 @@ impl<T> Interval<T> {
         T: PartialOrd + NothingBetween,
         U: ::core::borrow::Borrow<Self>,
     {
-        let r = right.borrow();
-        self.is_empty() || r.is_empty() || r.upper <= self.lower
+        right.borrow().strictly_left_of_interval(self)
     }
 
     /// True if self is of the form `[A, A]`.
