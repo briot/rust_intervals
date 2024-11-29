@@ -415,6 +415,123 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         let u = right.borrow();
         self.iter().any(|v| u.intersects_interval(v))
     }
+
+    /// Whether every value in self is less (<=) than right
+    /// Returns True if either set is empty.
+    pub fn left_of<U>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<T>,
+    {
+        match self.intvs.last() {
+            None => true,
+            Some(l) => l.left_of(right.borrow()),
+        }
+    }
+
+    /// Whether every value in self is strictly less (<) than right
+    /// Returns True if either set is empty.
+    pub fn strictly_left_of<U>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<T>,
+    {
+        match self.intvs.last() {
+            None => true,
+            Some(l) => l.strictly_left_of(right.borrow()),
+        }
+    }
+
+    /// Whether every value in self is less (<=) then all values in right.
+    /// Returns True if either set is empty.
+    pub fn left_of_interval<U>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Interval<T>>,
+    {
+        match self.intvs.last() {
+            None => true,
+            Some(l) => l.left_of_interval(right.borrow()),
+        }
+    }
+
+    /// Whether every value in self is strictly less (<) then all values in
+    /// right.
+    /// Returns True if either set is empty.
+    pub fn strictly_left_of_interval<U>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Interval<T>>,
+    {
+        match self.intvs.last() {
+            None => true,
+            Some(l) => l.strictly_left_of_interval(right.borrow()),
+        }
+    }
+
+    /// Whether every value in self is less then (<=) all values in right.
+    /// Returns True if either set is empty.
+    pub fn left_of_set<U, P2: Policy<T>>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<IntervalSet<T, P2>>,
+    {
+        match right.borrow().intvs.first() {
+            None => true,
+            Some(r) => self.left_of_interval(r),
+        }
+    }
+
+    /// Whether every value in self is greater or equal (>=) to right
+    /// Returns True if either set is empty.
+    pub fn right_of<U>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<T>,
+    {
+        match self.intvs.first() {
+            None => true,
+            Some(l) => l.right_of(right.borrow()),
+        }
+    }
+
+    /// Whether every value in self is strictly greater (>) then right
+    /// Returns True if either set is empty.
+    pub fn strictly_right_of<U>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<T>,
+    {
+        match self.intvs.first() {
+            None => true,
+            Some(l) => l.strictly_right_of(right.borrow()),
+        }
+    }
+
+    /// Whether every value in self is greater or equal (>=) than all values
+    /// in right.
+    /// Returns True if either set is empty.
+    pub fn right_of_interval<U>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<Interval<T>>,
+    {
+        match self.intvs.first() {
+            None => true,
+            Some(l) => l.right_of_interval(right.borrow()),
+        }
+    }
+
+    /// Whether every value in self is greater or equal (>=) than all values
+    /// in right.
+    /// Returns True if either set is empty.
+    pub fn right_of_set<U, P2: Policy<T>>(&self, right: U) -> bool
+    where
+        T: PartialOrd + NothingBetween,
+        U: ::core::borrow::Borrow<IntervalSet<T, P2>>,
+    {
+        right.borrow().left_of_set(self)
+    }
 }
 
 impl<T, P: Policy<T>> Default for IntervalSet<T, P> {
@@ -465,7 +582,7 @@ where
 {
     type Output = IntervalSet<T, P>;
 
-    /// Same as [`Interval::remove_interval()`]
+    /// Same as [`IntervalSet::remove_interval()`]
     fn sub(self, rhs: U) -> Self::Output {
         self.remove_interval(rhs)
     }
@@ -480,7 +597,7 @@ where
 {
     type Output = IntervalSet<T, P>;
 
-    /// Same as [`Interval::remove_interval()`]
+    /// Same as [`IntervalSet::remove_interval()`]
     fn sub(self, rhs: U) -> Self::Output {
         self.remove_interval(rhs)
     }
@@ -702,6 +819,40 @@ mod tests {
 
             m2.extend([interval!(19, 21)]);
             assert!(m.intersects(m2));
+        }
+
+        // left_of, right_of, ...
+        {
+            m.clear();
+            let mut m2 = m.clone();
+
+            m.extend([interval!(5, 10), interval!(15, 20)]);
+            m2.extend([interval!(25, 30), interval!(40, 50)]);
+            assert!(m.left_of_set(&m2));
+            assert!(!m2.left_of_set(&m));
+            assert!(!m.right_of_set(&m2));
+            assert!(m2.right_of_set(&m));
+
+            assert!(m.left_of_interval(interval!(20, 30)));
+            assert!(m.left_of_interval(interval!(19, 30)));
+            assert!(!m.left_of_interval(interval!(18, 30)));
+            assert!(m.strictly_left_of_interval(interval!(20, 30)));
+            assert!(!m.strictly_left_of_interval(interval!(19, 30)));
+            assert!(!m.strictly_left_of_interval(interval!(18, 30)));
+
+            assert!(m.right_of_interval(interval!(1, 5)));
+            assert!(m.right_of_interval(interval!(1, 6)));
+
+            assert!(m.left_of(20));
+            assert!(m.strictly_left_of(20));
+            assert!(m.left_of(19));
+            assert!(!m.strictly_left_of(19));
+            assert!(!m.left_of(18));
+
+            assert!(m.right_of(5));
+            assert!(!m.right_of(6));
+            assert!(!m.strictly_right_of(5));
+            assert!(m.strictly_right_of(4));
         }
     }
 
