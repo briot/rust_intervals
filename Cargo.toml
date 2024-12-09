@@ -26,3 +26,14 @@ rust_decimal = ["dep:rust_decimal"]
 serde = ["dep:serde"]
 serde_tests = ["serde", "dep:serde_json", "dep:ron"]
 std = []
+
+[lints.clippy]
+perf = "allow"
+std_instead_of_core = "allow"
+std_instead_of_alloc = "allow"
+alloc_instead_of_core = "allow"
+all = "allow"
+complexity = "allow"
+style = "allow"
+pedantic = "allow"
+cargo = "allow"

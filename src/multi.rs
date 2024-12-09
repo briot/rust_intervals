@@ -209,7 +209,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// call `IntervalSet::extend()` as this requires less allocations.
     pub fn add(&mut self, intv: Interval<T>)
     where
-        T: PartialOrd + Ord + NothingBetween + Clone,
+        T: Ord + NothingBetween + Clone,
     {
         self.extend([intv]);
     }
@@ -333,6 +333,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
             return false;
         }
         let mut reminder = Interval {
+            // simplified difference()
             lower: first.upper.max(&u.lower),
             upper: u.upper.clone(),
         };
@@ -345,6 +346,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
                 return false;
             }
             reminder = Interval {
+                //  simplified difference()
                 lower: intv.upper.max(&reminder.lower),
                 upper: reminder.upper,
             };
@@ -353,6 +355,58 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
             }
         }
         false
+    }
+
+    /// Returns the intersection of self and intv.
+    /// This could return any number of intervals.
+    pub fn intersection_interval<U>(&self, intv: U) -> Self
+    where
+        T: PartialOrd + NothingBetween + Clone,
+        U: ::core::borrow::Borrow<Interval<T>>,
+    {
+        let mut result = IntervalSet::empty();
+        let u = intv.borrow();
+        if u.is_empty() || self.intvs.is_empty() {
+            return result;
+        }
+
+        for v in &self.intvs {
+            if u.upper < v.lower {
+                break;
+            }
+
+            let inters = v.intersection(u);
+            if !inters.is_empty() {
+                result.intvs.push(inters);
+            }
+        }
+        return result;
+    }
+
+    /// Returns the intersection of self and intv.
+    /// This could return any number of intervals.
+    pub fn intersection<U, P2>(&self, intv: U) -> Self
+    where
+        P2: Policy<T>,
+        T: PartialOrd + NothingBetween + Clone,
+        U: ::core::borrow::Borrow<IntervalSet<T, P2>>,
+    {
+        let mut result = IntervalSet::empty();
+        let u = intv.borrow();
+        if u.is_empty() || self.intvs.is_empty() {
+            return result;
+        }
+
+        for v in &self.intvs {
+            let inters = u.intersection_interval(v);
+            if !inters.is_empty() {
+                result.intvs.extend(inters.intvs);
+            }
+            if u.left_of_interval(v) {
+                break;
+            }
+        }
+        return result;
     }
 
     /// Returns the convex hull, i.e. the smallest intervals that contains
@@ -407,8 +461,9 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
 
     /// Whether any value exists in both self and right.
     #[doc(alias = "overlaps")]
-    pub fn intersects<U, P2: Policy<T>>(&self, right: U) -> bool
+    pub fn intersects<U, P2>(&self, right: U) -> bool
     where
+        P2: Policy<T>,
         T: PartialOrd + NothingBetween,
         U: ::core::borrow::Borrow<IntervalSet<T, P2>>,
     {
@@ -471,8 +526,9 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
 
     /// Whether every value in self is less then (<=) all values in right.
     /// Returns True if either set is empty.
-    pub fn left_of_set<U, P2: Policy<T>>(&self, right: U) -> bool
+    pub fn left_of_set<U, P2>(&self, right: U) -> bool
     where
+        P2: Policy<T>,
         T: PartialOrd + NothingBetween,
         U: ::core::borrow::Borrow<IntervalSet<T, P2>>,
     {
@@ -525,8 +581,9 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// Whether every value in self is greater or equal (>=) than all values
     /// in right.
     /// Returns True if either set is empty.
-    pub fn right_of_set<U, P2: Policy<T>>(&self, right: U) -> bool
+    pub fn right_of_set<U, P2>(&self, right: U) -> bool
     where
+        P2: Policy<T>,
         T: PartialOrd + NothingBetween,
         U: ::core::borrow::Borrow<IntervalSet<T, P2>>,
     {

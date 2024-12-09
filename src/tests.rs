@@ -1543,4 +1543,47 @@ mod multi {
             IntervalSet::<u8, Separating>::new([interval!(3, 10, "[]")])
         );
     }
+
+    #[test]
+    fn test_intersection() {
+        let m1 = IntervalSet::new_joining([
+            interval!(3, 10, "[]"),
+            interval!(15, 20, "()"),
+            interval!(25, 40, "[)"),
+        ]);
+        assert_eq!(m1.intersection_interval(interval!(1, 50)), m1);
+        assert_eq!(
+            m1.intersection_interval(interval!(4, 35)),
+            IntervalSet::new_joining([
+                interval!(4, 10, "[]"),
+                interval!(15, 20, "()"),
+                interval!(25, 35, "[)"),
+            ]),
+        );
+        assert_eq!(
+            m1.intersection_interval(interval!(16, 17)),
+            IntervalSet::new_joining([interval!(16, 17, "[)"),]),
+        );
+        assert_eq!(
+            m1.intersection_interval(Interval::empty()),
+            IntervalSet::empty(),
+        );
+        assert_eq!(
+            IntervalSet::<u32>::empty().intersection_interval(interval!(4, 5)),
+            IntervalSet::empty(),
+        );
+        assert_eq!(
+            m1.intersection(IntervalSet::new_separating([
+                interval!(4, 8),
+                interval!(16, 27),
+                interval!(38, 50),
+            ])),
+            IntervalSet::new_joining([
+                interval!(4, 8),
+                interval!(16, 20),
+                interval!(25, 27),
+                interval!(38, 40),
+            ]),
+        );
+    }
 }

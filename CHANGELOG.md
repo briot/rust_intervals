@@ -13,6 +13,7 @@
   - `IntervalSet::left_of` and `IntervalSet::right_of`, also variants
     for comparing with an interval or another set.  Add variants for
     strictly_left_of and strictly_right_of.
+  - `IntervalSet::intersection_interval` and `IntervalSet::intersection`
 
 ## 0.5.0
 ## Fixed
