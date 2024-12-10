@@ -15,6 +15,8 @@
     strictly_left_of and strictly_right_of.
   - `IntervalSet::intersection_interval` and `IntervalSet::intersection_set`
   - `IntervalSet::contains_set`
+  - new trait `Bounded` (inspired from num_traits), needed to check whether
+    unbounded intervals are empty
 
 ## 0.5.0
 ## Fixed

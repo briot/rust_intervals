@@ -1,5 +1,6 @@
 use crate::bounds::Bound;
 use crate::nothing_between::NothingBetween;
+use crate::step::Bounded;
 use ::core::cmp::PartialOrd;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
@@ -69,7 +70,7 @@ where
 
 impl<'de, T> Deserialize<'de> for crate::intervals::Interval<T>
 where
-    T: PartialOrd + NothingBetween + DeserializeOwned,
+    T: PartialOrd + NothingBetween + DeserializeOwned + Bounded,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -117,7 +118,12 @@ mod test {
     use ::serde::{de::DeserializeOwned, Serialize};
 
     fn roundtrip<
-        T: PartialOrd + NothingBetween + Serialize + DeserializeOwned + Debug,
+        T: PartialOrd
+            + NothingBetween
+            + Serialize
+            + DeserializeOwned
+            + Debug
+            + Bounded,
     >(
         intv: Interval<T>,
         json_str: &str,

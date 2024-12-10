@@ -388,6 +388,9 @@ pub(crate) mod test {
         assert!(interval!(f32::NAN, 1.0).is_empty());
         assert!(interval!(1.0, f32::NAN).is_empty());
 
+        assert!(interval!(255_u8, "(inf").is_empty());
+        assert!(interval!("-inf", 0_u8, ")").is_empty());
+
         let empty = Interval::<f32>::empty();
         assert!(empty.is_empty());
         assert!(!empty.contains(1.1));
@@ -702,6 +705,7 @@ pub(crate) mod test {
                 + NothingBetween
                 + Clone
                 + Debug
+                + Bounded
                 + ::core::fmt::Display,
         {
             for lower_inc in [true, false] {
@@ -1105,6 +1109,20 @@ pub(crate) mod test {
         assert_eq!(intv1.iter().len(), 4);
         assert_eq!(intv1.iter().rev().len(), 4);
         assert_eq!(intv1.iter().size_hint(), (4, Some(4)));
+
+        let intv1 = interval!("-inf", 1_u8, ")");
+        assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![0]);
+        assert_eq!(intv1.iter().rev().collect::<Vec<_>>(), vec![0]);
+
+        let intv1 = interval!("-inf", 0_u8, ")");
+        assert_eq!(intv1.iter().collect::<Vec<u8>>(), Vec::<u8>::new());
+        assert_eq!(intv1.iter().rev().collect::<Vec<u8>>(), Vec::<u8>::new());
+
+        let intv1 = interval!("-inf", 2_u8, ")");
+        assert_eq!(intv1.iter().collect::<Vec<u8>>(), vec![0, 1]);
+
+        let intv1 = interval!(253_u8, 255, "[]");
+        assert_eq!(intv1.iter().collect::<Vec<_>>(), vec![253, 254, 255]);
 
         let intv1 = interval!(2, "[inf");
         assert_eq!(

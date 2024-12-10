@@ -86,7 +86,7 @@ pub use crate::intervals::{Interval, ParseError};
 pub use crate::iterator::IntervalIterator;
 pub use crate::nothing_between::NothingBetween;
 pub use crate::pairs::Pair;
-pub use crate::step::Step;
+pub use crate::step::{Bounded, Step};
 
 #[cfg(feature = "std")]
 mod leftmostiter;

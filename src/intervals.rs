@@ -2,7 +2,7 @@ use crate::bounds::Bound;
 use crate::iterator::IntervalIterator;
 use crate::nothing_between::NothingBetween;
 use crate::pairs::Pair;
-use crate::step::Step;
+use crate::step::{Bounded, Step};
 use ::core::cmp::{Ordering, PartialOrd};
 use ::core::ops::{Bound as RgBound, RangeBounds};
 
@@ -162,15 +162,15 @@ impl<T> Interval<T> {
     /// ```
     pub fn new_unbounded_closed(upper: T) -> Self
     where
-        T: PartialOrd,
+        T: PartialOrd + Bounded,
     {
         //  If we can't compare, we likely have a float NAN
-        match upper.partial_cmp(&upper) {
-            Some(Ordering::Equal) => Self {
+        match upper.partial_cmp(&T::min_value()) {
+            Some(Ordering::Greater) => Self {
                 lower: Bound::LeftUnbounded,
                 upper: Bound::RightOf(upper),
             },
-            None | Some(Ordering::Less | Ordering::Greater) => {
+            None | Some(Ordering::Less | Ordering::Equal) => {
                 Interval::empty()
             }
         }
@@ -193,15 +193,15 @@ impl<T> Interval<T> {
     /// ```
     pub fn new_unbounded_open(upper: T) -> Self
     where
-        T: PartialOrd,
+        T: PartialOrd + Bounded,
     {
         //  If we can't compare, we likely have a float NAN
-        match upper.partial_cmp(&upper) {
-            Some(Ordering::Equal) => Self {
+        match upper.partial_cmp(&T::min_value()) {
+            Some(Ordering::Greater) => Self {
                 lower: Bound::LeftUnbounded,
                 upper: Bound::LeftOf(upper),
             },
-            None | Some(Ordering::Less | Ordering::Greater) => {
+            None | Some(Ordering::Less | Ordering::Equal) => {
                 Interval::empty()
             }
         }
@@ -224,14 +224,14 @@ impl<T> Interval<T> {
     /// ```
     pub fn new_closed_unbounded(lower: T) -> Self
     where
-        T: PartialOrd,
+        T: PartialOrd + Bounded,
     {
-        match lower.partial_cmp(&lower) {
-            Some(Ordering::Equal) => Self {
+        match lower.partial_cmp(&T::max_value()) {
+            Some(Ordering::Less) => Self {
                 lower: Bound::LeftOf(lower),
                 upper: Bound::RightUnbounded,
             },
-            None | Some(Ordering::Less | Ordering::Greater) => {
+            None | Some(Ordering::Equal | Ordering::Greater) => {
                 Interval::empty()
             }
         }
@@ -256,14 +256,14 @@ impl<T> Interval<T> {
     /// ```
     pub fn new_open_unbounded(lower: T) -> Self
     where
-        T: PartialOrd,
+        T: PartialOrd + Bounded,
     {
-        match lower.partial_cmp(&lower) {
-            Some(Ordering::Equal) => Self {
+        match lower.partial_cmp(&T::max_value()) {
+            Some(Ordering::Less) => Self {
                 lower: Bound::RightOf(lower),
                 upper: Bound::RightUnbounded,
             },
-            None | Some(Ordering::Less | Ordering::Greater) => {
+            None | Some(Ordering::Equal | Ordering::Greater) => {
                 Interval::empty()
             }
         }
@@ -355,7 +355,7 @@ impl<T> Interval<T> {
     /// ```
     pub fn from_range<R: RangeBounds<T>>(range: R) -> Self
     where
-        T: PartialOrd + NothingBetween + Clone,
+        T: PartialOrd + NothingBetween + Clone + Bounded,
     {
         match (range.start_bound(), range.end_bound()) {
             (RgBound::Included(lo), RgBound::Included(up)) => {
@@ -675,7 +675,7 @@ impl<T> Interval<T> {
         let low = (&self.lower).partial_cmp(&r.lower); //  want min()
         let upp = (&self.upper).partial_cmp(&r.upper); //  want max()
         match (low, upp) {
-            (None, _) | (_, None) => Interval::empty(),
+            (None, _) | (_, None) => unreachable!(),
             (
                 Some(Ordering::Less | Ordering::Equal),
                 Some(Ordering::Less | Ordering::Equal),
@@ -964,7 +964,7 @@ impl<T> Interval<T> {
 
 impl<T> IntoIterator for Interval<T>
 where
-    T: Step + Clone + PartialOrd + NothingBetween,
+    T: Step + Bounded + Clone + PartialOrd + NothingBetween,
 {
     type Item = T;
     type IntoIter = IntervalIterator<T>;
@@ -1233,7 +1233,7 @@ pub enum ParseError<E> {
 
 impl<T, E> core::str::FromStr for Interval<T>
 where
-    T: PartialOrd + NothingBetween + core::str::FromStr<Err = E>,
+    T: PartialOrd + Bounded + NothingBetween + core::str::FromStr<Err = E>,
 {
     type Err = ParseError<E>;
 
@@ -1322,7 +1322,7 @@ where
 }
 impl<T> ::core::convert::From<::core::ops::RangeTo<T>> for Interval<T>
 where
-    T: Clone + PartialOrd,
+    T: Clone + PartialOrd + Bounded,
 {
     fn from(value: ::core::ops::RangeTo<T>) -> Self {
         Interval::new_unbounded_open(value.end.clone())
@@ -1330,7 +1330,7 @@ where
 }
 impl<T> ::core::convert::From<::core::ops::RangeToInclusive<T>> for Interval<T>
 where
-    T: Clone + PartialOrd,
+    T: Clone + PartialOrd + Bounded,
 {
     fn from(value: ::core::ops::RangeToInclusive<T>) -> Self {
         Interval::new_unbounded_closed(value.end.clone())
@@ -1338,7 +1338,7 @@ where
 }
 impl<T> ::core::convert::From<::core::ops::RangeFrom<T>> for Interval<T>
 where
-    T: Clone + PartialOrd,
+    T: Clone + PartialOrd + Bounded,
 {
     fn from(value: ::core::ops::RangeFrom<T>) -> Self {
         Interval::new_closed_unbounded(value.start.clone())
@@ -1352,7 +1352,7 @@ impl<T: Clone> ::core::convert::From<::core::ops::RangeFull> for Interval<T> {
 
 impl<T, E> ::core::convert::TryFrom<&str> for Interval<T>
 where
-    T: PartialOrd + NothingBetween + ::core::str::FromStr<Err = E>,
+    T: PartialOrd + Bounded + NothingBetween + ::core::str::FromStr<Err = E>,
     E: ::core::fmt::Debug,
 {
     type Error = ParseError<E>;

@@ -1,7 +1,7 @@
 use crate::bounds::Bound;
 use crate::intervals::Interval;
 use crate::nothing_between::NothingBetween;
-use crate::step::Step;
+use crate::step::{Step, Bounded};
 
 pub struct IntervalIterator<T> {
     pub(crate) intv: Interval<T>,
@@ -19,16 +19,25 @@ impl<T> IntervalIterator<T> {
     /// Internal implementation for nth() and next()
     fn internal_nth(&mut self, n: usize) -> Option<T>
     where
-        T: Step + Clone + PartialOrd + NothingBetween,
+        T: Step + Bounded + Clone + PartialOrd + NothingBetween,
     {
         match &self.intv.lower {
             Bound::LeftUnbounded => {
                 let current = T::min_value().forward(n);
-                self.intv.lower =
-                    match current.clone().and_then(|c| c.forward(1)) {
-                        None => Bound::RightUnbounded,
-                        Some(ref c) => Bound::LeftOf(c.clone()),
-                    };
+                match current.clone().and_then(|c| c.forward(1)) {
+                    None =>  {
+                        // Only called for a type with a single valid value
+                        self.intv = Interval::empty();
+                    }
+                    Some(c) =>  {
+                        let b = Bound::LeftOf(c);
+                        if b >= self.intv.upper.as_ref() {
+                            self.intv = Interval::empty();
+                        } else {
+                            self.intv.lower = b;
+                        }
+                    }
+                };
                 current
             }
             Bound::RightUnbounded => None, //  empty interval
@@ -67,7 +76,7 @@ impl<T> IntervalIterator<T> {
     /// Internal implementation for nth_back() and next_back()
     fn internal_nth_back(&mut self, n: usize) -> Option<T>
     where
-        T: Step + Clone + PartialOrd + NothingBetween,
+        T: Step + Bounded + Clone + PartialOrd + NothingBetween,
     {
         match &self.intv.upper {
             Bound::LeftUnbounded => None, //  empty interval
@@ -115,7 +124,7 @@ impl<T> IntervalIterator<T> {
 
 impl<T> Iterator for IntervalIterator<T>
 where
-    T: Step + Clone + PartialOrd + NothingBetween,
+    T: Step + Bounded + Clone + PartialOrd + NothingBetween,
 {
     type Item = T; // ??? Should this be &T to match what vectors do
 
@@ -169,7 +178,7 @@ where
 
 impl<T> DoubleEndedIterator for IntervalIterator<T>
 where
-    T: Step + Clone + PartialOrd + NothingBetween,
+    T: Step + Bounded + Clone + PartialOrd + NothingBetween,
 {
     /// Removes and returns an element from the end of the interval
     fn next_back(&mut self) -> Option<Self::Item> {
@@ -184,6 +193,6 @@ where
 /// len() will panic! if the number of values in the range is
 /// greater than usize::MAX.
 impl<T> ExactSizeIterator for IntervalIterator<T> where
-    T: Step + Clone + PartialOrd + NothingBetween
+    T: Step + Bounded + Clone + PartialOrd + NothingBetween
 {
 }

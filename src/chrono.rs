@@ -1,5 +1,5 @@
 use crate::nothing_between::NothingBetween;
-use crate::step::Step;
+use crate::step::{Bounded, Step};
 
 impl<T: chrono::TimeZone> NothingBetween for chrono::DateTime<T> {
     fn nothing_between(&self, other: &Self) -> bool {
@@ -14,14 +14,16 @@ impl NothingBetween for chrono::NaiveDate {
     }
 }
 
-impl Step for chrono::NaiveDate {
+impl Bounded for chrono::NaiveDate {
     fn min_value() -> Self {
         chrono::NaiveDate::MIN
     }
     fn max_value() -> Self {
         chrono::NaiveDate::MAX
     }
+}
 
+impl Step for chrono::NaiveDate {
     #[cfg_attr(test, mutants::skip)]
     fn forward(&self, step: usize) -> Option<Self> {
         self.checked_add_days(chrono::Days::new(step as u64))
