@@ -1,7 +1,7 @@
 use crate::bounds::Bound;
 use crate::intervals::Interval;
 use crate::nothing_between::NothingBetween;
-use crate::step::{Step, Bounded};
+use crate::step::{Bounded, Step};
 
 pub struct IntervalIterator<T> {
     pub(crate) intv: Interval<T>,
@@ -25,11 +25,11 @@ impl<T> IntervalIterator<T> {
             Bound::LeftUnbounded => {
                 let current = T::min_value().forward(n);
                 match current.clone().and_then(|c| c.forward(1)) {
-                    None =>  {
+                    None => {
                         // Only called for a type with a single valid value
                         self.intv = Interval::empty();
                     }
-                    Some(c) =>  {
+                    Some(c) => {
                         let b = Bound::LeftOf(c);
                         if b >= self.intv.upper.as_ref() {
                             self.intv = Interval::empty();

@@ -1415,29 +1415,29 @@ mod multi {
             m.extend([interval!(5, 10), interval!(15, 20)]);
 
             assert_eq!(
-                m.remove(6).iter().collect::<Vec<_>>(),
+                m.difference(6).iter().collect::<Vec<_>>(),
                 vec![
                     &interval!(5, 6, "[)"),
                     &interval!(6, 10, "()"),
                     &interval!(15, 20)
                 ],
             );
-            assert_eq!(m.remove(0), m);
-            assert_eq!(m.remove(10), m);
-            assert_eq!(m.remove(1000), m);
+            assert_eq!(m.difference(0), m);
+            assert_eq!(m.difference(10), m);
+            assert_eq!(m.difference(1000), m);
             assert_eq!(
-                m.remove_interval(interval!(8, 17))
+                m.difference_interval(interval!(8, 17))
                     .iter()
                     .collect::<Vec<_>>(),
                 vec![&interval!(5, 8, "[)"), &interval!(17, 20)],
             );
-            assert_eq!(m.remove_interval(Interval::empty()), m,);
+            assert_eq!(m.difference_interval(Interval::empty()), m,);
             assert_eq!(
-                m.remove_interval(interval!(0, 100)),
+                m.difference_interval(interval!(0, 100)),
                 IntervalSet::empty(),
             );
             assert_eq!(
-                m.remove_interval(interval!(6, 7))
+                m.difference_interval(interval!(6, 7))
                     .iter()
                     .collect::<Vec<_>>(),
                 vec![
@@ -1637,13 +1637,12 @@ mod multi {
                 interval!(38, 40),
             ]),
         );
-        assert_eq!(   //  test early exit in the loop
-            m1.intersection_set(IntervalSet::new_separating([
-                interval!(4, 8),
-            ])),
-            IntervalSet::new_joining([
-                interval!(4, 8),
-            ]),
+        assert_eq!(
+            //  test early exit in the loop
+            m1.intersection_set(IntervalSet::new_separating(
+                [interval!(4, 8),]
+            )),
+            IntervalSet::new_joining([interval!(4, 8),]),
         );
 
         let empty = IntervalSet::empty_joining();

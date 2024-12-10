@@ -217,20 +217,22 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         }
     }
 
-    /// Remove the value from Self, splitting intervals as needed.
-    pub fn remove(&self, value: T) -> Self
+    /// Return a set of intervals that includes all values of self except
+    /// value.
+    pub fn difference(&self, value: T) -> Self
     where
         T: PartialOrd + NothingBetween + Clone,
     {
-        self.remove_interval(Interval::new_single(value))
+        self.difference_interval(Interval::new_single(value))
     }
 
-    /// Remove from self all values found in intv.
+    /// Returns a set of intervals that includes all values of self except
+    /// those found in intv.
     /// ```
     /// #  use rust_intervals::{interval, IntervalSet};
     ///    let set1 = IntervalSet::new_joining([interval!(1, 20)]);
     ///    let intv1 = interval!(5, 10);
-    ///    let diff = set1.remove_interval(&intv1);
+    ///    let diff = set1.difference_interval(&intv1);
     ///    assert_eq!(
     ///        diff,
     ///        IntervalSet::new_joining([interval!(1, 5), interval!(10, 20)]),
@@ -241,7 +243,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     ///    assert_eq!(set1.clone() - &intv1, diff);
     ///    assert_eq!(set1 - intv1, diff);
     /// ```
-    pub fn remove_interval<U>(&self, intv: U) -> Self
+    pub fn difference_interval<U>(&self, intv: U) -> Self
     where
         T: PartialOrd + NothingBetween + Clone,
         U: ::core::borrow::Borrow<Interval<T>>,
@@ -267,9 +269,8 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         result
     }
 
-    /// Similar to [IntervalSet::remove_interval] but modifies self
-    /// in place.
-    pub fn remove_interval_inplace<U>(&mut self, intv: U)
+    /// Remove from self all values found in intv.
+    pub fn remove_interval<U>(&mut self, intv: U)
     where
         T: PartialOrd + NothingBetween + Clone,
         U: ::core::borrow::Borrow<Interval<T>>,
@@ -683,7 +684,7 @@ where
 
     /// Same as [`IntervalSet::remove_interval()`]
     fn sub(self, rhs: U) -> Self::Output {
-        self.remove_interval(rhs)
+        self.difference_interval(rhs)
     }
 }
 
@@ -698,7 +699,7 @@ where
 
     /// Same as [`IntervalSet::remove_interval()`]
     fn sub(self, rhs: U) -> Self::Output {
-        self.remove_interval(rhs)
+        self.difference_interval(rhs)
     }
 }
 
@@ -708,6 +709,6 @@ where
     U: ::core::borrow::Borrow<Interval<T>>,
 {
     fn sub_assign(&mut self, rhs: U) {
-        self.remove_interval_inplace(rhs);
+        self.remove_interval(rhs);
     }
 }

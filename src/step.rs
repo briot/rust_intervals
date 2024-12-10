@@ -6,7 +6,6 @@ pub trait Bounded {
     fn max_value() -> Self;
 }
 
-
 /// Similar to std::iter::Step, but the latter is unstable and cannot be used
 /// in this package.  It also doesn't provide support for starting from lowest
 /// value valid for the type for instance.
@@ -58,7 +57,7 @@ macro_rules! bounded_for_type {
                 Self::MAX
             }
         }
-    }
+    };
 }
 
 step_for_int!(u8);

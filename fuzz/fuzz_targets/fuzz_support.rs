@@ -14,7 +14,7 @@ pub enum RangeType {
 }
 impl RangeType {
     pub fn build<T>(&self, lower: T, upper: T) -> Interval<T>
-    where T: PartialOrd + NothingBetween
+    where T: PartialOrd + NothingBetween + Bounded
     {
         match self {
             RangeType::OpenClosed => {

@@ -170,9 +170,7 @@ impl<T> Interval<T> {
                 lower: Bound::LeftUnbounded,
                 upper: Bound::RightOf(upper),
             },
-            None | Some(Ordering::Less | Ordering::Equal) => {
-                Interval::empty()
-            }
+            None | Some(Ordering::Less | Ordering::Equal) => Interval::empty(),
         }
     }
 
@@ -201,9 +199,7 @@ impl<T> Interval<T> {
                 lower: Bound::LeftUnbounded,
                 upper: Bound::LeftOf(upper),
             },
-            None | Some(Ordering::Less | Ordering::Equal) => {
-                Interval::empty()
-            }
+            None | Some(Ordering::Less | Ordering::Equal) => Interval::empty(),
         }
     }
 

@@ -8,7 +8,7 @@
   - support for `Clone` in `IntervalSet`
   - `IntervalSet::clear`
   - `IntervalSet::equivalent`
-  - `IntervalSet::remove` and `IntervalSet::remove_interval`
+  - `IntervalSet::difference` and `IntervalSet::difference_interval`
   - `IntervalSet::intersects_interval` and `IntervalSet::intersects_set`
   - `IntervalSet::left_of` and `IntervalSet::right_of`, also variants
     for comparing with an interval or another set.  Add variants for
