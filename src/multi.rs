@@ -217,6 +217,25 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         }
     }
 
+    /// Add multiple sets of valid values to self, via an iterator.
+    /// Because this function needs to sort the intervals to improve performance
+    /// T must be Ord.  If it isn't (floats,...), use [IntervalSet::add] to
+    /// insert multiple intervals.
+    pub fn extend<I>(&mut self, iter: I)
+    where
+        T: Ord + NothingBetween + Clone,
+        I: IntoIterator<Item = Interval<T>>,
+    {
+        let mut elements = iter
+            .into_iter()
+            .filter(|intv| !intv.is_empty())
+            .collect::<Vec<_>>();
+        if !elements.is_empty() {
+            elements.sort();
+            P::merge(&mut self.intvs, elements);
+        }
+    }
+
     /// Return a set of intervals that includes all values of self except
     /// value.
     pub fn difference(&self, value: T) -> Self
@@ -269,6 +288,14 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         result
     }
 
+    /// Remove value from self
+    pub fn remove(&mut self, value: T)
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
+        self.remove_interval(Interval::new_single(value));
+    }
+
     /// Remove from self all values found in intv.
     pub fn remove_interval<U>(&mut self, intv: U)
     where
@@ -289,25 +316,6 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
             }
         }
         self.intvs.retain(|v| !v.is_empty());
-    }
-
-    /// Add multiple sets of valid values to self, via an iterator.
-    /// Because this function needs to sort the intervals to improve performance
-    /// T must be Ord.  If it isn't (floats,...), use [IntervalSet::add] to
-    /// insert multiple intervals.
-    pub fn extend<I>(&mut self, iter: I)
-    where
-        T: Ord + NothingBetween + Clone,
-        I: IntoIterator<Item = Interval<T>>,
-    {
-        let mut elements = iter
-            .into_iter()
-            .filter(|intv| !intv.is_empty())
-            .collect::<Vec<_>>();
-        if !elements.is_empty() {
-            elements.sort();
-            P::merge(&mut self.intvs, elements);
-        }
     }
 
     /// Iterate over all intervals
