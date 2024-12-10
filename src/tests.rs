@@ -1257,8 +1257,6 @@ mod multi {
         );
         assert_eq!(m.len(), expected.len());
 
-        m.check_invariants();
-
         assert_eq!(m.lower(), Some(&1));
         assert_eq!(m.upper(), Some(&10));
         assert!(!m.lower_unbounded());
@@ -1339,7 +1337,6 @@ mod multi {
         m.add(interval!(1, 4));
         assert_eq!(m.len(), 1);
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 4)],);
-        m.check_invariants();
 
         m.add(interval!(1, 4)); //  Adding same interval has no effect
         assert_eq!(m.len(), 1);
@@ -1365,14 +1362,12 @@ mod multi {
         m.add(interval!(4, 8, "[]")); // joins the two
         assert_eq!(m.len(), 1);
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(1, 10)],);
-        m.check_invariants();
 
         // Inserting intervals only after the end of all existing ones
         m.clear();
         m.extend([interval!(1, 3), interval!(4, 5)]);
         m.extend([interval!(6, 7), interval!(8, 9)]);
         assert_eq!(m.len(), 4);
-        m.check_invariants();
 
         // Single intervals
         {

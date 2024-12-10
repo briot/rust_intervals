@@ -740,6 +740,9 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
+        if self.is_empty() || r.is_empty() {
+            return Interval::empty();
+        }
         Interval {
             lower: (&self.lower).max(&r.lower).clone(),
             upper: (&self.upper).min(&r.upper).clone(),

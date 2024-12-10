@@ -215,6 +215,7 @@ where
     T: PartialOrd + NothingBetween,
 {
     fn cmp(&self, other: &Self) -> Ordering {
+        // partial_cmp would return None for empty intervals
         self.partial_cmp(other).unwrap()
     }
 }
