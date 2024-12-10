@@ -9,11 +9,11 @@
   - `IntervalSet::clear`
   - `IntervalSet::equivalent`
   - `IntervalSet::remove` and `IntervalSet::remove_interval`
-  - `IntervalSet::intersects_interval` and `IntervalSet::intersects`
+  - `IntervalSet::intersects_interval` and `IntervalSet::intersects_set`
   - `IntervalSet::left_of` and `IntervalSet::right_of`, also variants
     for comparing with an interval or another set.  Add variants for
     strictly_left_of and strictly_right_of.
-  - `IntervalSet::intersection_interval` and `IntervalSet::intersection`
+  - `IntervalSet::intersection_interval` and `IntervalSet::intersection_set`
 
 ## 0.5.0
 ## Fixed

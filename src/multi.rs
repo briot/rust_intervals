@@ -245,7 +245,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     {
         let u = intv.borrow();
         let mut result = IntervalSet::empty();
-        for v in self.intvs.iter() {
+        for (idx, v) in self.intvs.iter().enumerate() {
             match v.difference(u) {
                 Pair::One(p1) => {
                     result.intvs.push(p1);
@@ -253,9 +253,15 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
                 Pair::Two(p1, p2) => {
                     result.intvs.push(p1);
                     result.intvs.push(p2);
+
+                    // There will be no more difference now
+                    result.intvs.extend_from_slice(
+                        &self.intvs[idx + 1..]);
+                    break;
                 }
             }
         }
+        result.intvs.retain(|v| !v.is_empty());
         result
     }
 
@@ -385,7 +391,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
 
     /// Returns the intersection of self and intv.
     /// This could return any number of intervals.
-    pub fn intersection<U, P2>(&self, intv: U) -> Self
+    pub fn intersection_set<U, P2>(&self, intv: U) -> Self
     where
         P2: Policy<T>,
         T: PartialOrd + NothingBetween + Clone,
@@ -461,7 +467,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
 
     /// Whether any value exists in both self and right.
     #[doc(alias = "overlaps")]
-    pub fn intersects<U, P2>(&self, right: U) -> bool
+    pub fn intersects_set<U, P2>(&self, right: U) -> bool
     where
         P2: Policy<T>,
         T: PartialOrd + NothingBetween,

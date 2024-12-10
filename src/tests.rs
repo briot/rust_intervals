@@ -1429,16 +1429,16 @@ mod multi {
             assert!(!m.intersects_interval(interval!(10, 12)));
 
             let mut m2 = m.clone();
-            assert!(m.intersects(&m2));
+            assert!(m.intersects_set(&m2));
 
             m2.clear();
-            assert!(!m.intersects(&m2));
+            assert!(!m.intersects_set(&m2));
 
             m2.extend([interval!(1, 3), interval!(20, 30)]);
-            assert!(!m.intersects(&m2));
+            assert!(!m.intersects_set(&m2));
 
             m2.extend([interval!(19, 21)]);
-            assert!(m.intersects(m2));
+            assert!(m.intersects_set(m2));
         }
 
         // left_of, right_of, ...
@@ -1573,7 +1573,7 @@ mod multi {
             IntervalSet::empty(),
         );
         assert_eq!(
-            m1.intersection(IntervalSet::new_separating([
+            m1.intersection_set(IntervalSet::new_separating([
                 interval!(4, 8),
                 interval!(16, 27),
                 interval!(38, 50),
