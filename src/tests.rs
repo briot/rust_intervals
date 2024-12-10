@@ -1324,7 +1324,6 @@ mod multi {
             assert!(m.contains_set(&m2));
         }
 
-
         // Same as above, but intervals are not sorted initially
         m.clear();
         m.extend([
@@ -1442,10 +1441,19 @@ mod multi {
                 vec![&interval!(5, 8, "[)"), &interval!(17, 20)],
             );
             assert_eq!(m.remove_interval(Interval::empty()), m,);
-
             assert_eq!(
                 m.remove_interval(interval!(0, 100)),
                 IntervalSet::empty(),
+            );
+            assert_eq!(
+                m.remove_interval(interval!(6, 7))
+                    .iter()
+                    .collect::<Vec<_>>(),
+                vec![
+                    &interval!(5, 6),
+                    &interval!(7, 10, "[)"),
+                    &interval!(15, 20),
+                ]
             );
         }
 
@@ -1488,6 +1496,12 @@ mod multi {
             assert!(m.strictly_left_of_interval(interval!(20, 30)));
             assert!(!m.strictly_left_of_interval(interval!(19, 30)));
             assert!(!m.strictly_left_of_interval(interval!(18, 30)));
+            assert!(
+                Interval::empty().strictly_left_of_interval(interval!(1, 4))
+            );
+            assert!(Interval::<u8>::empty()
+                .strictly_left_of_interval(&Interval::empty()));
+            assert!(m.strictly_left_of_interval(&Interval::empty()));
 
             assert!(m.right_of_interval(interval!(1, 5)));
             assert!(m.right_of_interval(interval!(1, 6)));
@@ -1614,5 +1628,9 @@ mod multi {
                 interval!(38, 40),
             ]),
         );
+
+        let empty = IntervalSet::empty_joining();
+        assert_eq!(m1.intersection_set(&empty), empty);
+        assert_eq!(empty.intersection_set(&m1), empty);
     }
 }

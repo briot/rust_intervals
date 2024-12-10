@@ -27,7 +27,7 @@ install_crate = "cargo-llvm-cov"
 command = "cargo"
 # Could add  --branch  (superceded by --mcdc)
 # Could add --show-instantiations to show how functions are instantiated
-args = [ "llvm-cov", "test", "--show-missing-lines", "--doctests", "--html", "--all-features", "--color=always" ]
+args = [ "llvm-cov", "test", "--show-missing-lines", "--doctests", "--html", "--all-features", "--color=always", "--mcdc" ]
 
 [tasks.doc]
 command = "cargo"

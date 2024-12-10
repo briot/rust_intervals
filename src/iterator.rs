@@ -118,6 +118,7 @@ where
 
     /// Used to compute the result of `ExactSizeIterator::len()`, and
     /// optimize calls to collect() by pre-allocating when possible.
+    #[cfg_attr(test, mutants::skip)]
     fn size_hint(&self) -> (usize, Option<usize>) {
         if self.intv.is_empty() {
             (0, Some(0))

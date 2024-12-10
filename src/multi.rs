@@ -255,8 +255,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
                     result.intvs.push(p2);
 
                     // There will be no more difference now
-                    result.intvs.extend_from_slice(
-                        &self.intvs[idx + 1..]);
+                    result.intvs.extend_from_slice(&self.intvs[idx + 1..]);
                     break;
                 }
             }
@@ -417,7 +416,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     {
         let mut result = IntervalSet::empty();
         let u = intv.borrow();
-        if u.is_empty() || self.intvs.is_empty() {
+        if u.is_empty() {
             return result;
         }
 

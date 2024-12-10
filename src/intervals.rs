@@ -558,7 +558,7 @@ impl<T> Interval<T> {
         self.is_empty() || r.is_empty() || self.upper <= r.lower
     }
 
-    /// All values of self are strictly lower than every value in right,
+    /// Whether all values of self are strictly lower than every value in right,
     /// and there is some thing between the two intervals.
     pub fn strictly_left_not_contiguous<U>(&self, right: U) -> bool
     where
