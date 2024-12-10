@@ -36,7 +36,7 @@ impl<T> IntervalIterator<T> {
                 current
             }
             Bound::RightUnbounded => {
-                panic!("Can only happen when interval is empty");
+                unreachable!("Can only happen when interval is empty");
             }
             Bound::LeftOf(lo) => {
                 let current = lo.forward(n);

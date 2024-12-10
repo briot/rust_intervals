@@ -20,16 +20,6 @@ pub(crate) mod test {
         }
     }
 
-    macro_rules! assert_err {
-        ($expression:expr, $($pattern:tt)+) => {
-            match $expression {
-                $($pattern)+ => (),
-                ref e => panic!(
-                  "expected `{}` but got `{:?}`", stringify!($($pattern)+), e),
-            }
-        }
-    }
-
     /// Compares the positions of an interval and a value
     macro_rules! assert_lr {
         ($intv:expr, $v:expr,
@@ -527,9 +517,9 @@ pub(crate) mod test {
             Interval::doubly_unbounded()
         );
         assert_eq!("empty".parse::<Interval<i32>>()?, Interval::empty());
-        assert_err!(
+        assert_eq!(
             "&1,2".parse::<Interval<i32>>(),
-            Err(ParseError::InvalidInput)
+            Err(ParseError::InvalidInput),
         );
         assert!("&1,2".parse::<Interval<i32>>().is_err());
         Ok(())
@@ -683,6 +673,12 @@ pub(crate) mod test {
             &interval!("-inf", 2, "]"),
             &interval!("-inf", 3, ")"),
         );
+
+        assert_eq_and_hash(
+            &interval!(255_u8, 255, "[]"), // cannot compute 255 + 1
+            &interval!(254, 255, "(]"),
+        );
+
     }
 
     #[test]

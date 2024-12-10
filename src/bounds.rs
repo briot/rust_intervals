@@ -78,7 +78,7 @@ where
 
 impl<T> ::core::hash::Hash for Bound<T>
 where
-    T: ::core::hash::Hash + Step + NothingBetween,
+    T: ::core::hash::Hash + Step,
 {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         // Hash cannot be implemented for f32.
@@ -100,10 +100,8 @@ where
             Bound::RightOf(point) => {
                 let next = point.forward(1);
                 if let Some(next) = next {
-                    if point.nothing_between(&next) {
-                        Bound::LeftOf(next).hash(state);
-                        return;
-                    }
+                    Bound::LeftOf(next).hash(state);
+                    return;
                 }
                 core::mem::discriminant(self).hash(state);
                 point.hash(state);

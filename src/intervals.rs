@@ -1022,7 +1022,7 @@ where
             Some(Ordering::Less)
         } else {
             match self.lower.partial_cmp(&other.lower) {
-                None => None, // should not get here, interval is empty
+                None => unreachable!(), // interval is not empty
                 Some(Ordering::Less) => Some(Ordering::Less),
                 Some(Ordering::Greater) => Some(Ordering::Greater),
                 Some(Ordering::Equal) => self.upper.partial_cmp(&other.upper),
@@ -1073,10 +1073,10 @@ where
                 Bound::LeftUnbounded => write!(f, "(")?,
                 Bound::LeftOf(p) => write!(f, "[{}", p)?,
                 Bound::RightOf(p) => write!(f, "({}", p)?,
-                Bound::RightUnbounded => panic!("Invalid left bound"),
+                Bound::RightUnbounded => unreachable!(),
             }
             match &self.upper {
-                Bound::LeftUnbounded => panic!("Invalid right bound"),
+                Bound::LeftUnbounded => unreachable!(),
                 Bound::LeftOf(p) => write!(f, ", {})", p)?,
                 Bound::RightOf(p) => write!(f, ", {}]", p)?,
                 Bound::RightUnbounded => write!(f, ",)")?,
@@ -1086,7 +1086,7 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ParseError<E> {
     InvalidInput, // An invalid string was provided
     Bound(E),     // An error while parsing bounds

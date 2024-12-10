@@ -29,6 +29,31 @@ command = "cargo"
 # Could add --show-instantiations to show how functions are instantiated
 args = [ "llvm-cov", "test", "--show-missing-lines", "--doctests", "--html", "--all-features", "--color=always", "--mcdc" ]
 
+# [tasks.cov2]
+# toolchain = "nightly"
+# install_crate = "cargo-llvm-cov"
+# dependencies = ["cov_clean", "cov_no_std", "cov_all_tests", "cov_report" ]
+# 
+# [tasks.cov_clean]
+# toolchain = "nightly"
+# command = "cargo"
+# args = [ "llvm-cov", "clean", "--workspace" ]
+# 
+# [tasks.cov_all_tests]
+# toolchain = "nightly"
+# command = "cargo"
+# args = [ "llvm-cov", "--no-report", "--all-features", "--mcdc" ]
+# 
+# [tasks.cov_no_std]
+# toolchain = "nightly"
+# command = "cargo"
+# args = [ "llvm-cov", "--no-report", "--no-default-features", "--mcdc" ]
+# 
+# [tasks.cov_report]
+# toolchain = "nightly"
+# command = "cargo"
+# args = [ "llvm-cov", "report", "--html", "--doctests", "--show-missing-lines", "--mcdc" ]
+
 [tasks.doc]
 command = "cargo"
 args = [ "doc", "-p", "rust_intervals" ]

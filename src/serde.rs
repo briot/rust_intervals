@@ -58,6 +58,7 @@ where
                     SerdeInterval::OpenUnbounded(lo)
                 }
                 (_, Bound::LeftUnbounded) | (Bound::RightUnbounded, _) => {
+                    // Cannot be reached, we have tested for is_empty() earlier
                     SerdeInterval::Empty
                 }
             };
