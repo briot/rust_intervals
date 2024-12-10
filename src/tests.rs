@@ -1301,6 +1301,30 @@ mod multi {
         assert_eq!(m.iter().collect::<Vec<_>>(), vec![&interval!(0, 18)]);
         assert_eq!(m.len(), 1);
 
+        // contains set
+        {
+            m.clear();
+            m.extend([
+                interval!(1, 3, "[)"),
+                interval!(2, 4, "[)"),
+                interval!(4, 6, "[)"),
+                interval!(8, 10, "[)"),
+            ]);
+
+            assert!(m.contains_set(&empty));
+            assert!(!empty.contains_set(&m));
+            assert!(m.contains_set(&m));
+
+            let mut m2 = m.clone();
+            m2.extend([interval!(100, 200)]);
+            assert!(!m.contains_set(&m2));
+
+            let mut m2 = m.clone();
+            m2 -= interval!(2, 5);
+            assert!(m.contains_set(&m2));
+        }
+
+
         // Same as above, but intervals are not sorted initially
         m.clear();
         m.extend([
@@ -1418,6 +1442,11 @@ mod multi {
                 vec![&interval!(5, 8, "[)"), &interval!(17, 20)],
             );
             assert_eq!(m.remove_interval(Interval::empty()), m,);
+
+            assert_eq!(
+                m.remove_interval(interval!(0, 100)),
+                IntervalSet::empty(),
+            );
         }
 
         // Intersects

@@ -14,6 +14,7 @@
     for comparing with an interval or another set.  Add variants for
     strictly_left_of and strictly_right_of.
   - `IntervalSet::intersection_interval` and `IntervalSet::intersection_set`
+  - `IntervalSet::contains_set`
 
 ## 0.5.0
 ## Fixed

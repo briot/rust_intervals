@@ -265,6 +265,29 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         result
     }
 
+    /// Similar to [IntervalSet::remove_interval] but modifies self
+    /// in place.
+    pub fn remove_interval_inplace<U>(&mut self, intv: U)
+    where
+        T: PartialOrd + NothingBetween + Clone,
+        U: ::core::borrow::Borrow<Interval<T>>,
+    {
+        let u = intv.borrow();
+        for (idx, v) in self.intvs.iter_mut().enumerate() {
+            match v.difference(u) {
+                Pair::One(p1) => {
+                    *v = p1;
+                }
+                Pair::Two(p1, p2) => {
+                    *v = p1;
+                    self.intvs.insert(idx, p2);
+                    break;
+                }
+            }
+        }
+        self.intvs.retain(|v| !v.is_empty());
+    }
+
     /// Add multiple sets of valid values to self, via an iterator
     pub fn extend<I>(&mut self, iter: I)
     where
@@ -361,6 +384,28 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
             }
         }
         false
+    }
+
+    /// Whether all values in other are also in self
+    pub fn contains_set<U, P2>(&self, other: U) -> bool
+    where
+        P: ::core::fmt::Debug,
+        P2: Policy<T> + ::core::fmt::Debug,
+        T: PartialOrd + NothingBetween + Clone + ::core::fmt::Debug,
+        U: ::core::borrow::Borrow<IntervalSet<T, P2>>,
+    {
+        let u = other.borrow();
+        if u.is_empty() {
+            return true;
+        }
+        if self.is_empty() {
+            return false;
+        }
+        let mut reminder = u.clone();
+        for v in &self.intvs {
+            reminder -= v;
+        }
+        reminder.is_empty()
     }
 
     /// Returns the intersection of self and intv.
@@ -663,5 +708,15 @@ where
     /// Same as [`IntervalSet::remove_interval()`]
     fn sub(self, rhs: U) -> Self::Output {
         self.remove_interval(rhs)
+    }
+}
+
+impl<T, U, P: Policy<T>> ::core::ops::SubAssign<U> for IntervalSet<T, P>
+where
+    T: PartialOrd + NothingBetween + Clone,
+    U: ::core::borrow::Borrow<Interval<T>>,
+{
+    fn sub_assign(&mut self, rhs: U) {
+        self.remove_interval_inplace(rhs);
     }
 }
