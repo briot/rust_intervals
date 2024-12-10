@@ -41,28 +41,6 @@ impl<T> Bound<T> {
         }
     }
 
-    pub(crate) fn min(&self, right: &Self) -> Self
-    where
-        T: PartialOrd + NothingBetween + Clone,
-    {
-        if self < right {
-            self.clone()
-        } else {
-            right.clone()
-        }
-    }
-
-    pub(crate) fn max(&self, right: &Self) -> Self
-    where
-        T: PartialOrd + NothingBetween + Clone,
-    {
-        if self > right {
-            self.clone()
-        } else {
-            right.clone()
-        }
-    }
-
     /// Return the bound's value (which might be included in the interval
     /// or not).  This returns None for an unbounded bound.
     pub(crate) fn value(&self) -> Option<&T> {
@@ -231,6 +209,15 @@ where
             (_, Bound::RightUnbounded) => Some(Ordering::Less),
             (Bound::RightUnbounded, _) => Some(Ordering::Greater),
         }
+    }
+}
+
+impl<T> Ord for Bound<T>
+where
+    T: PartialOrd + NothingBetween,
+{
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
     }
 }
 

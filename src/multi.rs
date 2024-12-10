@@ -362,7 +362,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         }
         let mut reminder = Interval {
             // simplified difference()
-            lower: first.upper.max(&u.lower),
+            lower: (&first.upper).max(&u.lower).clone(),
             upper: u.upper.clone(),
         };
         if reminder.is_empty() {
@@ -375,7 +375,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
             }
             reminder = Interval {
                 //  simplified difference()
-                lower: intv.upper.max(&reminder.lower),
+                lower: (&intv.upper).max(&reminder.lower).clone(),
                 upper: reminder.upper,
             };
             if reminder.is_empty() {
@@ -443,7 +443,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     {
         let mut result = IntervalSet::empty();
         let u = intv.borrow();
-        if u.is_empty() || self.intvs.is_empty() {
+        if u.is_empty() {
             return result;
         }
 

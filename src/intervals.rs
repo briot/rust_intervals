@@ -620,8 +620,8 @@ impl<T> Interval<T> {
             self.clone()
         } else {
             Self {
-                lower: self.lower.min(&r.lower),
-                upper: self.upper.max(&r.upper),
+                lower: (&self.lower).min(&r.lower).clone(),
+                upper: (&self.upper).max(&r.upper).clone(),
             }
         }
     }
@@ -651,10 +651,10 @@ impl<T> Interval<T> {
             Pair::new_from_two(
                 Interval {
                     lower: self.lower.clone(),
-                    upper: r.lower.min(&self.upper),
+                    upper: (&r.lower).min(&self.upper).clone(),
                 },
                 Interval {
-                    lower: r.upper.max(&self.lower),
+                    lower: (&r.upper).max(&self.lower).clone(),
                     upper: self.upper.clone(),
                 },
             )
@@ -686,18 +686,18 @@ impl<T> Interval<T> {
         } else {
             Pair::new_from_two(
                 Interval {
-                    lower: self.lower.min(&r.lower),
-                    upper: self
-                        .lower
+                    lower: (&self.lower).min(&r.lower).clone(),
+                    upper: (&self.lower)
                         .max(&r.lower)
-                        .min(&self.upper.min(&r.upper)),
+                        .min((&self.upper).min(&r.upper))
+                        .clone(),
                 },
                 Interval {
-                    lower: self
-                        .upper
+                    lower: (&self.upper)
                         .min(&r.upper)
-                        .max(&self.lower.max(&r.lower)),
-                    upper: self.upper.max(&r.upper),
+                        .max((&self.lower).max(&r.lower))
+                        .clone(),
+                    upper: (&self.upper).max(&r.upper).clone(),
                 },
             )
         }
@@ -741,8 +741,8 @@ impl<T> Interval<T> {
     {
         let r = right.borrow();
         Interval {
-            lower: self.lower.max(&r.lower),
-            upper: self.upper.min(&r.upper),
+            lower: (&self.lower).max(&r.lower).clone(),
+            upper: (&self.upper).min(&r.upper).clone(),
         }
     }
 
@@ -761,8 +761,8 @@ impl<T> Interval<T> {
             Interval::empty()
         } else {
             Interval {
-                lower: self.upper.min(&r.upper),
-                upper: self.lower.max(&r.lower),
+                lower: (&self.upper).min(&r.upper).clone(),
+                upper: (&self.lower).max(&r.lower).clone(),
             }
         }
     }
