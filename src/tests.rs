@@ -355,10 +355,10 @@ pub(crate) mod test {
         assert!(!intv.upper_inclusive());
 
         let empty2 = Interval::new_open_closed(3, 3);
-        assert_eq!(empty2.lower(), Some(&3)); //  doesn't match postgres
+        assert_eq!(empty2.lower(), None);
         assert!(!empty2.lower_inclusive());
-        assert_eq!(empty2.upper(), Some(&3)); //  doesn't match postgres
-        assert!(empty2.upper_inclusive());
+        assert_eq!(empty2.upper(), None);
+        assert!(!empty2.upper_inclusive());
 
         let intv = Interval::<f32>::new_single(1.0);
         assert_eq!(intv.lower(), Some(&1.0));
@@ -385,12 +385,20 @@ pub(crate) mod test {
         check_empty("f64", 0_f64, f64::EPSILON, 2.0 * f64::EPSILON, 1.0);
         check_empty("char", 'a', 'b', 'c', 'f');
 
+        assert!(interval!(f32::NAN, 1.0).is_empty());
+        assert!(interval!(1.0, f32::NAN).is_empty());
+
         let empty = Interval::<f32>::empty();
         assert!(empty.is_empty());
         assert!(!empty.contains(1.1));
 
         let empty2 = Interval::new_closed_open(10.0_f32, 10.0);
         assert_equivalent(&empty, &empty2);
+
+        assert!(Interval::new_unbounded_closed(f32::NAN).is_empty());
+        assert!(Interval::new_unbounded_open(f32::NAN).is_empty());
+        assert!(Interval::new_closed_unbounded(f32::NAN).is_empty());
+        assert!(Interval::new_open_unbounded(f32::NAN).is_empty());
 
         // In mathematical representation, an infinite number of reals between
         // 1.0 and one_eps
@@ -636,15 +644,15 @@ pub(crate) mod test {
         assert!(intv1 < intv5);
 
         let empty = Interval::empty();
-        assert_eq!(intv1.partial_cmp(&empty), Some(Ordering::Greater));
-        assert_eq!(empty.partial_cmp(&intv1), Some(Ordering::Less));
-        assert_eq!(intv1.cmp(&empty), Ordering::Greater);
-        assert_eq!(empty.cmp(&intv1), Ordering::Less);
+        assert_eq!(intv1.partial_cmp(&empty), Some(Ordering::Less));
+        assert_eq!(empty.partial_cmp(&intv1), Some(Ordering::Greater));
+        assert_eq!(intv1.cmp(&empty), Ordering::Less);
+        assert_eq!(empty.cmp(&intv1), Ordering::Greater);
 
         let intv1 = interval!(1.0, f32::NAN); // actually empty
         let intv2 = interval!(1.0, 3.0);
-        assert_eq!(intv1.partial_cmp(&intv2), Some(Ordering::Less));
-        assert_eq!(intv2.partial_cmp(&intv1), Some(Ordering::Greater));
+        assert_eq!(intv1.partial_cmp(&intv2), Some(Ordering::Greater));
+        assert_eq!(intv2.partial_cmp(&intv1), Some(Ordering::Less));
     }
 
     #[cfg(feature = "std")]
@@ -678,7 +686,6 @@ pub(crate) mod test {
             &interval!(255_u8, 255, "[]"), // cannot compute 255 + 1
             &interval!(254, 255, "(]"),
         );
-
     }
 
     #[test]
@@ -906,31 +913,6 @@ pub(crate) mod test {
 
     #[test]
     fn test_unusual_bounds() {
-        // We can actually declare intervals for types that we can't even
-        // compare, although a lot of the functions are not available
-        let intv1 = Interval::new_closed_open("abc", "def");
-        assert_eq!(intv1.lower(), Some(&"abc"));
-        assert!(intv1.lower_inclusive());
-        assert!(!intv1.lower_unbounded());
-        assert_eq!(intv1.upper(), Some(&"def"));
-        assert!(!intv1.upper_inclusive());
-        assert!(!intv1.upper_unbounded());
-
-        let intv2 = Interval::new_closed_unbounded("abc");
-        assert_eq!(intv2.lower(), Some(&"abc"));
-        assert!(intv2.lower_inclusive());
-        assert!(!intv2.lower_unbounded());
-        assert_eq!(intv2.upper(), None);
-        assert!(!intv2.upper_inclusive());
-        assert!(intv2.upper_unbounded());
-
-        #[cfg(feature = "std")]
-        {
-            let intv3 =
-                Interval::new_closed_open("abc".to_string(), "def".to_string());
-            let _intv4 = intv3.as_ref();
-        }
-
         let intv5 = Interval::new_closed_open('a', 'c');
         assert!(!intv5.is_empty());
 
@@ -1503,6 +1485,19 @@ mod multi {
             assert!(!m.strictly_left_of(19));
             assert!(!m.left_of(18));
 
+            assert!(empty.left_of(1));
+            assert!(empty.strictly_left_of(1));
+            assert!(empty.left_of_interval(interval!(1, 3)));
+            assert!(empty.strictly_left_of_interval(interval!(1, 3)));
+            assert!(empty.left_of_set(&m));
+            assert!(m.left_of_set(&empty));
+
+            assert!(empty.right_of(1));
+            assert!(empty.strictly_right_of(1));
+            assert!(empty.right_of_interval(interval!(1, 3)));
+            assert!(empty.right_of_set(&m));
+            assert!(m.right_of_set(&empty));
+
             assert!(m.right_of(5));
             assert!(!m.right_of(6));
             assert!(!m.strictly_right_of(5));
@@ -1519,6 +1514,10 @@ mod multi {
         );
 
         assert_eq!(IntervalSet::new_joining([interval!(5, 6)]).len(), 1);
+
+        let mut m_f32 = IntervalSet::empty_joining();
+        m_f32.add(interval!(5.0_f32, 8.0));
+        assert!(m_f32.contains_interval(interval!(f32::NAN, 4.0)));
     }
 
     #[test]
@@ -1571,6 +1570,7 @@ mod multi {
 
         let intv1 = interval!(3, 20, "[)");
         let pairs = intv1 - interval!(10, 20, "()"); //  one interval
+        println!("MANU pairs={:?}", pairs);
         let m3 = IntervalSet::from_pair(pairs);
         assert_eq!(
             m3,
@@ -1617,6 +1617,14 @@ mod multi {
                 interval!(16, 20),
                 interval!(25, 27),
                 interval!(38, 40),
+            ]),
+        );
+        assert_eq!(   //  test early exit in the loop
+            m1.intersection_set(IntervalSet::new_separating([
+                interval!(4, 8),
+            ])),
+            IntervalSet::new_joining([
+                interval!(4, 8),
             ]),
         );
 

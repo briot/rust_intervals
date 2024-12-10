@@ -9,7 +9,7 @@ pub struct Joining;
 impl Joining {
     fn do_merge<T, I>(vec: &mut Vec<Interval<T>>, iter: I)
     where
-        T: Ord + NothingBetween + Clone,
+        T: PartialOrd + NothingBetween + Clone,
         I: IntoIterator<Item = Interval<T>>,
     {
         let mut to_insert = None;
@@ -32,7 +32,7 @@ impl Joining {
 impl<T> Policy<T> for Joining {
     fn merge(vec: &mut Vec<Interval<T>>, elements: Vec<Interval<T>>)
     where
-        T: Ord + NothingBetween + Clone,
+        T: PartialOrd + NothingBetween + Clone,
     {
         // Special case: we are inserting at the end of self.  No need to
         // create a new vector.

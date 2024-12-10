@@ -3,6 +3,7 @@ use crate::multi_joining::Joining;
 use crate::multi_separating::Separating;
 use crate::nothing_between::NothingBetween;
 use crate::pairs::Pair;
+use ::core::cmp::Ordering;
 use ::core::marker::PhantomData;
 
 pub trait Policy<T> {
@@ -11,7 +12,7 @@ pub trait Policy<T> {
     /// elements always contains at least one interval.
     fn merge(vec: &mut Vec<Interval<T>>, elements: Vec<Interval<T>>)
     where
-        T: Ord + NothingBetween + Clone;
+        T: PartialOrd + NothingBetween + Clone;
 }
 
 /// A sorted list of non-overlapping intervals.
@@ -67,7 +68,7 @@ impl<T> IntervalSet<T, Joining> {
 
     pub fn new_single_joining(value: T) -> Self
     where
-        T: Clone,
+        T: PartialOrd + Clone,
     {
         Self::new_single(value)
     }
@@ -88,7 +89,7 @@ impl<T> IntervalSet<T, Separating> {
 
     pub fn new_single_separating(value: T) -> Self
     where
-        T: Clone,
+        T: PartialOrd + Clone,
     {
         Self::new_single(value)
     }
@@ -112,7 +113,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// ```
     pub fn new_single(value: T) -> Self
     where
-        T: Clone,
+        T: PartialOrd + Clone,
     {
         IntervalSet {
             intvs: vec![Interval::new_single(value)],
@@ -209,9 +210,11 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// call `IntervalSet::extend()` as this requires less allocations.
     pub fn add(&mut self, intv: Interval<T>)
     where
-        T: Ord + NothingBetween + Clone,
+        T: PartialOrd + NothingBetween + Clone,
     {
-        self.extend([intv]);
+        if !intv.is_empty() {
+            P::merge(&mut self.intvs, vec![intv]);
+        }
     }
 
     /// Remove the value from Self, splitting intervals as needed.
@@ -287,7 +290,10 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         self.intvs.retain(|v| !v.is_empty());
     }
 
-    /// Add multiple sets of valid values to self, via an iterator
+    /// Add multiple sets of valid values to self, via an iterator.
+    /// Because this function needs to sort the intervals to improve performance
+    /// T must be Ord.  If it isn't (floats,...), use [IntervalSet::add] to
+    /// insert multiple intervals.
     pub fn extend<I>(&mut self, iter: I)
     where
         T: Ord + NothingBetween + Clone,
@@ -360,10 +366,13 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         if u.lower < first.lower {
             return false;
         }
-        let mut reminder = Interval {
-            // simplified difference()
-            lower: (&first.upper).max(&u.lower).clone(),
-            upper: u.upper.clone(),
+
+        let mut reminder = match (&first.upper).partial_cmp(&u.lower) {
+            None => unreachable!(),
+            Some(Ordering::Less | Ordering::Equal) => (*u).clone(),
+            Some(Ordering::Greater) => {
+                Interval::from_bounds(&first.upper, &u.upper)
+            }
         };
         if reminder.is_empty() {
             return true;
@@ -373,14 +382,19 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
             if reminder.lower < intv.lower {
                 return false;
             }
-            reminder = Interval {
-                //  simplified difference()
-                lower: (&intv.upper).max(&reminder.lower).clone(),
-                upper: reminder.upper,
+            reminder = match (&intv.upper).partial_cmp(&reminder.lower) {
+                None => unreachable!(),
+                Some(Ordering::Less | Ordering::Equal) => reminder,
+                Some(Ordering::Greater) => {
+                    if intv.upper >= reminder.upper {
+                        return true;
+                    }
+                    Interval {
+                        lower: intv.upper.clone(),
+                        upper: reminder.upper,
+                    }
+                }
             };
-            if reminder.is_empty() {
-                return true;
-            }
         }
         false
     }
@@ -469,10 +483,10 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         if self.is_empty() {
             Interval::empty()
         } else {
-            Interval {
-                lower: self.intvs.first().unwrap().lower.clone(),
-                upper: self.intvs.last().unwrap().upper.clone(),
-            }
+            Interval::from_bounds(
+                &self.intvs.first().unwrap().lower,
+                &self.intvs.last().unwrap().upper,
+            )
         }
     }
 

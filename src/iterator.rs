@@ -21,10 +21,6 @@ impl<T> IntervalIterator<T> {
     where
         T: Step + Clone + PartialOrd + NothingBetween,
     {
-        if self.intv.is_empty() {
-            return None;
-        }
-
         match &self.intv.lower {
             Bound::LeftUnbounded => {
                 let current = T::min_value().forward(n);
@@ -35,24 +31,34 @@ impl<T> IntervalIterator<T> {
                     };
                 current
             }
-            Bound::RightUnbounded => {
-                unreachable!("Can only happen when interval is empty");
-            }
+            Bound::RightUnbounded => None, //  empty interval
             Bound::LeftOf(lo) => {
                 let current = lo.forward(n);
-                self.intv.lower =
-                    match current.clone().and_then(|c| c.forward(1)) {
-                        None => Bound::RightUnbounded,
-                        Some(c) => Bound::LeftOf(c),
-                    };
+                match current.clone().and_then(|c| c.forward(1)) {
+                    None => self.intv = Interval::empty(),
+                    Some(c) => {
+                        let b = Bound::LeftOf(c);
+                        if b >= self.intv.upper {
+                            self.intv = Interval::empty();
+                        } else {
+                            self.intv.lower = b;
+                        }
+                    }
+                };
                 current
             }
             Bound::RightOf(lo) => {
                 let current = lo.forward(n).and_then(|c| c.forward(1));
-                self.intv.lower = match current {
-                    None => Bound::RightUnbounded,
-                    Some(ref c) => Bound::RightOf(c.clone()),
-                };
+                match current {
+                    None => self.intv = Interval::empty(),
+                    Some(ref c) => {
+                        if Bound::RightOf(c) >= self.intv.upper.as_ref() {
+                            self.intv = Interval::empty();
+                        } else {
+                            self.intv.lower = Bound::RightOf(c.clone());
+                        }
+                    }
+                }
                 current
             }
         }
@@ -63,14 +69,8 @@ impl<T> IntervalIterator<T> {
     where
         T: Step + Clone + PartialOrd + NothingBetween,
     {
-        if self.intv.is_empty() {
-            return None;
-        }
-
         match &self.intv.upper {
-            Bound::LeftUnbounded => {
-                panic!("Can only happen when interval is empty");
-            }
+            Bound::LeftUnbounded => None, //  empty interval
             Bound::RightUnbounded => {
                 let current = T::max_value().backward(n);
                 self.intv.upper =
@@ -82,19 +82,31 @@ impl<T> IntervalIterator<T> {
             }
             Bound::RightOf(up) => {
                 let current = up.backward(n);
-                self.intv.upper =
-                    match current.clone().and_then(|c| c.backward(1)) {
-                        None => Bound::LeftUnbounded,
-                        Some(c) => Bound::RightOf(c),
-                    };
+                match current.clone().and_then(|c| c.backward(1)) {
+                    None => self.intv = Interval::empty(),
+                    Some(c) => {
+                        let b = Bound::RightOf(c);
+                        if b <= self.intv.lower {
+                            self.intv = Interval::empty();
+                        } else {
+                            self.intv.upper = b;
+                        }
+                    }
+                }
                 current
             }
             Bound::LeftOf(lo) => {
                 let current = lo.backward(n).and_then(|c| c.backward(1));
-                self.intv.upper = match current {
-                    None => Bound::LeftUnbounded,
-                    Some(ref c) => Bound::LeftOf(c.clone()),
-                };
+                match current {
+                    None => self.intv = Interval::empty(),
+                    Some(ref c) => {
+                        if Bound::LeftOf(c) <= self.intv.lower.as_ref() {
+                            self.intv = Interval::empty();
+                        } else {
+                            self.intv.upper = Bound::LeftOf(c.clone());
+                        }
+                    }
+                }
                 current
             }
         }
@@ -120,45 +132,37 @@ where
     /// optimize calls to collect() by pre-allocating when possible.
     #[cfg_attr(test, mutants::skip)]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        if self.intv.is_empty() {
-            (0, Some(0))
-        } else {
-            let len = match (&self.intv.lower, &self.intv.upper) {
-                (Bound::RightUnbounded, _) | (_, Bound::LeftUnbounded) => {
-                    Some(0)
-                }
-                (Bound::LeftUnbounded, Bound::RightUnbounded) => {
-                    T::min_value().elements_between(&T::max_value())
-                }
-                (Bound::LeftUnbounded, Bound::LeftOf(up)) => {
-                    T::min_value().elements_between(up)
-                }
-                (Bound::LeftUnbounded, Bound::RightOf(up)) => {
-                    T::min_value().elements_between(up).map(|c| c + 1)
-                }
-                (Bound::LeftOf(lo), Bound::RightUnbounded) => {
-                    lo.elements_between(&T::max_value())
-                }
-                (Bound::LeftOf(lo), Bound::LeftOf(up)) => {
-                    lo.elements_between(up)
-                }
-                (Bound::LeftOf(lo), Bound::RightOf(up)) => {
-                    lo.elements_between(up).map(|c| c + 1)
-                }
-                (Bound::RightOf(lo), Bound::RightUnbounded) => {
-                    lo.elements_between(&T::max_value())
-                }
-                (Bound::RightOf(lo), Bound::LeftOf(up)) => {
-                    lo.elements_between(up).map(|c| c - 1)
-                }
-                (Bound::RightOf(lo), Bound::RightOf(up)) => {
-                    lo.elements_between(up)
-                }
-            };
-            match len {
-                None => (usize::MAX, None),
-                Some(l) => (l, Some(l)),
+        let len = match (&self.intv.lower, &self.intv.upper) {
+            (Bound::RightUnbounded, _) | (_, Bound::LeftUnbounded) => {
+                Some(0) //  empty interval
             }
+            (Bound::LeftUnbounded, Bound::RightUnbounded) => {
+                T::min_value().elements_between(&T::max_value())
+            }
+            (Bound::LeftUnbounded, Bound::LeftOf(up)) => {
+                T::min_value().elements_between(up)
+            }
+            (Bound::LeftUnbounded, Bound::RightOf(up)) => {
+                T::min_value().elements_between(up).map(|c| c + 1)
+            }
+            (Bound::LeftOf(lo), Bound::RightUnbounded) => {
+                lo.elements_between(&T::max_value())
+            }
+            (Bound::LeftOf(lo), Bound::LeftOf(up)) => lo.elements_between(up),
+            (Bound::LeftOf(lo), Bound::RightOf(up)) => {
+                lo.elements_between(up).map(|c| c + 1)
+            }
+            (Bound::RightOf(lo), Bound::RightUnbounded) => {
+                lo.elements_between(&T::max_value())
+            }
+            (Bound::RightOf(lo), Bound::LeftOf(up)) => {
+                lo.elements_between(up).map(|c| c - 1)
+            }
+            (Bound::RightOf(lo), Bound::RightOf(up)) => lo.elements_between(up),
+        };
+        match len {
+            None => (usize::MAX, None),
+            Some(l) => (l, Some(l)),
         }
     }
 }

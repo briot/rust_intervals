@@ -10,6 +10,8 @@ use ::core::ops::{Bound as RgBound, RangeBounds};
 pub struct Interval<T> {
     pub(crate) lower: Bound<T>,
     pub(crate) upper: Bound<T>,
+    // For an empty interval, we have lower==RightUnbounded and
+    // upper==LeftUnbounded
 }
 
 impl<T> Interval<T> {
@@ -30,10 +32,18 @@ impl<T> Interval<T> {
     /// #  Ok(())
     /// #  }
     /// ```
-    pub fn new_closed_open(lower: T, upper: T) -> Self {
-        Self {
-            lower: Bound::LeftOf(lower),
-            upper: Bound::LeftOf(upper),
+    pub fn new_closed_open(lower: T, upper: T) -> Self
+    where
+        T: PartialOrd,
+    {
+        match lower.partial_cmp(&upper) {
+            None | Some(Ordering::Equal | Ordering::Greater) => {
+                Interval::empty()
+            }
+            Some(Ordering::Less) => Self {
+                lower: Bound::LeftOf(lower),
+                upper: Bound::LeftOf(upper),
+            },
         }
     }
 
@@ -52,10 +62,16 @@ impl<T> Interval<T> {
     /// #  Ok(())
     /// #  }
     /// ```
-    pub fn new_closed_closed(lower: T, upper: T) -> Self {
-        Self {
-            lower: Bound::LeftOf(lower),
-            upper: Bound::RightOf(upper),
+    pub fn new_closed_closed(lower: T, upper: T) -> Self
+    where
+        T: PartialOrd,
+    {
+        match lower.partial_cmp(&upper) {
+            None | Some(Ordering::Greater) => Interval::empty(),
+            Some(Ordering::Less | Ordering::Equal) => Self {
+                lower: Bound::LeftOf(lower),
+                upper: Bound::RightOf(upper),
+            },
         }
     }
 
@@ -76,10 +92,24 @@ impl<T> Interval<T> {
     /// #  Ok(())
     /// #  }
     /// ```
-    pub fn new_open_open(lower: T, upper: T) -> Self {
-        Self {
-            lower: Bound::RightOf(lower),
-            upper: Bound::LeftOf(upper),
+    pub fn new_open_open(lower: T, upper: T) -> Self
+    where
+        T: PartialOrd + NothingBetween,
+    {
+        match lower.partial_cmp(&upper) {
+            None | Some(Ordering::Equal | Ordering::Greater) => {
+                Interval::empty()
+            }
+            Some(Ordering::Less) => {
+                if lower.nothing_between(&upper) {
+                    Interval::empty()
+                } else {
+                    Self {
+                        lower: Bound::RightOf(lower),
+                        upper: Bound::LeftOf(upper),
+                    }
+                }
+            }
         }
     }
 
@@ -100,10 +130,18 @@ impl<T> Interval<T> {
     /// #  Ok(())
     /// #  }
     /// ```
-    pub fn new_open_closed(lower: T, upper: T) -> Self {
-        Self {
-            lower: Bound::RightOf(lower),
-            upper: Bound::RightOf(upper),
+    pub fn new_open_closed(lower: T, upper: T) -> Self
+    where
+        T: PartialOrd,
+    {
+        match lower.partial_cmp(&upper) {
+            None | Some(Ordering::Equal | Ordering::Greater) => {
+                Interval::empty()
+            }
+            Some(Ordering::Less) => Self {
+                lower: Bound::RightOf(lower),
+                upper: Bound::RightOf(upper),
+            },
         }
     }
 
@@ -122,10 +160,19 @@ impl<T> Interval<T> {
     /// #  Ok(())
     /// #  }
     /// ```
-    pub fn new_unbounded_closed(upper: T) -> Self {
-        Self {
-            lower: Bound::LeftUnbounded,
-            upper: Bound::RightOf(upper),
+    pub fn new_unbounded_closed(upper: T) -> Self
+    where
+        T: PartialOrd,
+    {
+        //  If we can't compare, we likely have a float NAN
+        match upper.partial_cmp(&upper) {
+            Some(Ordering::Equal) => Self {
+                lower: Bound::LeftUnbounded,
+                upper: Bound::RightOf(upper),
+            },
+            None | Some(Ordering::Less | Ordering::Greater) => {
+                Interval::empty()
+            }
         }
     }
 
@@ -144,10 +191,19 @@ impl<T> Interval<T> {
     /// #  Ok(())
     /// #  }
     /// ```
-    pub fn new_unbounded_open(upper: T) -> Self {
-        Self {
-            lower: Bound::LeftUnbounded,
-            upper: Bound::LeftOf(upper),
+    pub fn new_unbounded_open(upper: T) -> Self
+    where
+        T: PartialOrd,
+    {
+        //  If we can't compare, we likely have a float NAN
+        match upper.partial_cmp(&upper) {
+            Some(Ordering::Equal) => Self {
+                lower: Bound::LeftUnbounded,
+                upper: Bound::LeftOf(upper),
+            },
+            None | Some(Ordering::Less | Ordering::Greater) => {
+                Interval::empty()
+            }
         }
     }
 
@@ -166,10 +222,18 @@ impl<T> Interval<T> {
     /// #  Ok(())
     /// #  }
     /// ```
-    pub fn new_closed_unbounded(lower: T) -> Self {
-        Self {
-            lower: Bound::LeftOf(lower),
-            upper: Bound::RightUnbounded,
+    pub fn new_closed_unbounded(lower: T) -> Self
+    where
+        T: PartialOrd,
+    {
+        match lower.partial_cmp(&lower) {
+            Some(Ordering::Equal) => Self {
+                lower: Bound::LeftOf(lower),
+                upper: Bound::RightUnbounded,
+            },
+            None | Some(Ordering::Less | Ordering::Greater) => {
+                Interval::empty()
+            }
         }
     }
 
@@ -190,10 +254,18 @@ impl<T> Interval<T> {
     /// #  Ok(())
     /// #  }
     /// ```
-    pub fn new_open_unbounded(lower: T) -> Self {
-        Self {
-            lower: Bound::RightOf(lower),
-            upper: Bound::RightUnbounded,
+    pub fn new_open_unbounded(lower: T) -> Self
+    where
+        T: PartialOrd,
+    {
+        match lower.partial_cmp(&lower) {
+            Some(Ordering::Equal) => Self {
+                lower: Bound::RightOf(lower),
+                upper: Bound::RightUnbounded,
+            },
+            None | Some(Ordering::Less | Ordering::Greater) => {
+                Interval::empty()
+            }
         }
     }
 
@@ -252,7 +324,7 @@ impl<T> Interval<T> {
     /// ```
     pub fn new_single(value: T) -> Self
     where
-        T: Clone,
+        T: PartialOrd + Clone,
     {
         Interval::new_closed_closed(value.clone(), value)
     }
@@ -283,7 +355,7 @@ impl<T> Interval<T> {
     /// ```
     pub fn from_range<R: RangeBounds<T>>(range: R) -> Self
     where
-        T: Clone,
+        T: PartialOrd + NothingBetween + Clone,
     {
         match (range.start_bound(), range.end_bound()) {
             (RgBound::Included(lo), RgBound::Included(up)) => {
@@ -318,9 +390,7 @@ impl<T> Interval<T> {
 
     /// The lower bound.  Returns None for an unbounded interval (i.e. lower
     /// is -infinity).
-    /// For an empty interval, it returns whatever what used to create the
-    /// interval (None if you used [`Interval::empty()`]), but the value is
-    /// irrelevant.
+    /// For an empty interval, it returns None.
     /// This value might not actually be valid for self, if we have an
     /// open bound for instance.
     pub fn lower(&self) -> Option<&T> {
@@ -340,9 +410,7 @@ impl<T> Interval<T> {
 
     /// The upper bound.  Returns None for an unbounded interval (i.e. upper
     /// is +infinity).
-    /// For an empty interval, it returns whatever what used to create the
-    /// interval (None if you used [`Interval::empty()`]), but the value is
-    /// irrelevant.
+    /// For an empty interval, it returns None.
     /// This value might not actually be valid for self, if we have an
     /// open bound for instance.
     pub fn upper(&self) -> Option<&T> {
@@ -370,14 +438,10 @@ impl<T> Interval<T> {
 
     /// True if the interval contains no element.
     /// This highly depends on how the NothingBetween trait was implemented.
-    pub fn is_empty(&self) -> bool
-    where
-        T: PartialOrd + NothingBetween,
-    {
-        match self.upper.partial_cmp(&self.lower) {
-            None => true, //  can't compare bounds
-            Some(Ordering::Equal | Ordering::Less) => true,
-            Some(Ordering::Greater) => false,
+    pub fn is_empty(&self) -> bool {
+        match (&self.lower, &self.upper) {
+            (Bound::RightUnbounded, Bound::LeftUnbounded) => true,
+            _ => false,
         }
     }
 
@@ -406,7 +470,7 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let s = other.borrow();
-        s.is_empty() || (self.lower <= s.lower && s.upper <= self.upper)
+        self.lower <= s.lower && s.upper <= self.upper
     }
 
     /// Whether the two intervals contain the same set of values
@@ -423,13 +487,7 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let u = other.borrow();
-        if self.is_empty() {
-            u.is_empty()
-        } else if u.is_empty() {
-            false
-        } else {
-            self.lower == u.lower && self.upper == u.upper
-        }
+        self.lower == u.lower && self.upper == u.upper
     }
 
     /// Whether every value in self is strictly less than (<) X
@@ -455,7 +513,7 @@ impl<T> Interval<T> {
         T: PartialOrd + NothingBetween,
         K: ::core::borrow::Borrow<T>,
     {
-        self.is_empty() || self.upper.left_of(x.borrow())
+        self.upper.left_of(x.borrow())
     }
 
     /// Whether X is strictly less than (<) every value in self.
@@ -475,7 +533,7 @@ impl<T> Interval<T> {
         T: PartialOrd + NothingBetween,
         K: ::core::borrow::Borrow<T>,
     {
-        self.is_empty() || self.lower.right_of(x.borrow())
+        self.lower.right_of(x.borrow())
     }
 
     /// Whether every value in self is less than (<=) X.
@@ -495,7 +553,7 @@ impl<T> Interval<T> {
         T: PartialOrd + NothingBetween,
         K: ::core::borrow::Borrow<T>,
     {
-        self.is_empty() || self.upper <= Bound::RightOf(x.borrow())
+        self.upper <= Bound::RightOf(x.borrow())
     }
 
     /// Whether X is less than (<=) every value in self.
@@ -515,7 +573,7 @@ impl<T> Interval<T> {
         T: PartialOrd + NothingBetween,
         K: ::core::borrow::Borrow<T>,
     {
-        self.is_empty() || self.lower >= Bound::LeftOf(x.borrow())
+        self.lower >= Bound::LeftOf(x.borrow())
     }
 
     /// Whether every value in self is less than or equal (<=) to every value
@@ -526,9 +584,6 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
-        if self.is_empty() || r.is_empty() {
-            return true;
-        }
 
         // Case of "..,5)" and "[4,..".  The bounds are different and yet
         // we should return true.
@@ -536,6 +591,9 @@ impl<T> Interval<T> {
         // and returns Greater.  But because there is nothing_between(4,5),
         // those should actually be equal.
         match (&self.upper, &r.lower) {
+            // Either interval is empty
+            (Bound::LeftUnbounded, _) | (_, Bound::RightUnbounded) => true,
+
             // "..,4]" and "[4,..."
             (Bound::RightOf(u), Bound::LeftOf(r)) => u <= r,
 
@@ -555,7 +613,7 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
-        self.is_empty() || r.is_empty() || self.upper <= r.lower
+        self.upper <= r.lower
     }
 
     /// Whether all values of self are strictly lower than every value in right,
@@ -566,7 +624,7 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
-        !self.is_empty() && !r.is_empty() && self.upper < r.lower
+        self.upper < r.lower
     }
 
     /// Whether every value in self is greater or equal (>=) to every value
@@ -614,14 +672,24 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
-        if self.is_empty() {
-            r.clone()
-        } else if r.is_empty() {
-            self.clone()
-        } else {
-            Self {
-                lower: (&self.lower).min(&r.lower).clone(),
-                upper: (&self.upper).max(&r.upper).clone(),
+        let low = (&self.lower).partial_cmp(&r.lower); //  want min()
+        let upp = (&self.upper).partial_cmp(&r.upper); //  want max()
+        match (low, upp) {
+            (None, _) | (_, None) => Interval::empty(),
+            (
+                Some(Ordering::Less | Ordering::Equal),
+                Some(Ordering::Less | Ordering::Equal),
+            ) => Interval::from_bounds(&self.lower, &r.upper),
+            (
+                Some(Ordering::Less | Ordering::Equal),
+                Some(Ordering::Greater),
+            ) => self.clone(),
+            (
+                Some(Ordering::Greater),
+                Some(Ordering::Less | Ordering::Equal),
+            ) => r.clone(),
+            (Some(Ordering::Greater), Some(Ordering::Greater)) => {
+                Interval::from_bounds(&r.lower, &self.upper)
             }
         }
     }
@@ -645,19 +713,24 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
-        if self.is_empty() || r.is_empty() {
-            Pair::One(self.clone())
-        } else {
-            Pair::new_from_two(
-                Interval {
-                    lower: self.lower.clone(),
-                    upper: (&r.lower).min(&self.upper).clone(),
-                },
-                Interval {
-                    lower: (&r.upper).max(&self.lower).clone(),
-                    upper: self.upper.clone(),
-                },
+        let up1 = (&r.lower).partial_cmp(&self.upper); //  want min()
+        let lo2 = (&r.upper).partial_cmp(&self.lower); //  want max()
+        match (up1, lo2) {
+            (None, _)      // One of the intervals is empty
+            | (_, None)    // One of the intervals is empty
+            | (
+                Some(Ordering::Less | Ordering::Equal),
+                Some(Ordering::Less | Ordering::Equal),
             )
+            | (Some(Ordering::Greater), _) => Pair::One(self.clone()),
+
+            (
+                Some(Ordering::Less | Ordering::Equal),
+                Some(Ordering::Greater),
+            ) => Pair::new_from_two(
+                Interval::from_bounds(&self.lower, &r.lower),
+                Interval::from_bounds(&r.upper, &self.upper),
+            ),
         }
     }
 
@@ -682,25 +755,37 @@ impl<T> Interval<T> {
     {
         let r = right.borrow();
         if self.is_empty() || r.is_empty() {
-            Pair::new_from_two(self.clone(), r.clone())
-        } else {
-            Pair::new_from_two(
-                Interval {
-                    lower: (&self.lower).min(&r.lower).clone(),
-                    upper: (&self.lower)
-                        .max(&r.lower)
-                        .min((&self.upper).min(&r.upper))
-                        .clone(),
-                },
-                Interval {
-                    lower: (&self.upper)
-                        .min(&r.upper)
-                        .max((&self.lower).max(&r.lower))
-                        .clone(),
-                    upper: (&self.upper).max(&r.upper).clone(),
-                },
-            )
+            return Pair::new_from_two(self.clone(), r.clone());
         }
+
+        let (min_of_lowers, max_of_lowers) = match (&self.lower)
+            .partial_cmp(&r.lower)
+        {
+            None => return Pair::new_from_two(self.clone(), r.clone()),
+            Some(Ordering::Less | Ordering::Equal) => (&self.lower, &r.lower),
+            Some(Ordering::Greater) => (&r.lower, &self.lower),
+        };
+
+        let (min_of_uppers, max_of_uppers) = match (&self.upper)
+            .partial_cmp(&r.upper)
+        {
+            None => return Pair::new_from_two(self.clone(), r.clone()),
+            Some(Ordering::Less | Ordering::Equal) => (&self.upper, &r.upper),
+            Some(Ordering::Greater) => (&r.upper, &self.upper),
+        };
+
+        let (v1, v2) = match max_of_lowers.partial_cmp(min_of_uppers) {
+            None => return Pair::new_from_two(self.clone(), r.clone()),
+            Some(Ordering::Less | Ordering::Equal) => {
+                (max_of_lowers, min_of_uppers)
+            }
+            Some(Ordering::Greater) => (min_of_uppers, max_of_lowers),
+        };
+
+        Pair::new_from_two(
+            Interval::from_bounds(min_of_lowers, v1),
+            Interval::from_bounds(v2, max_of_uppers),
+        )
     }
 
     /// Whether the two intervals overlap, i.e. have at least one point in
@@ -712,10 +797,7 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
-        !self.is_empty()
-            && !r.is_empty()
-            && self.lower < r.upper
-            && r.lower < self.upper
+        self.lower < r.upper && r.lower < self.upper
     }
 
     /// Returns the intersection of the two intervals.  This is the same as the
@@ -740,12 +822,25 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
-        if self.is_empty() || r.is_empty() {
-            return Interval::empty();
-        }
-        Interval {
-            lower: (&self.lower).max(&r.lower).clone(),
-            upper: (&self.upper).min(&r.upper).clone(),
+        let low = (&self.lower).partial_cmp(&r.lower); //  want max()
+        let upp = (&self.upper).partial_cmp(&r.upper); //  want min()
+        match (low, upp) {
+            (None, _) | (_, None) => Interval::empty(),
+            (
+                Some(Ordering::Less | Ordering::Equal),
+                Some(Ordering::Less | Ordering::Equal),
+            ) => Interval::from_bounds(&r.lower, &self.upper),
+            (
+                Some(Ordering::Less | Ordering::Equal),
+                Some(Ordering::Greater),
+            ) => r.clone(),
+            (
+                Some(Ordering::Greater),
+                Some(Ordering::Less | Ordering::Equal),
+            ) => self.clone(),
+            (Some(Ordering::Greater), Some(Ordering::Greater)) => {
+                Interval::from_bounds(&self.lower, &r.upper)
+            }
         }
     }
 
@@ -760,12 +855,36 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
-        if self.is_empty() || r.is_empty() {
-            Interval::empty()
-        } else {
-            Interval {
-                lower: (&self.upper).min(&r.upper).clone(),
-                upper: (&self.lower).max(&r.lower).clone(),
+        let low = (&self.upper).partial_cmp(&r.upper); //  want min()
+        let upp = (&self.lower).partial_cmp(&r.lower); //  want max()
+        match (low, upp) {
+            (None, _) | (_, None) => Interval::empty(),
+            (
+                Some(Ordering::Less | Ordering::Equal),
+                Some(Ordering::Less | Ordering::Equal),
+            ) => Interval::from_bounds(&self.upper, &r.lower),
+            (
+                Some(Ordering::Less | Ordering::Equal),
+                Some(Ordering::Greater),
+            ) => {
+                if self.is_empty() {
+                    Interval::empty()
+                } else {
+                    Interval::from_bounds(&self.upper, &self.lower)
+                }
+            }
+            (
+                Some(Ordering::Greater),
+                Some(Ordering::Less | Ordering::Equal),
+            ) => {
+                if r.is_empty() {
+                    Interval::empty()
+                } else {
+                    Interval::from_bounds(&r.upper, &r.lower)
+                }
+            }
+            (Some(Ordering::Greater), Some(Ordering::Greater)) => {
+                Interval::from_bounds(&r.upper, &self.lower)
             }
         }
     }
@@ -778,11 +897,9 @@ impl<T> Interval<T> {
         U: ::core::borrow::Borrow<Self>,
     {
         let r = right.borrow();
-        if self.is_empty() || r.is_empty() {
-            true
-        } else {
-            self.lower <= r.upper && r.lower <= self.upper
-        }
+        self.is_empty()
+            || r.is_empty()
+            || (self.lower <= r.upper && r.lower <= self.upper)
     }
 
     /// Returns the union of the two intervals, if they are contiguous.
@@ -827,6 +944,21 @@ impl<T> Interval<T> {
         T: Clone + Step + PartialOrd + NothingBetween,
     {
         IntervalIterator { intv: self.clone() }
+    }
+
+    /// Creates an interval from its bounds, and normalizes empty intervals
+    pub(crate) fn from_bounds(lower: &Bound<T>, upper: &Bound<T>) -> Self
+    where
+        T: PartialOrd + NothingBetween + Clone,
+    {
+        if lower >= upper {
+            Interval::empty()
+        } else {
+            Interval {
+                lower: lower.clone(),
+                upper: upper.clone(),
+            }
+        }
     }
 }
 
@@ -1016,20 +1148,14 @@ where
     /// If they start on the same value, whether self ends before other.
     /// This function might return True even if self has points to the right of
     /// every point in other.
-    /// An empty interval is always before another interval.
+    /// An empty interval is always after another interval.
     /// It has no real geometrical meaning.
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if other.is_empty() {
-            Some(Ordering::Greater)
-        } else if self.is_empty() {
-            Some(Ordering::Less)
-        } else {
-            match self.lower.partial_cmp(&other.lower) {
-                None => unreachable!(), // interval is not empty
-                Some(Ordering::Less) => Some(Ordering::Less),
-                Some(Ordering::Greater) => Some(Ordering::Greater),
-                Some(Ordering::Equal) => self.upper.partial_cmp(&other.upper),
-            }
+        match self.lower.partial_cmp(&other.lower) {
+            None => unreachable!(), // interval is empty
+            Some(Ordering::Less) => Some(Ordering::Less),
+            Some(Ordering::Greater) => Some(Ordering::Greater),
+            Some(Ordering::Equal) => self.upper.partial_cmp(&other.upper),
         }
     }
 }
@@ -1069,20 +1195,30 @@ where
     T: ::core::fmt::Display + NothingBetween + PartialOrd,
 {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        if self.is_empty() {
-            write!(f, "empty")?;
-        } else {
-            match &self.lower {
-                Bound::LeftUnbounded => write!(f, "(")?,
-                Bound::LeftOf(p) => write!(f, "[{}", p)?,
-                Bound::RightOf(p) => write!(f, "({}", p)?,
-                Bound::RightUnbounded => unreachable!(),
+        match (&self.lower, &self.upper) {
+            (Bound::RightUnbounded, _) | (_, Bound::LeftUnbounded) => {
+                write!(f, "empty")?
             }
-            match &self.upper {
-                Bound::LeftUnbounded => unreachable!(),
-                Bound::LeftOf(p) => write!(f, ", {})", p)?,
-                Bound::RightOf(p) => write!(f, ", {}]", p)?,
-                Bound::RightUnbounded => write!(f, ",)")?,
+            (Bound::LeftUnbounded, Bound::LeftOf(p)) => write!(f, "(, {})", p)?,
+            (Bound::LeftUnbounded, Bound::RightOf(p)) => {
+                write!(f, "(, {}]", p)?
+            }
+            (Bound::LeftUnbounded, Bound::RightUnbounded) => write!(f, "(,)")?,
+            (Bound::LeftOf(l), Bound::LeftOf(p)) => {
+                write!(f, "[{}, {})", l, p)?
+            }
+            (Bound::LeftOf(l), Bound::RightOf(p)) => {
+                write!(f, "[{}, {}]", l, p)?
+            }
+            (Bound::LeftOf(l), Bound::RightUnbounded) => write!(f, "[{},)", l)?,
+            (Bound::RightOf(l), Bound::LeftOf(p)) => {
+                write!(f, "({}, {})", l, p)?
+            }
+            (Bound::RightOf(l), Bound::RightOf(p)) => {
+                write!(f, "({}, {}]", l, p)?
+            }
+            (Bound::RightOf(l), Bound::RightUnbounded) => {
+                write!(f, "({},)", l)?
             }
         }
         Ok(())
@@ -1097,7 +1233,7 @@ pub enum ParseError<E> {
 
 impl<T, E> core::str::FromStr for Interval<T>
 where
-    T: core::str::FromStr<Err = E>,
+    T: PartialOrd + NothingBetween + core::str::FromStr<Err = E>,
 {
     type Err = ParseError<E>;
 
@@ -1168,32 +1304,41 @@ where
     }
 }
 
-impl<T: Clone> ::core::convert::From<::core::ops::Range<T>> for Interval<T> {
+impl<T> ::core::convert::From<::core::ops::Range<T>> for Interval<T>
+where
+    T: Clone + PartialOrd + NothingBetween,
+{
     fn from(value: ::core::ops::Range<T>) -> Self {
         Interval::new_closed_open(value.start.clone(), value.end.clone())
     }
 }
-impl<T: Clone> ::core::convert::From<::core::ops::RangeInclusive<T>>
-    for Interval<T>
+impl<T> ::core::convert::From<::core::ops::RangeInclusive<T>> for Interval<T>
+where
+    T: Clone + PartialOrd,
 {
     fn from(value: ::core::ops::RangeInclusive<T>) -> Self {
         Interval::new_closed_closed(value.start().clone(), value.end().clone())
     }
 }
-impl<T: Clone> ::core::convert::From<::core::ops::RangeTo<T>> for Interval<T> {
+impl<T> ::core::convert::From<::core::ops::RangeTo<T>> for Interval<T>
+where
+    T: Clone + PartialOrd,
+{
     fn from(value: ::core::ops::RangeTo<T>) -> Self {
         Interval::new_unbounded_open(value.end.clone())
     }
 }
-impl<T: Clone> ::core::convert::From<::core::ops::RangeToInclusive<T>>
-    for Interval<T>
+impl<T> ::core::convert::From<::core::ops::RangeToInclusive<T>> for Interval<T>
+where
+    T: Clone + PartialOrd,
 {
     fn from(value: ::core::ops::RangeToInclusive<T>) -> Self {
         Interval::new_unbounded_closed(value.end.clone())
     }
 }
-impl<T: Clone> ::core::convert::From<::core::ops::RangeFrom<T>>
-    for Interval<T>
+impl<T> ::core::convert::From<::core::ops::RangeFrom<T>> for Interval<T>
+where
+    T: Clone + PartialOrd,
 {
     fn from(value: ::core::ops::RangeFrom<T>) -> Self {
         Interval::new_closed_unbounded(value.start.clone())
@@ -1207,7 +1352,7 @@ impl<T: Clone> ::core::convert::From<::core::ops::RangeFull> for Interval<T> {
 
 impl<T, E> ::core::convert::TryFrom<&str> for Interval<T>
 where
-    T: ::core::str::FromStr<Err = E>,
+    T: PartialOrd + NothingBetween + ::core::str::FromStr<Err = E>,
     E: ::core::fmt::Debug,
 {
     type Error = ParseError<E>;
