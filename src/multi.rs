@@ -720,3 +720,23 @@ where
         self.remove_interval(rhs);
     }
 }
+
+impl<T> ::core::fmt::Display for IntervalSet<T>
+where
+    T: ::core::fmt::Display + NothingBetween + PartialOrd,
+{
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        if self.is_empty() {
+            write!(f, "empty")
+        } else {
+            write!(f, "{{")?;
+            for (idx, v) in self.iter().enumerate() {
+                if idx != 0 {
+                    write!(f, ", ")?;
+                }
+                write!(f, "{}", v)?;
+            }
+            write!(f, "}}")
+        }
+    }
+}

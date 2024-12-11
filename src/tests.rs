@@ -1649,4 +1649,17 @@ mod multi {
         assert_eq!(m1.intersection_set(&empty), empty);
         assert_eq!(empty.intersection_set(&m1), empty);
     }
+
+    #[test]
+    fn test_display() {
+        let empty = IntervalSet::<f32>::empty_joining();
+        assert_eq!(format!("{}", empty), "empty");
+
+        let m1 = IntervalSet::new_joining([
+            interval!(3, 10, "[]"),
+            interval!(15, 20, "()"),
+            interval!(25, 40, "[)"),
+        ]);
+        assert_eq!(format!("{}", m1), "{[3, 10], (15, 20), [25, 40)}");
+    }
 }
