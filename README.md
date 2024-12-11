@@ -86,6 +86,15 @@ approaches:
 
 ```
 
+## Testing
+
+This library includes extensive testing (`cargo make test-all`),
+including support for MC/DC coverage (`cargo make cov`, reaching a total of
+95.16%, where the remaining uncovered code all seem to be unreachable code).
+
+We also work fuzzing tests (`cargo make fuzz`) and random mutations on the
+code to detect missing tests (`cargo make mutants`).
+
 ## Similar packages
 
 - `std::ops::Range` are the Rust built-in ranges.  They only provide
@@ -102,10 +111,7 @@ approaches:
 The following features are planned.
 
 - [ ] Sets of disjoint intervals
-   - [ ] Multiple combining styles (joining, separating, splitting) similar to
-         Boost
 - [ ] Map from intervals to values (and resolve overlaps to unique values)
-- [ ] More testing (using cargo-mutants to detect missing tests)
 
 ## Authors
 
