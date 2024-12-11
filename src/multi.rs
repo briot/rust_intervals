@@ -242,6 +242,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     where
         T: PartialOrd + NothingBetween + Clone,
     {
+        // ??? We could avoid Clone by not going through a single-interval
         self.difference_interval(Interval::new_single(value))
     }
 

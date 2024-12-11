@@ -59,19 +59,19 @@ command = "cargo"
 args = [ "doc", "-p", "rust_intervals" ]
 
 [tasks.fuzz]
-dependencies = [ "fuzz_intv", "fuzz_multi" ]
+dependencies = [ "fuzz_intv", "fuzz_set" ]
 
 [tasks.fuzz_intv]
 toolchain = "nightly"
 install_crate = "cargo-fuzz"
 command = "cargo"
-args = ["fuzz", "run", "fuzz_target_1", "--", "-max_total_time=10", "-max_len=1000"]
+args = ["fuzz", "run", "fuzz_intervals", "--", "-max_total_time=20", "-max_len=1000"]
 
-[tasks.fuzz_multi]
+[tasks.fuzz_set]
 toolchain = "nightly"
 install_crate = "cargo-fuzz"
 command = "cargo"
-args = ["fuzz", "run", "fuzz_target_multi", "--", "-max_total_time=10", "-max_len=8000"]
+args = ["fuzz", "run", "fuzz_intervalsets", "--", "-max_total_time=20", "-max_len=8000"]
 
 [tasks.clippy]
 command = "cargo"

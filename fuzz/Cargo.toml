@@ -13,15 +13,15 @@ libfuzzer-sys = "0.4"
 rust_intervals = { path = ".." }
 
 [[bin]]
-name = "fuzz_target_1"
-path = "fuzz_targets/fuzz_target_1.rs"
+name = "fuzz_intervals"
+path = "fuzz_targets/fuzz_intervals.rs"
 test = false
 doc = false
 bench = false
 
 [[bin]]
-name = "fuzz_target_multi"
-path = "fuzz_targets/fuzz_target_multi.rs"
+name = "fuzz_intervalsets"
+path = "fuzz_targets/fuzz_intervalsets.rs"
 test = false
 doc = false
 bench = false
