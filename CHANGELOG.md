@@ -1,5 +1,7 @@
 # Version History
 
+## 0.7.0
+
 ## 0.6.0
 ## Fixed
   - fixed incorrect implementation of contains_interval for Separating policy
