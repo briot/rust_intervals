@@ -1161,7 +1161,10 @@ where
     T: PartialOrd + Ord + NothingBetween,
 {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
+        match self.partial_cmp(other) {
+            None => unreachable!(),
+            Some(order) => order,
+        }
     }
 }
 
@@ -1238,12 +1241,15 @@ where
     /// for the two bounds of the interval, and is not part of the display for
     /// one of the bounds.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s == "empty" {
+        if s == "empty" || s.is_empty() {
             return Ok(Interval::empty());
         }
 
         let mut input = s.char_indices();
-        let (_, lo_incl) = input.next().unwrap();
+        let lo_incl = match input.next() {
+            None => unreachable!(),
+            Some((_, lo_incl)) => lo_incl,
+        };
         let mut up_incl: char = ']';
         let mut lo: Option<T> = None;
         let mut up: Option<T> = None;

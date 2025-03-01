@@ -368,11 +368,10 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
         // Unfortunately Rust doesn't let us specialize the function.
         //    self.iter().any(|v| v.contains_interval(u))
 
-        if self.intvs.is_empty() {
-            return false;
-        }
-
-        let first = self.intvs.first().unwrap();
+        let first = match self.intvs.first() {
+            None => return false,
+            Some(f) => f,
+        };
         if u.lower < first.lower {
             return false;
         }
@@ -490,13 +489,9 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     where
         T: PartialOrd + NothingBetween + Clone,
     {
-        if self.is_empty() {
-            Interval::empty()
-        } else {
-            Interval::from_bounds(
-                &self.intvs.first().unwrap().lower,
-                &self.intvs.last().unwrap().upper,
-            )
+        match (self.intvs.first(), self.intvs.last()) {
+            (None, _) | (_, None) => Interval::empty(),
+            (Some(f), Some(l)) => Interval::from_bounds(&f.lower, &l.upper),
         }
     }
 

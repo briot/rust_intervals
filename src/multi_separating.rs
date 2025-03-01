@@ -26,7 +26,9 @@ impl Separating {
                 }
             };
         }
-        vec.push(to_insert.unwrap());
+        if let Some(ins) = to_insert {
+            vec.push(ins);
+        }
     }
 }
 
@@ -35,22 +37,29 @@ impl<T> Policy<T> for Separating {
     where
         T: PartialOrd + NothingBetween + Clone,
     {
-        // Special case: we are inserting at the end of self.  No need to
-        // create a new vector.
-        let last = vec.last();
-        if last.is_none()
-            || last
-                .unwrap()
-                .strictly_left_of_interval(elements.first().unwrap())
-        {
-            Self::do_merge(vec, elements);
-        } else {
-            let mut old = Vec::new();
-            ::core::mem::swap(vec, &mut old);
-            Self::do_merge(
-                vec,
-                LeftMostIter::new(old.into_iter(), elements.into_iter()),
-            );
+        match elements.first() {
+            None => {}
+            Some(fi) => {
+                match vec.last() {
+                    None => Self::do_merge(vec, elements),
+                    Some(la) if la.strictly_left_of_interval(fi) => {
+                        // Special case: we are inserting at the end of self.  No need to
+                        // create a new vector.
+                        Self::do_merge(vec, elements)
+                    }
+                    _ => {
+                        let mut old = Vec::new();
+                        ::core::mem::swap(vec, &mut old);
+                        Self::do_merge(
+                            vec,
+                            LeftMostIter::new(
+                                old.into_iter(),
+                                elements.into_iter(),
+                            ),
+                        );
+                    }
+                }
+            }
         }
     }
 }
