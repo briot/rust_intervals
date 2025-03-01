@@ -1227,9 +1227,9 @@ pub enum ParseError<E> {
     Bound(E),     // An error while parsing bounds
 }
 
-impl<T, E> core::str::FromStr for Interval<T>
+impl<T, E> ::core::str::FromStr for Interval<T>
 where
-    T: PartialOrd + Bounded + NothingBetween + core::str::FromStr<Err = E>,
+    T: PartialOrd + Bounded + NothingBetween + ::core::str::FromStr<Err = E>,
 {
     type Err = ParseError<E>;
 
