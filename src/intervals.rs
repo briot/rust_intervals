@@ -279,6 +279,7 @@ impl<T> Interval<T> {
     /// #  Ok(())
     /// #  }
     /// ```
+    #[must_use]
     pub fn doubly_unbounded() -> Self {
         Self {
             lower: Bound::LeftUnbounded,
@@ -300,6 +301,7 @@ impl<T> Interval<T> {
     /// #  Ok(())
     /// #  }
     /// ```
+    #[must_use]
     pub fn empty() -> Self {
         Self {
             lower: Bound::RightUnbounded,

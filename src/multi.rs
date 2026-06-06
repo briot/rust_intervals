@@ -54,6 +54,7 @@ pub struct IntervalSet<T, P: Policy<T> = Joining> {
 }
 
 impl<T> IntervalSet<T, Joining> {
+    #[must_use]
     pub fn empty_joining() -> Self {
         Default::default()
     }
@@ -75,6 +76,7 @@ impl<T> IntervalSet<T, Joining> {
 }
 
 impl<T> IntervalSet<T, Separating> {
+    #[must_use]
     pub fn empty_separating() -> Self {
         Default::default()
     }
@@ -100,6 +102,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// ```none
     ///    {}
     /// ```
+    #[must_use]
     pub fn empty() -> Self {
         IntervalSet {
             intvs: Vec::new(),
@@ -154,6 +157,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// self is empty or if the left-most interval is unbounded.
     /// This value might not actually be valid for self, if we have an
     /// open bound for instance.
+    #[must_use]
     pub fn lower(&self) -> Option<&T> {
         match self.intvs.first() {
             None => None,
@@ -163,6 +167,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
 
     /// True if the left-most interval is unbounded.
     /// This is false if self is empty.
+    #[must_use]
     pub fn lower_unbounded(&self) -> bool {
         match self.intvs.first() {
             None => false,
@@ -174,6 +179,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// self is empty or if the right-most interval is unbounded.
     /// This value might not actually be valid for self, if we have an
     /// open bound for instance.
+    #[must_use]
     pub fn upper(&self) -> Option<&T> {
         match self.intvs.last() {
             None => None,
@@ -183,6 +189,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
 
     /// True if the right-most interval is unbounded.
     /// This is false if self is empty.
+    #[must_use]
     pub fn upper_unbounded(&self) -> bool {
         match self.intvs.last() {
             None => false,
@@ -191,11 +198,13 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     }
 
     /// Return the number of intervals in self.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.intvs.len()
     }
 
     /// True if there are not values in self
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.intvs.is_empty()
     }
@@ -280,7 +289,9 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
                     result.intvs.push(p2);
 
                     // There will be no more difference now
-                    result.intvs.extend_from_slice(&self.intvs[idx + 1..]);
+                    if let Some(follow) = &self.intvs.get(idx + 1..) {
+                        result.intvs.extend_from_slice(follow);
+                    }
                     break;
                 }
             }
@@ -485,6 +496,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
     /// Returns the convex hull, i.e. the smallest intervals that contains
     /// all values in all intervals in self.  The result might contain
     /// additional values that were not valid for self.
+    #[must_use]
     pub fn convex_hull(&self) -> Interval<T>
     where
         T: PartialOrd + NothingBetween + Clone,
