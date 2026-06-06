@@ -1446,6 +1446,21 @@ mod multi {
                     &interval!(15, 20),
                 ]
             );
+
+            m.clear();
+            m.extend([
+                interval!(15, 20),
+                interval!(25, 30)
+            ]);
+            m.remove_interval(interval!(17, 18));
+            assert_eq!(
+                m.iter().copied().collect::<Vec<_>>(),
+                vec![
+                    interval!(15, 17),
+                    interval!(18, 20),
+                    interval!(25, 30),
+                ]
+            );
         }
 
         // Intersects

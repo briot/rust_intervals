@@ -311,7 +311,7 @@ impl<T, P: Policy<T>> IntervalSet<T, P> {
                 }
                 Pair::Two(p1, p2) => {
                     *v = p1;
-                    self.intvs.insert(idx, p2);
+                    self.intvs.insert(idx + 1, p2);
                     break;
                 }
             }
