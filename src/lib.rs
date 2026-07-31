@@ -1,8 +1,7 @@
 //! This create provides operations for mathematical intervals.
 //! Such intervals include all values between two bounds.
 //!
-//! This library supports multiple kinds of intervals.  Let's call E the
-//! set of valid values in the interval,
+//! This library supports multiple kinds of intervals.
 //!
 //!  |Interval|Constructor                       |Description
 //!  |--------|----------------------------------|--------------
@@ -21,7 +20,7 @@
 //! depends on the traits that the bound type implements.
 //!
 //! Intervals on floats (like any code using float) can be tricky.  For
-//! instance, the two intervals `[1.0, 100.0)` and `[1.0, 100.0 - f32:EPSILON)`
+//! instance, the two intervals `[1.0, 100.0)` and `[1.0, 100.0 - f32:EPSILON]`
 //! are not considered equivalent, since the machine thinks the two upper
 //! bounds have the same value, but one of them is closed and the other is
 //! open.
